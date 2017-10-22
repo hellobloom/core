@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# Exit script as soon as a command fails.
+set -o errexit
+
+# Executes cleanup function at script exit.
+trap cleanup EXIT
+
+cleanup() {
+  # Kill the testrpc instance that we started (if we started one and if it's still running).
+  if descendant_testrpc_exists; then
+    kill_descendant_testrpc "$background_pid"
+  fi
+}
+
+if [ "$SOLIDITY_COVERAGE" = true ]; then
+  testrpc_port=8555
+else
+  testrpc_port=8545
+fi
+
+kill_descendant_testrpc() {
+  local parent_pid="$1"
+
+  # The `-P` flag only looks for processes that are a child of the provided
+  #   pid. This makes sure we don't kill other testrpc commands that might be running.
+  #
+  # The `-f` flag lets us match against arguments which is important because the
+  # testrpc command looks like this:
+  #
+  #    32938 s002  S 0:03.05 node node_modules/.bin/testrpc --gasLimit 100000000
+  #
+  # where `node` is the process name and `testrpc` is just part of an argument
+  pkill -P "$parent_pid" -f testrpc > /dev/null
+}
+
+descendant_testrpc_exists() {
+  pgrep -f testrpc > /dev/null
+}
+
+testrpc_running() {
+  nc -z localhost "$testrpc_port"
+}
+
+testrpc() {
+  if [ "$SOLIDITY_COVERAGE" = true ]; then
+    node_modules/.bin/testrpc-sc --gasLimit 0xfffffffffff --port "$testrpc_port" "$@"
+  else
+    node_modules/.bin/testrpc "$@"
+  fi
+}
+
+remove_compiled_tests() {
+  if [ -d ./js_test ]; then
+    rm -r ./js_test
+  fi
+}
+
+compile_tests() {
+  remove_compiled_tests
+
+  # Copy over files so we include things like mock contracts
+  cp -r ./test ./js_test
+
+  # Compile into the js_test directory
+  node_modules/.bin/tsc
+}
+
+compiled_test_files() {
+  # Return a list of compiled test files
+  find js_test -type f
+}
+
+if testrpc_running; then
+  echo "Using existing testrpc instance"
+else
+  echo "Starting our own testrpc instance"
+  testrpc --gasLimit 100000000 > /dev/null &
+  background_pid="$!"
+fi
+
+if [ "$SOLIDITY_COVERAGE" = true ]; then
+  node_modules/.bin/solidity-coverage
+else
+  compile_tests
+  compiled_test_files | xargs node_modules/.bin/truffle test "$@"
+fi

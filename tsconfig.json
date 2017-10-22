@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "strictNullChecks": true,
+    "outDir": "js_test",
+    "module": "commonjs",
+    "lib": ["es6", "es2017", "dom"],
+    "target": "es5"
+  },
+  "include": [
+    "./truffle.d.ts",
+    "./web3.d.ts",
+    "./chai-bignumber.d.ts",
+    "test/**/*.ts"
+  ]
+}

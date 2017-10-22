@@ -1,1 +1,10 @@
-node_modules/
+/node_modules
+/build
+coverage.json
+coverage/
+
+# Ignore our compiled js_test directory
+/js_test
+
+# Don't check in our installed ethpm dependency source. Just the lockfile details.
+installed_contracts/**/*.sol
