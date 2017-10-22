@@ -1,0 +1,40 @@
+{
+  "contract_name": "Controlled",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_newController",
+          "type": "address"
+        }
+      ],
+      "name": "changeController",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "controller",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "payable": false,
+      "type": "constructor"
+    }
+  ],
+  "unlinked_binary": "0x6060604052341561000f57600080fd5b5b60008054600160a060020a03191633600160a060020a03161790555b5b61015c8061003c6000396000f300606060405263ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416633cebb8238114610048578063f77c479114610076575b600080fd5b341561005357600080fd5b61007473ffffffffffffffffffffffffffffffffffffffff600435166100b2565b005b341561008157600080fd5b610089610114565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b6000543373ffffffffffffffffffffffffffffffffffffffff9081169116146100da57600080fd5b6000805473ffffffffffffffffffffffffffffffffffffffff191673ffffffffffffffffffffffffffffffffffffffff83161790555b5b50565b60005473ffffffffffffffffffffffffffffffffffffffff16815600a165627a7a7230582023a0d42971e415f16847a11884b3f43cf73bbd48407584ac7cef86cc4a0df0650029",
+  "networks": {},
+  "schema_version": "0.0.5",
+  "updated_at": 1508663251052
+}

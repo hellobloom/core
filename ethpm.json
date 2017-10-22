@@ -1,0 +1,11 @@
+{
+  "package_name": "bloom-crowdsale",
+  "version": "0.0.1",
+  "description": "Bloom token",
+  "authors": ["John Backus <john@hellobloom.io>"],
+  "keywords": ["ethereum", "bloom"],
+  "dependencies": {
+    "zeppelin": "1.3.0"
+  },
+  "license": "MIT"
+}

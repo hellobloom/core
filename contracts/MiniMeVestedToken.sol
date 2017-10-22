@@ -1,0 +1,1 @@
+./../../crowdsale/contracts/MiniMeVestedToken.sol
