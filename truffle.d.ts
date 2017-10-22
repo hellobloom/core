@@ -62,6 +62,8 @@ interface ContractInstance {
   address: Address;
 }
 
+interface MockBLTInstance extends BLTInstance {}
+
 interface ConfigurableMockInstance extends ContractInstance, Ownable {
   count(...args: any[]): any;
   finishConfiguration(...args: any[]): any;
@@ -76,4 +78,5 @@ interface Artifacts {
   require(
     name: "./helpers/ConfigurableMock"
   ): Contract<ConfigurableMockInstance>;
+  require(name: "./helpers/MockBLT"): Contract<MockBLTInstance>;
 }
