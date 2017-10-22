@@ -1,0 +1,11 @@
+{
+  "name": "bloom-core",
+  "version": "0.0.1",
+  "description": "Core bloom contracts",
+  "main": "truffle.js",
+  "author": "John Backus",
+  "license": "MIT",
+  "dependencies": {
+    "truffle": "^3.4.11"
+  }
+}
