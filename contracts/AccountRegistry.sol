@@ -4,8 +4,8 @@ import "zeppelin/ownership/Ownable.sol";
 import "./BLT.sol";
 
 contract AccountRegistry is Ownable {
-  mapping(address => bool) accounts;
-  mapping(address => address) invites;
+  mapping(address => bool) public accounts;
+  mapping(address => bool) public invites;
   mapping(address => mapping(address => bool)) pendingInvites;
   address public inviteCollateralizer;
   BLT public blt;
@@ -13,14 +13,16 @@ contract AccountRegistry is Ownable {
   function AccountRegistry(BLT _blt) {
     inviteCollateralizer = new InviteCollateralizer(this, _blt);
     blt = _blt;
+    accounts[owner] = true;
   }
 
   function createAccount() {
-    require(invites[msg.sender] != address(0) && !accounts[msg.sender]);
+    require(invites[msg.sender] && !accounts[msg.sender]);
   }
 
   function invite(address _recipient) {
-    pendingInvites[msg.sender][_recipient] = true;
+    require(accounts[msg.sender] && !invites[_recipient]);
+    invites[_recipient] = true;
   }
 }
 

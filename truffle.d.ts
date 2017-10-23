@@ -62,7 +62,9 @@ interface ContractInstance {
   address: Address;
 }
 
-interface MockBLTInstance extends BLTInstance {}
+interface MockBLTInstance extends BLTInstance {
+  gift(recipient: Address, options?: TransactionOptions): Promise<void>;
+}
 
 interface ConfigurableMockInstance extends ContractInstance, Ownable {
   count(...args: any[]): any;

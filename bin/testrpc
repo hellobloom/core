@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./node_modules/.bin/testrpc --gasLimit 100000000
