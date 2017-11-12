@@ -2,16 +2,16 @@ pragma solidity ^0.4.15;
 
 import "zeppelin/ownership/Ownable.sol";
 import "zeppelin/token/SafeERC20.sol";
-import "./BLT.sol";
+import "zeppelin/token/ERC20.sol";
 
 contract AccountRegistry is Ownable {
   mapping(address => bool) public accounts;
   mapping(address => bool) public invites;
   mapping(address => mapping(address => bool)) pendingInvites;
   address public inviteCollateralizer;
-  BLT public blt;
+  ERC20 public blt;
 
-  function AccountRegistry(BLT _blt) {
+  function AccountRegistry(ERC20 _blt) {
     inviteCollateralizer = new InviteCollateralizer(this, _blt);
     blt = _blt;
     accounts[owner] = true;
@@ -32,11 +32,11 @@ contract AccountRegistry is Ownable {
 }
 
 contract InviteCollateralizer is Ownable {
-  using SafeERC20 for BLT;
+  using SafeERC20 for ERC20;
   AccountRegistry public registry;
-  BLT public blt;
+  ERC20 public blt;
 
-  function InviteCollateralizer(AccountRegistry _registry, BLT _blt) {
+  function InviteCollateralizer(AccountRegistry _registry, ERC20 _blt) {
     registry = _registry;
     blt = _blt;
   }
