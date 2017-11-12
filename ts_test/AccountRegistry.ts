@@ -5,6 +5,8 @@ import * as BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 
+import { MockBLTInstance, AccountRegistryInstance } from "./../truffle";
+
 const chaiBignumber = require("chai-bignumber");
 
 chai
@@ -18,10 +20,17 @@ const MockBLT = artifacts.require("./helpers/MockBLT");
 
 contract("AccountRegistry", function([owner, alice, bob]) {
   describe("inviting new users", async () => {
+    let token: MockBLTInstance;
+    let registry: AccountRegistryInstance;
+    let collateralizer: string;
+
+    beforeEach(async () => {
+      token = await MockBLT.new();
+      registry = await AccountRegistry.new(token.address);
+      collateralizer = await registry.inviteCollateralizer();
+    });
+
     it("allows existing users to invite others if they collateralize some BLT", async () => {
-      const token = await MockBLT.new();
-      const registry = await AccountRegistry.new(token.address);
-      const collateralizer = await registry.inviteCollateralizer();
       await token.gift(owner);
       await token.approve(collateralizer, new BigNumber("1e18"));
 
@@ -33,9 +42,6 @@ contract("AccountRegistry", function([owner, alice, bob]) {
     it("fails if the invited user already has an account");
 
     it("fails if the invited user already has an invite", async () => {
-      const token = await MockBLT.new();
-      const registry = await AccountRegistry.new(token.address);
-      const collateralizer = await registry.inviteCollateralizer();
       await token.gift(owner);
       await token.approve(collateralizer, new BigNumber("1e18"));
 
@@ -46,17 +52,12 @@ contract("AccountRegistry", function([owner, alice, bob]) {
     it("fails if the inviter does not have any BLT");
 
     it("fails if the inviter has not approved the collateralizer", async () => {
-      const token = await MockBLT.new();
-      const registry = await AccountRegistry.new(token.address);
       await token.gift(owner);
 
       await registry.invite(alice).should.be.rejectedWith("invalid opcode");
     });
 
     it("fails if the inviter does not have an account", async () => {
-      const token = await MockBLT.new();
-      const registry = await AccountRegistry.new(token.address);
-      const collateralizer = await registry.inviteCollateralizer();
       await token.gift(alice);
       await token.approve(collateralizer, new BigNumber("1e18"), {
         from: alice

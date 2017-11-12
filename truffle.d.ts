@@ -89,3 +89,16 @@ interface Artifacts {
   require(name: "BLT"): BLTContract;
   require(name: "./helpers/MockBLT"): MockBLTContract;
 }
+
+export {
+  BLTInstance,
+  AccountRegistryInstance,
+  MiniMeTokenInstance,
+  MiniMeVestedTokenInstance,
+  InviteCollateralizerInstance,
+  AccountRegistryContract,
+  InviteCollateralizerContract,
+  MiniMeVestedTokenContract,
+  BLTContract,
+  MockBLTInstance
+};
