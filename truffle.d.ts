@@ -3,7 +3,8 @@ import {
   BLTInstance,
   AccountRegistryInstance,
   MiniMeTokenInstance,
-  MiniMeVestedTokenInstance
+  MiniMeVestedTokenInstance,
+  InviteCollateralizerInstance
 } from "./contracts";
 
 declare global {
@@ -75,6 +76,7 @@ interface ConfigurableMockInstance extends ContractInstance, Ownable {
 
 interface Artifacts {
   require(name: "AccountRegistry"): Contract<AccountRegistryInstance>;
+  require(name: "InviteCollateralizer"): Contract<InviteCollateralizerInstance>;
   require(name: "MiniMeVestedToken"): Contract<MiniMeVestedTokenInstance>;
   require(name: "BLT"): Contract<BLTInstance>;
   require(

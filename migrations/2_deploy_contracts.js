@@ -1,4 +1,5 @@
-var BLT = artifacts.require("./BLT.sol");
+var BLT = artifacts.require("./MockBLT.sol");
+// var BLT = artifacts.require("./BLT.sol");
 var AccountRegistry = artifacts.require("AccountRegistry");
 
 module.exports = function(deployer) {

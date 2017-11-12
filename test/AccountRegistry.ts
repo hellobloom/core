@@ -13,13 +13,14 @@ chai
   .should();
 
 const AccountRegistry = artifacts.require("AccountRegistry");
+// const InviteCollateralizer = artifacts.require("InviteCollateralizer");
 const MockBLT = artifacts.require("./helpers/MockBLT");
 
 contract("AccountRegistry", function([owner, alice, bob]) {
   describe("inviting new users", async () => {
     it("allows existing users to invite others if they collateralize some BLT", async () => {
       const token = await MockBLT.new();
-      const registry = await AccountRegistry.new(token);
+      const registry = await AccountRegistry.new(token.address);
       const collateralizer = await registry.inviteCollateralizer();
       await token.gift(owner);
       await token.approve(collateralizer, new BigNumber("1e18"));
@@ -33,7 +34,7 @@ contract("AccountRegistry", function([owner, alice, bob]) {
 
     it("fails if the invited user already has an invite", async () => {
       const token = await MockBLT.new();
-      const registry = await AccountRegistry.new(token);
+      const registry = await AccountRegistry.new(token.address);
       const collateralizer = await registry.inviteCollateralizer();
       await token.gift(owner);
       await token.approve(collateralizer, new BigNumber("1e18"));
@@ -43,7 +44,14 @@ contract("AccountRegistry", function([owner, alice, bob]) {
     });
 
     it("fails if the inviter does not have any BLT");
-    it("fails if the inviter has not approved the collateralizer");
+
+    it("fails if the inviter has not approved the collateralizer", async () => {
+      const token = await MockBLT.new();
+      const registry = await AccountRegistry.new(token);
+      await token.gift(owner);
+
+      await registry.invite(alice).should.be.rejectedWith("invalid opcode");
+    });
 
     it("fails if the inviter does not have an account", async () => {
       const token = await MockBLT.new();

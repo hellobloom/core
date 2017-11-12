@@ -6,7 +6,7 @@
   "author": "John Backus",
   "license": "MIT",
   "dependencies": {
-    "truffle": "^3.4.11"
+    "truffle": "^4.0.0-beta.2"
   },
   "devDependencies": {
     "@types/bignumber.js": "^4.0.3",

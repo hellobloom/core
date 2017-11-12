@@ -48,6 +48,19 @@ export interface ApproveAndCallFallBackInstance extends ContractInstance {
   ): Promise<void>;
 }
 
+export interface BasicTokenInstance extends ContractInstance {
+  totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  balanceOf(
+    owner: Address,
+    options?: TransactionOptions
+  ): Promise<BigNumber.BigNumber>;
+  transfer(
+    to: Address,
+    value: UInt,
+    options?: TransactionOptions
+  ): Promise<boolean>;
+}
+
 export interface BLTInstance extends ContractInstance {
   tokenGrantsCount(
     holder: Address,
@@ -220,12 +233,59 @@ export interface ConvertLibInstance extends ContractInstance {
   ): Promise<BigNumber.BigNumber>;
 }
 
+export interface ERC20Instance extends ContractInstance {
+  approve(
+    spender: Address,
+    value: UInt,
+    options?: TransactionOptions
+  ): Promise<boolean>;
+  totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  transferFrom(
+    from: Address,
+    to: Address,
+    value: UInt,
+    options?: TransactionOptions
+  ): Promise<boolean>;
+  balanceOf(
+    who: Address,
+    options?: TransactionOptions
+  ): Promise<BigNumber.BigNumber>;
+  transfer(
+    to: Address,
+    value: UInt,
+    options?: TransactionOptions
+  ): Promise<boolean>;
+  allowance(
+    owner: Address,
+    spender: Address,
+    options?: TransactionOptions
+  ): Promise<BigNumber.BigNumber>;
+}
+
+export interface ERC20BasicInstance extends ContractInstance {
+  totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  balanceOf(
+    who: Address,
+    options?: TransactionOptions
+  ): Promise<BigNumber.BigNumber>;
+  transfer(
+    to: Address,
+    value: UInt,
+    options?: TransactionOptions
+  ): Promise<boolean>;
+}
+
 export interface InviteCollateralizerInstance extends ContractInstance {
   registry(options?: TransactionOptions): Promise<Address>;
   owner(options?: TransactionOptions): Promise<Address>;
   blt(options?: TransactionOptions): Promise<Address>;
+  takeCollateral(
+    owner: Address,
+    options?: TransactionOptions
+  ): Promise<boolean>;
   transferOwnership(
     newOwner: Address,
+    blt: Address,
     options?: TransactionOptions
   ): Promise<void>;
 }
@@ -516,7 +576,48 @@ export interface OwnableInstance extends ContractInstance {
   ): Promise<void>;
 }
 
+export interface SafeERC20Instance extends ContractInstance {}
+
 export interface SafeMathInstance extends ContractInstance {}
+
+export interface StandardTokenInstance extends ContractInstance {
+  approve(
+    spender: Address,
+    value: UInt,
+    options?: TransactionOptions
+  ): Promise<boolean>;
+  totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  transferFrom(
+    from: Address,
+    to: Address,
+    value: UInt,
+    options?: TransactionOptions
+  ): Promise<boolean>;
+  decreaseApproval(
+    spender: Address,
+    subtractedValue: UInt,
+    options?: TransactionOptions
+  ): Promise<boolean>;
+  balanceOf(
+    owner: Address,
+    options?: TransactionOptions
+  ): Promise<BigNumber.BigNumber>;
+  transfer(
+    to: Address,
+    value: UInt,
+    options?: TransactionOptions
+  ): Promise<boolean>;
+  increaseApproval(
+    spender: Address,
+    addedValue: UInt,
+    options?: TransactionOptions
+  ): Promise<boolean>;
+  allowance(
+    owner: Address,
+    spender: Address,
+    options?: TransactionOptions
+  ): Promise<BigNumber.BigNumber>;
+}
 
 export interface TokenControllerInstance extends ContractInstance {
   onTransfer(

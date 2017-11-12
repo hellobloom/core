@@ -49,7 +49,7 @@ type Member = ConstructorMember | EventMember | FunctionMember | FallbackMember;
 type Abi = (EventMember | FunctionMember)[];
 
 interface Definition {
-  contract_name: string;
+  contractName: string;
   abi: Abi;
 }
 
@@ -85,7 +85,7 @@ function generateHeader(): string {
 
 function buildContract(definition: Definition) {
   return `
-    export interface ${definition.contract_name}Instance extends ContractInstance {
+    export interface ${definition.contractName}Instance extends ContractInstance {
       ${buildMembers(definition.abi)}
     }
   `;

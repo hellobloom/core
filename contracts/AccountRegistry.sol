@@ -1,6 +1,7 @@
 pragma solidity ^0.4.15;
 
 import "zeppelin/ownership/Ownable.sol";
+import "zeppelin/token/SafeERC20.sol";
 import "./BLT.sol";
 
 contract AccountRegistry is Ownable {
@@ -22,16 +23,22 @@ contract AccountRegistry is Ownable {
 
   function invite(address _recipient) {
     require(accounts[msg.sender] && !invites[_recipient]);
+    require(InviteCollateralizer(inviteCollateralizer).takeCollateral(msg.sender));
     invites[_recipient] = true;
   }
 }
 
 contract InviteCollateralizer is Ownable {
+  using SafeERC20 for BLT;
   AccountRegistry public registry;
   BLT public blt;
 
   function InviteCollateralizer(AccountRegistry _registry, BLT _blt) {
     registry = _registry;
     blt = _blt;
+  }
+
+  function takeCollateral(address _owner) returns (bool) {
+    return blt.transferFrom(_owner, address(this), 1);
   }
 }
