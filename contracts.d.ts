@@ -31,6 +31,7 @@ export interface AccountRegistryInstance extends ContractInstance {
   owner(options?: TransactionOptions): Promise<Address>;
   invites(unnamed1: Address, options?: TransactionOptions): Promise<boolean>;
   createAccount(options?: TransactionOptions): Promise<void>;
+  acceptInvite(options?: TransactionOptions): Promise<void>;
   blt(options?: TransactionOptions): Promise<Address>;
   transferOwnership(
     newOwner: Address,
