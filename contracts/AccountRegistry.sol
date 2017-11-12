@@ -17,10 +17,6 @@ contract AccountRegistry is Ownable {
     accounts[owner] = true;
   }
 
-  function createAccount() {
-    require(invites[msg.sender] && !accounts[msg.sender]);
-  }
-
   function invite(address _recipient) {
     require(accounts[msg.sender] && !invites[_recipient]);
     require(InviteCollateralizer(inviteCollateralizer).takeCollateral(msg.sender));
