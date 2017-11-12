@@ -27,6 +27,7 @@
     "solidity-coverage": "^0.2.2",
     "truffle-hdwallet-provider": "^0.0.3",
     "ts-node": "^3.3.0",
+    "tslint": "^5.8.0",
     "typescript": "^2.5.2"
   }
 }

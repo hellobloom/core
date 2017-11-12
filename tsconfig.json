@@ -8,7 +8,8 @@
     "outDir": "test",
     "module": "commonjs",
     "lib": ["es6", "es2017", "dom"],
-    "target": "es5"
+    "target": "es5",
+    "plugins": [{ "name": "tslint-language-service" }]
   },
   "include": [
     "./truffle.d.ts",
