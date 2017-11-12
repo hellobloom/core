@@ -46,7 +46,7 @@ interface FunctionMemberInput {
 
 type Member = ConstructorMember | EventMember | FunctionMember | FallbackMember;
 
-type Abi = (EventMember | FunctionMember)[];
+type Abi = (EventMember | FunctionMember | ConstructorMember)[];
 
 interface Definition {
   contractName: string;
@@ -88,6 +88,14 @@ function buildContract(definition: Definition) {
     export interface ${definition.contractName}Instance extends ContractInstance {
       ${buildMembers(definition.abi)}
     }
+
+    export interface ${definition.contractName}Contract {
+      new: (${buildConstructorArguments(
+        definition.abi
+      )}) => Promise<${definition.contractName}Instance>;
+      deployed(): Promise<${definition.contractName}Instance>;
+      at(address: string): ${definition.contractName}Instance;
+    }
   `;
 }
 
@@ -108,6 +116,16 @@ function buildMember(member: Member): string {
     default:
       throw "Exhaustiveness miss!";
   }
+}
+
+function buildConstructorArguments(abi: Abi): string {
+  const constructorMember = abi.find(member => member.type === "constructor");
+
+  if (!constructorMember) {
+    return "";
+  }
+
+  return constructorMember.inputs.map(buildFunctionArgument).join(", ");
 }
 
 function buildFunctionMember(member: FunctionMember) {

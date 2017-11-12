@@ -4,7 +4,11 @@ import {
   AccountRegistryInstance,
   MiniMeTokenInstance,
   MiniMeVestedTokenInstance,
-  InviteCollateralizerInstance
+  InviteCollateralizerInstance,
+  AccountRegistryContract,
+  InviteCollateralizerContract,
+  MiniMeVestedTokenContract,
+  BLTContract
 } from "./contracts";
 
 declare global {
@@ -67,6 +71,10 @@ interface MockBLTInstance extends BLTInstance {
   gift(recipient: Address, options?: TransactionOptions): Promise<void>;
 }
 
+interface MockBLTContract extends Contract<MockBLTInstance> {
+  new (): Promise<MockBLTInstance>;
+}
+
 interface ConfigurableMockInstance extends ContractInstance, Ownable {
   count(...args: any[]): any;
   finishConfiguration(...args: any[]): any;
@@ -75,12 +83,9 @@ interface ConfigurableMockInstance extends ContractInstance, Ownable {
 }
 
 interface Artifacts {
-  require(name: "AccountRegistry"): Contract<AccountRegistryInstance>;
-  require(name: "InviteCollateralizer"): Contract<InviteCollateralizerInstance>;
-  require(name: "MiniMeVestedToken"): Contract<MiniMeVestedTokenInstance>;
-  require(name: "BLT"): Contract<BLTInstance>;
-  require(
-    name: "./helpers/ConfigurableMock"
-  ): Contract<ConfigurableMockInstance>;
-  require(name: "./helpers/MockBLT"): Contract<MockBLTInstance>;
+  require(name: "AccountRegistry"): AccountRegistryContract;
+  require(name: "InviteCollateralizer"): InviteCollateralizerContract;
+  require(name: "MiniMeVestedToken"): MiniMeVestedTokenContract;
+  require(name: "BLT"): BLTContract;
+  require(name: "./helpers/MockBLT"): MockBLTContract;
 }

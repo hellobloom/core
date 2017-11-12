@@ -47,7 +47,7 @@ contract("AccountRegistry", function([owner, alice, bob]) {
 
     it("fails if the inviter has not approved the collateralizer", async () => {
       const token = await MockBLT.new();
-      const registry = await AccountRegistry.new(token);
+      const registry = await AccountRegistry.new(token.address);
       await token.gift(owner);
 
       await registry.invite(alice).should.be.rejectedWith("invalid opcode");
@@ -55,7 +55,7 @@ contract("AccountRegistry", function([owner, alice, bob]) {
 
     it("fails if the inviter does not have an account", async () => {
       const token = await MockBLT.new();
-      const registry = await AccountRegistry.new(token);
+      const registry = await AccountRegistry.new(token.address);
       const collateralizer = await registry.inviteCollateralizer();
       await token.gift(alice);
       await token.approve(collateralizer, new BigNumber("1e18"), {

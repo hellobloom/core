@@ -38,6 +38,12 @@ export interface AccountRegistryInstance extends ContractInstance {
   ): Promise<void>;
 }
 
+export interface AccountRegistryContract {
+  new: (blt: Address) => Promise<AccountRegistryInstance>;
+  deployed(): Promise<AccountRegistryInstance>;
+  at(address: string): AccountRegistryInstance;
+}
+
 export interface ApproveAndCallFallBackInstance extends ContractInstance {
   receiveApproval(
     from: Address,
@@ -48,17 +54,10 @@ export interface ApproveAndCallFallBackInstance extends ContractInstance {
   ): Promise<void>;
 }
 
-export interface BasicTokenInstance extends ContractInstance {
-  totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
-  balanceOf(
-    owner: Address,
-    options?: TransactionOptions
-  ): Promise<BigNumber.BigNumber>;
-  transfer(
-    to: Address,
-    value: UInt,
-    options?: TransactionOptions
-  ): Promise<boolean>;
+export interface ApproveAndCallFallBackContract {
+  new: () => Promise<ApproveAndCallFallBackInstance>;
+  deployed(): Promise<ApproveAndCallFallBackInstance>;
+  at(address: string): ApproveAndCallFallBackInstance;
 }
 
 export interface BLTInstance extends ContractInstance {
@@ -217,6 +216,12 @@ export interface BLTInstance extends ContractInstance {
   ): Promise<void>;
 }
 
+export interface BLTContract {
+  new: (tokenFactory: Address) => Promise<BLTInstance>;
+  deployed(): Promise<BLTInstance>;
+  at(address: string): BLTInstance;
+}
+
 export interface ControlledInstance extends ContractInstance {
   changeController(
     newController: Address,
@@ -225,12 +230,24 @@ export interface ControlledInstance extends ContractInstance {
   controller(options?: TransactionOptions): Promise<Address>;
 }
 
+export interface ControlledContract {
+  new: () => Promise<ControlledInstance>;
+  deployed(): Promise<ControlledInstance>;
+  at(address: string): ControlledInstance;
+}
+
 export interface ConvertLibInstance extends ContractInstance {
   convert(
     amount: UInt,
     conversionRate: UInt,
     options?: TransactionOptions
   ): Promise<BigNumber.BigNumber>;
+}
+
+export interface ConvertLibContract {
+  new: () => Promise<ConvertLibInstance>;
+  deployed(): Promise<ConvertLibInstance>;
+  at(address: string): ConvertLibInstance;
 }
 
 export interface ERC20Instance extends ContractInstance {
@@ -262,6 +279,12 @@ export interface ERC20Instance extends ContractInstance {
   ): Promise<BigNumber.BigNumber>;
 }
 
+export interface ERC20Contract {
+  new: () => Promise<ERC20Instance>;
+  deployed(): Promise<ERC20Instance>;
+  at(address: string): ERC20Instance;
+}
+
 export interface ERC20BasicInstance extends ContractInstance {
   totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   balanceOf(
@@ -275,6 +298,12 @@ export interface ERC20BasicInstance extends ContractInstance {
   ): Promise<boolean>;
 }
 
+export interface ERC20BasicContract {
+  new: () => Promise<ERC20BasicInstance>;
+  deployed(): Promise<ERC20BasicInstance>;
+  at(address: string): ERC20BasicInstance;
+}
+
 export interface InviteCollateralizerInstance extends ContractInstance {
   registry(options?: TransactionOptions): Promise<Address>;
   owner(options?: TransactionOptions): Promise<Address>;
@@ -285,12 +314,26 @@ export interface InviteCollateralizerInstance extends ContractInstance {
   ): Promise<boolean>;
   transferOwnership(
     newOwner: Address,
-    blt: Address,
     options?: TransactionOptions
   ): Promise<void>;
 }
 
+export interface InviteCollateralizerContract {
+  new: (
+    registry: Address,
+    blt: Address
+  ) => Promise<InviteCollateralizerInstance>;
+  deployed(): Promise<InviteCollateralizerInstance>;
+  at(address: string): InviteCollateralizerInstance;
+}
+
 export interface MathInstance extends ContractInstance {}
+
+export interface MathContract {
+  new: () => Promise<MathInstance>;
+  deployed(): Promise<MathInstance>;
+  at(address: string): MathInstance;
+}
 
 export interface MetaCoinInstance extends ContractInstance {
   getBalanceInEth(
@@ -308,6 +351,12 @@ export interface MetaCoinInstance extends ContractInstance {
   ): Promise<BigNumber.BigNumber>;
 }
 
+export interface MetaCoinContract {
+  new: () => Promise<MetaCoinInstance>;
+  deployed(): Promise<MetaCoinInstance>;
+  at(address: string): MetaCoinInstance;
+}
+
 export interface MigrationsInstance extends ContractInstance {
   upgrade(new_address: Address, options?: TransactionOptions): Promise<void>;
   last_completed_migration(
@@ -315,6 +364,12 @@ export interface MigrationsInstance extends ContractInstance {
   ): Promise<BigNumber.BigNumber>;
   owner(options?: TransactionOptions): Promise<Address>;
   setCompleted(completed: UInt, options?: TransactionOptions): Promise<void>;
+}
+
+export interface MigrationsContract {
+  new: () => Promise<MigrationsInstance>;
+  deployed(): Promise<MigrationsInstance>;
+  at(address: string): MigrationsInstance;
 }
 
 export interface MiniMeTokenInstance extends ContractInstance {
@@ -400,6 +455,20 @@ export interface MiniMeTokenInstance extends ContractInstance {
   controller(options?: TransactionOptions): Promise<Address>;
 }
 
+export interface MiniMeTokenContract {
+  new: (
+    tokenFactory: Address,
+    parentToken: Address,
+    parentSnapShotBlock: UInt,
+    tokenName: string,
+    decimalUnits: UInt,
+    tokenSymbol: string,
+    transfersEnabled: boolean
+  ) => Promise<MiniMeTokenInstance>;
+  deployed(): Promise<MiniMeTokenInstance>;
+  at(address: string): MiniMeTokenInstance;
+}
+
 export interface MiniMeTokenFactoryInstance extends ContractInstance {
   createCloneToken(
     parentToken: Address,
@@ -410,6 +479,12 @@ export interface MiniMeTokenFactoryInstance extends ContractInstance {
     transfersEnabled: boolean,
     options?: TransactionOptions
   ): Promise<Address>;
+}
+
+export interface MiniMeTokenFactoryContract {
+  new: () => Promise<MiniMeTokenFactoryInstance>;
+  deployed(): Promise<MiniMeTokenFactoryInstance>;
+  at(address: string): MiniMeTokenFactoryInstance;
 }
 
 export interface MiniMeVestedTokenInstance extends ContractInstance {
@@ -568,6 +643,20 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
   ): Promise<void>;
 }
 
+export interface MiniMeVestedTokenContract {
+  new: (
+    tokenFactory: Address,
+    parentToken: Address,
+    parentSnapShotBlock: UInt,
+    tokenName: string,
+    decimalUnits: UInt,
+    tokenSymbol: string,
+    transfersEnabled: boolean
+  ) => Promise<MiniMeVestedTokenInstance>;
+  deployed(): Promise<MiniMeVestedTokenInstance>;
+  at(address: string): MiniMeVestedTokenInstance;
+}
+
 export interface OwnableInstance extends ContractInstance {
   owner(options?: TransactionOptions): Promise<Address>;
   transferOwnership(
@@ -576,47 +665,26 @@ export interface OwnableInstance extends ContractInstance {
   ): Promise<void>;
 }
 
+export interface OwnableContract {
+  new: () => Promise<OwnableInstance>;
+  deployed(): Promise<OwnableInstance>;
+  at(address: string): OwnableInstance;
+}
+
 export interface SafeERC20Instance extends ContractInstance {}
+
+export interface SafeERC20Contract {
+  new: () => Promise<SafeERC20Instance>;
+  deployed(): Promise<SafeERC20Instance>;
+  at(address: string): SafeERC20Instance;
+}
 
 export interface SafeMathInstance extends ContractInstance {}
 
-export interface StandardTokenInstance extends ContractInstance {
-  approve(
-    spender: Address,
-    value: UInt,
-    options?: TransactionOptions
-  ): Promise<boolean>;
-  totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
-  transferFrom(
-    from: Address,
-    to: Address,
-    value: UInt,
-    options?: TransactionOptions
-  ): Promise<boolean>;
-  decreaseApproval(
-    spender: Address,
-    subtractedValue: UInt,
-    options?: TransactionOptions
-  ): Promise<boolean>;
-  balanceOf(
-    owner: Address,
-    options?: TransactionOptions
-  ): Promise<BigNumber.BigNumber>;
-  transfer(
-    to: Address,
-    value: UInt,
-    options?: TransactionOptions
-  ): Promise<boolean>;
-  increaseApproval(
-    spender: Address,
-    addedValue: UInt,
-    options?: TransactionOptions
-  ): Promise<boolean>;
-  allowance(
-    owner: Address,
-    spender: Address,
-    options?: TransactionOptions
-  ): Promise<BigNumber.BigNumber>;
+export interface SafeMathContract {
+  new: () => Promise<SafeMathInstance>;
+  deployed(): Promise<SafeMathInstance>;
+  at(address: string): SafeMathInstance;
 }
 
 export interface TokenControllerInstance extends ContractInstance {
@@ -633,4 +701,10 @@ export interface TokenControllerInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<boolean>;
   proxyPayment(owner: Address, options?: TransactionOptions): Promise<boolean>;
+}
+
+export interface TokenControllerContract {
+  new: () => Promise<TokenControllerInstance>;
+  deployed(): Promise<TokenControllerInstance>;
+  at(address: string): TokenControllerInstance;
 }
