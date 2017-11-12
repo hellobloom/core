@@ -1,7 +1,7 @@
 #!/bin/bash
 
-typescript_test_directory="./test"
-compiled_test_directory="./js_test"
+typescript_test_directory="./ts_test"
+compiled_test_directory="./test"
 
 # Exit script as soon as a command fails.
 set -o errexit
