@@ -13,7 +13,7 @@ contract AccountRegistry is Ownable {
   ERC20 public blt;
 
   function AccountRegistry(ERC20 _blt) {
-    inviteCollateralizer = new InviteCollateralizer(this, _blt);
+    inviteCollateralizer = new InviteCollateralizer(_blt);
     blt = _blt;
     accounts[owner] = true;
   }

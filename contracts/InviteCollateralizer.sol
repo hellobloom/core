@@ -7,11 +7,9 @@ import "./AccountRegistry.sol";
 
 contract InviteCollateralizer is Ownable {
   using SafeERC20 for ERC20;
-  AccountRegistry public registry;
   ERC20 public blt;
 
-  function InviteCollateralizer(AccountRegistry _registry, ERC20 _blt) {
-    registry = _registry;
+  function InviteCollateralizer(ERC20 _blt) {
     blt = _blt;
   }
 

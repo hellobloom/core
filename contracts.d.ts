@@ -30,13 +30,12 @@ export interface AccountRegistryInstance extends ContractInstance {
   accounts(unnamed0: Address, options?: TransactionOptions): Promise<boolean>;
   owner(options?: TransactionOptions): Promise<Address>;
   invites(unnamed1: Address, options?: TransactionOptions): Promise<boolean>;
-  createAccount(options?: TransactionOptions): Promise<void>;
   acceptInvite(options?: TransactionOptions): Promise<void>;
   blt(options?: TransactionOptions): Promise<Address>;
   transferOwnership(
     newOwner: Address,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Address>;
 }
 
 export interface AccountRegistryContract {
@@ -306,7 +305,6 @@ export interface ERC20BasicContract {
 }
 
 export interface InviteCollateralizerInstance extends ContractInstance {
-  registry(options?: TransactionOptions): Promise<Address>;
   owner(options?: TransactionOptions): Promise<Address>;
   blt(options?: TransactionOptions): Promise<Address>;
   takeCollateral(
@@ -316,14 +314,11 @@ export interface InviteCollateralizerInstance extends ContractInstance {
   transferOwnership(
     newOwner: Address,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<boolean>;
 }
 
 export interface InviteCollateralizerContract {
-  new: (
-    registry: Address,
-    blt: Address
-  ) => Promise<InviteCollateralizerInstance>;
+  new: (blt: Address) => Promise<InviteCollateralizerInstance>;
   deployed(): Promise<InviteCollateralizerInstance>;
   at(address: string): InviteCollateralizerInstance;
 }
