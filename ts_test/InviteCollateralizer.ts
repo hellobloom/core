@@ -2,6 +2,8 @@ import * as BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 
+import { increaseTime } from "./helpers/increaseTime";
+
 import { MockBLTInstance, InviteCollateralizerInstance } from "./../truffle";
 
 const chaiBignumber = require("chai-bignumber");
@@ -47,4 +49,15 @@ contract("InviteCollateralizer", function([owner, _alice, _bob]) {
     collateralizerBalanceBefore.should.be.bignumber.equal(0);
     collateralizerBalanceAfter.should.be.bignumber.equal(1);
   });
+
+  it("lets the owner of the collateralized BLT claim it after a year", async () => {
+    await collateralizer.takeCollateral(owner);
+
+    await increaseTime(60 * 60 * 24 * 365);
+
+    await collateralizer.reclaim().should.be.fulfilled;
+  });
+
+  it("does not let the owner claim the BLT before a year has passed");
+  it("lets a user collateralize BLT multiple times");
 });

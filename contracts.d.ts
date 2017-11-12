@@ -35,7 +35,7 @@ export interface AccountRegistryInstance extends ContractInstance {
   transferOwnership(
     newOwner: Address,
     options?: TransactionOptions
-  ): Promise<Address>;
+  ): Promise<void>;
 }
 
 export interface AccountRegistryContract {
@@ -305,6 +305,7 @@ export interface ERC20BasicContract {
 }
 
 export interface InviteCollateralizerInstance extends ContractInstance {
+  reclaim(options?: TransactionOptions): Promise<boolean>;
   owner(options?: TransactionOptions): Promise<Address>;
   blt(options?: TransactionOptions): Promise<Address>;
   takeCollateral(
@@ -314,7 +315,7 @@ export interface InviteCollateralizerInstance extends ContractInstance {
   transferOwnership(
     newOwner: Address,
     options?: TransactionOptions
-  ): Promise<boolean>;
+  ): Promise<void>;
 }
 
 export interface InviteCollateralizerContract {

@@ -16,4 +16,8 @@ contract InviteCollateralizer is Ownable {
   function takeCollateral(address _owner) returns (bool) {
     return blt.transferFrom(_owner, address(this), 1);
   }
+
+  function reclaim() returns (bool) {
+    return blt.transfer(msg.sender, 1);
+  }
 }
