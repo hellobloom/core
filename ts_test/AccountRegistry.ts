@@ -29,15 +29,18 @@ contract("AccountRegistry", function([owner, alice, bob]) {
     collateralizer = await registry.inviteCollateralizer();
   });
 
-  const inviteAlice = async () => {
+  const setupOwner = async () => {
     await token.gift(owner);
-    await token.approve(collateralizer, new BigNumber("1e18"));
-    await registry.invite(alice);
+    return token.approve(collateralizer, new BigNumber("1e18"));
+  };
+
+  const inviteAlice = async () => {
+    await setupOwner();
+    return registry.invite(alice);
   };
 
   it("allows existing users to invite others if they collateralize some BLT", async () => {
-    await token.gift(owner);
-    await token.approve(collateralizer, new BigNumber("1e18"));
+    await setupOwner();
 
     (await registry.invites(alice)).should.be.false;
     await registry.invite(alice);
@@ -51,8 +54,7 @@ contract("AccountRegistry", function([owner, alice, bob]) {
   });
 
   it("fails if the invited user already has an invite", async () => {
-    await token.gift(owner);
-    await token.approve(collateralizer, new BigNumber("1e18"));
+    await setupOwner();
 
     await registry.invite(alice).should.be.fulfilled;
     await registry.invite(alice).should.be.rejectedWith("invalid opcode");
