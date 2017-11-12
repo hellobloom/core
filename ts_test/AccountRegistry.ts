@@ -49,7 +49,9 @@ contract("AccountRegistry", function([owner, alice, bob]) {
       await registry.invite(alice).should.be.rejectedWith("invalid opcode");
     });
 
-    it("fails if the inviter does not have any BLT");
+    it("fails if the inviter does not have any BLT", async () => {
+      await registry.invite(alice).should.be.rejectedWith("invalid opcode");
+    });
 
     it("fails if the inviter has not approved the collateralizer", async () => {
       await token.gift(owner);
