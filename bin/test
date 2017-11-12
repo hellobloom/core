@@ -1,5 +1,8 @@
 #!/bin/bash
 
+typescript_test_directory="./test"
+compiled_test_directory="./js_test"
+
 # Exit script as soon as a command fails.
 set -o errexit
 
@@ -51,8 +54,8 @@ testrpc() {
 }
 
 remove_compiled_tests() {
-  if [ -d ./js_test ]; then
-    rm -r ./js_test
+  if [ -d "$compiled_test_directory" ]; then
+    rm -r "$compiled_test_directory"
   fi
 }
 
@@ -60,7 +63,7 @@ compile_tests() {
   remove_compiled_tests
 
   # Copy over files so we include things like mock contracts
-  cp -r ./test ./js_test
+  cp -r "$typescript_test_directory" "$compiled_test_directory"
 
   # Compile into the js_test directory
   node_modules/.bin/tsc
@@ -68,7 +71,7 @@ compile_tests() {
 
 compiled_test_files() {
   # Return a list of compiled test files
-  find js_test -type f
+  find "$compiled_test_directory" -type f
 }
 
 if testrpc_running; then
