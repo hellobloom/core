@@ -1,6 +1,7 @@
 import * as BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import * as Web3 from "web3";
 
 import { increaseTime } from "./helpers/increaseTime";
 
@@ -22,7 +23,7 @@ contract("InviteCollateralizer", function([owner, _alice, _bob]) {
 
   const setupOwner = async () => {
     await token.gift(owner);
-    return token.approve(collateralizer.address, new BigNumber("1e18"));
+    await token.approve(collateralizer.address, new BigNumber("1e18"));
   };
 
   beforeEach(async () => {
@@ -31,7 +32,7 @@ contract("InviteCollateralizer", function([owner, _alice, _bob]) {
     await setupOwner();
   });
 
-  it("transfers a small amount of BLT to the collateralizer", async () => {
+  it.only("transfers a small amount of BLT to the collateralizer", async () => {
     const ownerBalanceBefore = await token.balanceOf(owner);
     const collateralizerBalanceBefore = await token.balanceOf(
       collateralizer.address
@@ -48,6 +49,24 @@ contract("InviteCollateralizer", function([owner, _alice, _bob]) {
     ownerBalanceAfter.should.be.bignumber.equal("999999999999999999");
     collateralizerBalanceBefore.should.be.bignumber.equal(0);
     collateralizerBalanceAfter.should.be.bignumber.equal(1);
+  });
+
+  it.only("emits a collateralization event", async () => {
+    const { logs } = await (collateralizer.takeCollateral as any)(owner);
+
+    const { blockNumber, args } = logs.find(
+      (log: Web3.SolidityEvent<never>) => {
+        return log.event === "CollateralPosted";
+      }
+    );
+
+    const blockTimestamp = web3.eth.getBlock(blockNumber).timestamp;
+
+    args.owner.should.equal(owner);
+    args.releaseDate.should.be.bignumber.greaterThan(
+      blockTimestamp + 60 * 60 * 24 * 364
+    );
+    args.amount.should.be.bignumber.equal(1);
   });
 
   it("lets the owner of the collateralized BLT claim it after a year", async () => {
