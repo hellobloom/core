@@ -95,6 +95,13 @@ contract("AccountRegistry", function([owner, alice, bob]) {
         .createAccount(bob, { from: alice })
         .should.be.rejectedWith("invalid opcode");
     });
+
+    it("throws an error if the user already has an account", async () => {
+      await registry.createAccount(bob).should.be.fulfilled;
+      await registry
+        .createAccount(bob)
+        .should.be.rejectedWith("invalid opcode");
+    });
   });
 
   describe("accepting invites", async () => {

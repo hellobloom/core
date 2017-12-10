@@ -21,6 +21,7 @@ contract AccountRegistry is Ownable {
   }
 
   function createAccount(address _newUser) onlyInviteAdmin {
+    require(!accounts[_newUser]);
     accounts[_newUser] = true;
   }
 
