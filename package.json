@@ -22,6 +22,7 @@
     "chai": "^4.1.1",
     "chai-as-promised": "^7.1.1",
     "chai-bignumber": "^2.0.1",
+    "ethereumjs-abi": "^0.6.5",
     "ethereumjs-testrpc": "^4.1.1",
     "prettier": "^1.6.1",
     "solidity-coverage": "^0.2.2",

@@ -33,6 +33,7 @@ type SolidityType =
   | "address[]"
   | "bool"
   | "bytes"
+  | "bytes32"
   | "string"
   | "uint8"
   | "uint64"
@@ -188,6 +189,8 @@ function translateType(type: SolidityType, options = { UInt: "UInt" }): string {
     case "bool":
       return "boolean";
     case "bytes":
+      return "string";
+    case "bytes32":
       return "string";
     case "uint8":
     case "uint64":
