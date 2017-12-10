@@ -26,6 +26,10 @@ interface ContractInstance {
 
 export interface AccountRegistryInstance extends ContractInstance {
   inviteCollateralizer(options?: TransactionOptions): Promise<Address>;
+  setInviteAdmin(
+    newInviteAdmin: Address,
+    options?: TransactionOptions
+  ): Promise<void>;
   invite(recipient: Address, options?: TransactionOptions): Promise<void>;
   accounts(unnamed0: Address, options?: TransactionOptions): Promise<boolean>;
   owner(options?: TransactionOptions): Promise<Address>;
