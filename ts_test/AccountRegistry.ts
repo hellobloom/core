@@ -102,6 +102,28 @@ contract("AccountRegistry", function([owner, alice, bob]) {
         .createAccount(bob)
         .should.be.rejectedWith("invalid opcode");
     });
+
+    it("supports changing the invite admin", async () => {
+      await registry
+        .createAccount(bob, { from: alice })
+        .should.be.rejectedWith("invalid opcode");
+
+      await registry.setInviteAdmin(alice);
+
+      await registry.createAccount(bob, { from: alice }).should.be.fulfilled;
+    });
+
+    it("only allows the owner to change the invite admin", async () => {
+      await registry
+        .setInviteAdmin(alice, { from: alice })
+        .should.be.rejectedWith("invalid opcode");
+    });
+
+    it("does not allow setting the invite admin to zero", async () => {
+      await registry
+        .setInviteAdmin("0x0")
+        .should.be.rejectedWith("invalid opcode");
+    });
   });
 
   describe("accepting invites", async () => {

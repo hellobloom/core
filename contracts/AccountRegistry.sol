@@ -20,6 +20,10 @@ contract AccountRegistry is Ownable {
     inviteAdmin = owner;
   }
 
+  function setInviteAdmin(address _newInviteAdmin) onlyOwner nonZero(_newInviteAdmin) {
+    inviteAdmin = _newInviteAdmin;
+  }
+
   function createAccount(address _newUser) onlyInviteAdmin {
     require(!accounts[_newUser]);
     accounts[_newUser] = true;
@@ -36,6 +40,11 @@ contract AccountRegistry is Ownable {
 
     invites[msg.sender] = false;
     accounts[msg.sender] = true;
+  }
+
+  modifier nonZero(address _address) {
+    require(_address != 0);
+    _;
   }
 
   modifier onlyInviteAdmin {
