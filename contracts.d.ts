@@ -67,7 +67,10 @@ export interface AccountRegistryInstance extends ContractInstance {
 }
 
 export interface AccountRegistryContract {
-  new: (blt: Address) => Promise<AccountRegistryInstance>;
+  new: (
+    blt: Address,
+    seizedTokensWallet: Address
+  ) => Promise<AccountRegistryInstance>;
   deployed(): Promise<AccountRegistryInstance>;
   at(address: string): AccountRegistryInstance;
 }
@@ -341,25 +344,52 @@ export interface ERC20BasicContract {
 }
 
 export interface InviteCollateralizerInstance extends ContractInstance {
+  seizedTokensWallet(options?: TransactionOptions): Promise<Address>;
+  changeCollateralTaker(
+    newCollateralTaker: Address,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
+  changeCollateralAmount(
+    newAmount: UInt,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
+  changeSeizedTokensWallet(
+    newSeizedTokensWallet: Address,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
+  collateralizations(
+    unnamed8: Address,
+    unnamed9: UInt,
+    options?: TransactionOptions
+  ): Promise<[BigNumber.BigNumber, BigNumber.BigNumber, boolean]>;
   reclaim(options?: TransactionOptions): Promise<boolean>;
+  changeCollateralSeizer(
+    newCollateralSeizer: Address,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
   owner(options?: TransactionOptions): Promise<Address>;
+  collateralAmount(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   blt(options?: TransactionOptions): Promise<Address>;
   takeCollateral(
     owner: Address,
     options?: TransactionOptions
   ): Promise<boolean>;
+  seize(
+    subject: Address,
+    collateralId: UInt,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
   transferOwnership(
     newOwner: Address,
     options?: TransactionOptions
   ): Promise<Web3.TransactionReceipt>;
-  collateralizations(
-    unnamed8: Address,
-    options?: TransactionOptions
-  ): Promise<[BigNumber.BigNumber, BigNumber.BigNumber]>;
 }
 
 export interface InviteCollateralizerContract {
-  new: (blt: Address) => Promise<InviteCollateralizerInstance>;
+  new: (
+    blt: Address,
+    seizedTokensWallet: Address
+  ) => Promise<InviteCollateralizerInstance>;
   deployed(): Promise<InviteCollateralizerInstance>;
   at(address: string): InviteCollateralizerInstance;
 }
@@ -551,7 +581,7 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
   creationBlock(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   canCreateGrants(
-    unnamed9: Address,
+    unnamed10: Address,
     options?: TransactionOptions
   ): Promise<boolean>;
   setCanCreateGrants(
@@ -566,8 +596,8 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<boolean>;
   grants(
-    unnamed10: Address,
-    unnamed11: UInt,
+    unnamed11: Address,
+    unnamed12: UInt,
     options?: TransactionOptions
   ): Promise<
     [

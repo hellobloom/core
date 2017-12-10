@@ -435,7 +435,9 @@ declare module "web3" {
       from?: string;
     }
 
-    interface TransactionReceipt<EventArgs = { [key: string]: string }> {
+    interface TransactionReceipt<
+      EventArgs = { [key: string]: string | BigNumber.BigNumber }
+    > {
       blockHash: string;
       blockNumber: number;
       transactionHash: string;

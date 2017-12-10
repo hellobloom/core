@@ -16,7 +16,7 @@ const should = chai
 const AccountRegistry = artifacts.require("AccountRegistry");
 const MockBLT = artifacts.require("./helpers/MockBLT");
 
-contract("AccountRegistry", function([owner, alice, bob]) {
+contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
   let token: MockBLTInstance;
   let registry: AccountRegistryInstance;
   let collateralizer: string;
@@ -41,7 +41,7 @@ contract("AccountRegistry", function([owner, alice, bob]) {
 
   beforeEach(async () => {
     token = await MockBLT.new();
-    registry = await AccountRegistry.new(token.address);
+    registry = await AccountRegistry.new(token.address, seizedTokensWallet);
     collateralizer = await registry.inviteCollateralizer();
     inviterSecret = hashedSecret("secret", owner);
     inviteeSecret = hashedSecret("secret", alice);
