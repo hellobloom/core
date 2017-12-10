@@ -18,6 +18,10 @@ contract AccountRegistry is Ownable {
   ERC20 public blt;
   address private inviteAdmin;
 
+  event InviteCreated(address indexed inviter);
+  event InviteAccepted(address indexed inviter, address indexed recipient);
+  event AccountCreated(address indexed newUser);
+
   function AccountRegistry(ERC20 _blt) {
     inviteCollateralizer = new InviteCollateralizer(_blt);
     blt = _blt;
@@ -31,12 +35,13 @@ contract AccountRegistry is Ownable {
 
   function createAccount(address _newUser) onlyInviteAdmin {
     require(!accounts[_newUser]);
-    accounts[_newUser] = true;
+    createAccountFor(_newUser);
   }
 
   function createInvite(bytes32 _hashedInviteSecret) onlyUser {
     require(InviteCollateralizer(inviteCollateralizer).takeCollateral(msg.sender));
     inviterSecretDigests[msg.sender][_hashedInviteSecret] = true;
+    InviteCreated(msg.sender);
   }
 
   function beginAcceptInvite(bytes32 _hashedInviteeSecret) onlyNonUser {
@@ -56,7 +61,14 @@ contract AccountRegistry is Ownable {
 
     inviterSecretDigests[_inviter][actualInviterSecret] = false;
     inviteeSecretDigests[msg.sender][actualInviteeSecret] = 0;
-    accounts[msg.sender] = true;
+    createAccountFor(msg.sender);
+
+    InviteAccepted(_inviter, msg.sender);
+  }
+
+  function createAccountFor(address _newUser) private {
+    accounts[_newUser] = true;
+    AccountCreated(_newUser);
   }
 
   function inviteSecretDigest(string _secret, address _subject) private returns (bytes32) {

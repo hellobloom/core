@@ -435,7 +435,7 @@ declare module "web3" {
       from?: string;
     }
 
-    interface TransactionReceipt {
+    interface TransactionReceipt<EventArgs = { [key: string]: string }> {
       blockHash: string;
       blockNumber: number;
       transactionHash: string;
@@ -445,10 +445,10 @@ declare module "web3" {
       cumulativeGasUsed: number;
       gasUsed: number;
       contractAddress: string | null;
-      logs: LogEntry[];
+      logs: LogEntry<EventArgs>[];
     }
 
-    interface LogEntry {
+    interface LogEntry<EventArgs> extends SolidityEvent<EventArgs> {
       logIndex: number | null;
       transactionIndex: number;
       transactionHash: string;

@@ -8,7 +8,7 @@ import { advanceBlocks } from "./helpers/advanceBlock";
 
 const chaiBignumber = require("chai-bignumber");
 
-chai
+const should = chai
   .use(chaiAsPromised)
   .use(chaiBignumber(web3.BigNumber))
   .should();
@@ -53,6 +53,16 @@ contract("AccountRegistry", function([owner, alice, bob]) {
     (await registry.inviterSecretDigests(owner, inviterSecret)).should.be.false;
     await registry.createInvite(inviterSecret);
     (await registry.inviterSecretDigests(owner, inviterSecret)).should.be.true;
+  });
+
+  it("emits an event when an invite is created", async () => {
+    const { logs } = await registry.createInvite(inviterSecret);
+
+    const match = logs.find(log => {
+      return log.event === "InviteCreated" && log.args.inviter === owner;
+    });
+
+    should.exist(match);
   });
 
   it("does not allow a registered user to invite without collateralizing BLT", async () => {
@@ -119,6 +129,42 @@ contract("AccountRegistry", function([owner, alice, bob]) {
       .be.fulfilled;
 
     (await registry.accounts(alice)).should.be.true;
+  });
+
+  it("emits an event when an invite is accepted", async () => {
+    await registry.createInvite(inviterSecret);
+    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
+    await advanceBlocks(5);
+
+    const { logs } = await registry.finishAcceptInvite(owner, "secret", {
+      from: alice
+    });
+
+    const inviteAcceptedMatch = logs.find(log => {
+      return (
+        log.event === "InviteAccepted" &&
+        log.args.inviter === owner &&
+        log.args.recipient === alice
+      );
+    });
+
+    should.exist(inviteAcceptedMatch);
+  });
+
+  it("emits an event that an account was created when an invite was accepted", async () => {
+    await registry.createInvite(inviterSecret);
+    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
+    await advanceBlocks(5);
+
+    const { logs } = await registry.finishAcceptInvite(owner, "secret", {
+      from: alice
+    });
+
+    const accountCreatedMatch = logs.find(log => {
+      return log.event === "AccountCreated" && log.args.newUser === alice;
+    });
+
+    should.exist(accountCreatedMatch);
   });
 
   it("deletes the invite secret hashes when an invite is accepted", async () => {

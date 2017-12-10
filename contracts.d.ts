@@ -29,11 +29,11 @@ export interface AccountRegistryInstance extends ContractInstance {
   setInviteAdmin(
     newInviteAdmin: Address,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   createInvite(
     hashedInviteSecret: string,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   accounts(unnamed0: Address, options?: TransactionOptions): Promise<boolean>;
   inviterSecretDigests(
     unnamed1: Address,
@@ -44,8 +44,11 @@ export interface AccountRegistryInstance extends ContractInstance {
   beginAcceptInvite(
     hashedInviteeSecret: string,
     options?: TransactionOptions
-  ): Promise<void>;
-  createAccount(newUser: Address, options?: TransactionOptions): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
+  createAccount(
+    newUser: Address,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
   blt(options?: TransactionOptions): Promise<Address>;
   inviteeSecretDigests(
     unnamed3: Address,
@@ -56,11 +59,11 @@ export interface AccountRegistryInstance extends ContractInstance {
     inviter: Address,
     secret: string,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   transferOwnership(
     newOwner: Address,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
 }
 
 export interface AccountRegistryContract {
@@ -76,7 +79,7 @@ export interface ApproveAndCallFallBackInstance extends ContractInstance {
     token: Address,
     data: string,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
 }
 
 export interface ApproveAndCallFallBackContract {
@@ -110,7 +113,7 @@ export interface BLTInstance extends ContractInstance {
     addr: Address,
     allowed: boolean,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   transferFrom(
     from: Address,
     to: Address,
@@ -136,7 +139,7 @@ export interface BLTInstance extends ContractInstance {
   changeController(
     newController: Address,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   balanceOfAt(
     owner: Address,
     blockNumber: UInt,
@@ -191,7 +194,7 @@ export interface BLTInstance extends ContractInstance {
     revokable: boolean,
     burnsOnRevoke: boolean,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   totalSupplyAt(
     blockNumber: UInt,
     options?: TransactionOptions
@@ -206,7 +209,7 @@ export interface BLTInstance extends ContractInstance {
     receiver: Address,
     grantId: UInt,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   transfersEnabled(options?: TransactionOptions): Promise<boolean>;
   parentSnapShotBlock(
     options?: TransactionOptions
@@ -232,18 +235,21 @@ export interface BLTInstance extends ContractInstance {
     spender: Address,
     options?: TransactionOptions
   ): Promise<BigNumber.BigNumber>;
-  claimTokens(token: Address, options?: TransactionOptions): Promise<void>;
+  claimTokens(
+    token: Address,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
   vestingWhitelister(options?: TransactionOptions): Promise<Address>;
   tokenFactory(options?: TransactionOptions): Promise<Address>;
   enableTransfers(
     transfersEnabled: boolean,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   controller(options?: TransactionOptions): Promise<Address>;
   changeVestingWhitelister(
     newWhitelister: Address,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
 }
 
 export interface BLTContract {
@@ -256,7 +262,7 @@ export interface ControlledInstance extends ContractInstance {
   changeController(
     newController: Address,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   controller(options?: TransactionOptions): Promise<Address>;
 }
 
@@ -345,7 +351,7 @@ export interface InviteCollateralizerInstance extends ContractInstance {
   transferOwnership(
     newOwner: Address,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   collateralizations(
     unnamed8: Address,
     options?: TransactionOptions
@@ -389,12 +395,18 @@ export interface MetaCoinContract {
 }
 
 export interface MigrationsInstance extends ContractInstance {
-  upgrade(new_address: Address, options?: TransactionOptions): Promise<void>;
+  upgrade(
+    new_address: Address,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
   last_completed_migration(
     options?: TransactionOptions
   ): Promise<BigNumber.BigNumber>;
   owner(options?: TransactionOptions): Promise<Address>;
-  setCompleted(completed: UInt, options?: TransactionOptions): Promise<void>;
+  setCompleted(
+    completed: UInt,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
 }
 
 export interface MigrationsContract {
@@ -422,7 +434,7 @@ export interface MiniMeTokenInstance extends ContractInstance {
   changeController(
     newController: Address,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   balanceOfAt(
     owner: Address,
     blockNumber: UInt,
@@ -477,12 +489,15 @@ export interface MiniMeTokenInstance extends ContractInstance {
     spender: Address,
     options?: TransactionOptions
   ): Promise<BigNumber.BigNumber>;
-  claimTokens(token: Address, options?: TransactionOptions): Promise<void>;
+  claimTokens(
+    token: Address,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
   tokenFactory(options?: TransactionOptions): Promise<Address>;
   enableTransfers(
     transfersEnabled: boolean,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   controller(options?: TransactionOptions): Promise<Address>;
 }
 
@@ -543,7 +558,7 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     addr: Address,
     allowed: boolean,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   transferFrom(
     from: Address,
     to: Address,
@@ -569,7 +584,7 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
   changeController(
     newController: Address,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   balanceOfAt(
     owner: Address,
     blockNumber: UInt,
@@ -624,7 +639,7 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     revokable: boolean,
     burnsOnRevoke: boolean,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   totalSupplyAt(
     blockNumber: UInt,
     options?: TransactionOptions
@@ -639,7 +654,7 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     receiver: Address,
     grantId: UInt,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   transfersEnabled(options?: TransactionOptions): Promise<boolean>;
   parentSnapShotBlock(
     options?: TransactionOptions
@@ -665,18 +680,21 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     spender: Address,
     options?: TransactionOptions
   ): Promise<BigNumber.BigNumber>;
-  claimTokens(token: Address, options?: TransactionOptions): Promise<void>;
+  claimTokens(
+    token: Address,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
   vestingWhitelister(options?: TransactionOptions): Promise<Address>;
   tokenFactory(options?: TransactionOptions): Promise<Address>;
   enableTransfers(
     transfersEnabled: boolean,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
   controller(options?: TransactionOptions): Promise<Address>;
   changeVestingWhitelister(
     newWhitelister: Address,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
 }
 
 export interface MiniMeVestedTokenContract {
@@ -698,7 +716,7 @@ export interface OwnableInstance extends ContractInstance {
   transferOwnership(
     newOwner: Address,
     options?: TransactionOptions
-  ): Promise<void>;
+  ): Promise<Web3.TransactionReceipt>;
 }
 
 export interface OwnableContract {
