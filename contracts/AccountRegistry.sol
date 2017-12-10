@@ -44,12 +44,12 @@ contract AccountRegistry is Ownable {
   }
 
   function finishAcceptInvite(address _inviter, string _secret) onlyNonUser {
-    bytes32 actualInviterSecret = keccak256(_secret, "/", _inviter);
+    bytes32 actualInviterSecret = inviteSecretDigest(_secret, _inviter);
 
     // Assert this secret was actually issued by this user
     require(inviterSecretDigests[_inviter][actualInviterSecret]);
 
-    bytes32 actualInviteeSecret = keccak256(_secret, "/", msg.sender);
+    bytes32 actualInviteeSecret = inviteSecretDigest(_secret, msg.sender);
 
     // Assert this user has already demonstrated they know the secret
     require(block.number >= inviteeSecretDigests[msg.sender][actualInviteeSecret] + 5);
@@ -57,6 +57,10 @@ contract AccountRegistry is Ownable {
     inviterSecretDigests[_inviter][actualInviterSecret] = false;
     inviteeSecretDigests[msg.sender][actualInviteeSecret] = 0;
     accounts[msg.sender] = true;
+  }
+
+  function inviteSecretDigest(string _secret, address _subject) private returns (bytes32) {
+    return keccak256(_secret, "/", _subject);
   }
 
   modifier onlyNonUser {
