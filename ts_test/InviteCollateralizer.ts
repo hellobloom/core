@@ -32,7 +32,7 @@ contract("InviteCollateralizer", function([owner, _alice, _bob]) {
     await setupOwner();
   });
 
-  it.only("transfers a small amount of BLT to the collateralizer", async () => {
+  it("transfers a small amount of BLT to the collateralizer", async () => {
     const ownerBalanceBefore = await token.balanceOf(owner);
     const collateralizerBalanceBefore = await token.balanceOf(
       collateralizer.address
@@ -51,7 +51,7 @@ contract("InviteCollateralizer", function([owner, _alice, _bob]) {
     collateralizerBalanceAfter.should.be.bignumber.equal(1);
   });
 
-  it.only("emits a collateralization event", async () => {
+  it("emits a collateralization event", async () => {
     const { logs } = await (collateralizer.takeCollateral as any)(owner);
 
     const { blockNumber, args } = logs.find(

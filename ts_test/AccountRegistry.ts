@@ -81,6 +81,22 @@ contract("AccountRegistry", function([owner, alice, bob]) {
       .should.be.rejectedWith("invalid opcode");
   });
 
+  describe("invitation admin", async () => {
+    it("allows the invite admin to instantly create an account for people", async () => {
+      (await registry.accounts(bob)).should.be.false;
+
+      await registry.createAccount(bob);
+
+      (await registry.accounts(bob)).should.be.true;
+    });
+
+    it("does not allow anyone else to instantly create accounts", async () => {
+      await registry
+        .createAccount(bob, { from: alice })
+        .should.be.rejectedWith("invalid opcode");
+    });
+  });
+
   describe("accepting invites", async () => {
     beforeEach(inviteAlice);
 

@@ -11,11 +11,17 @@ contract AccountRegistry is Ownable {
   mapping(address => mapping(address => bool)) pendingInvites;
   address public inviteCollateralizer;
   ERC20 public blt;
+  address private inviteAdmin;
 
   function AccountRegistry(ERC20 _blt) {
     inviteCollateralizer = new InviteCollateralizer(_blt);
     blt = _blt;
     accounts[owner] = true;
+    inviteAdmin = owner;
+  }
+
+  function createAccount(address _newUser) onlyInviteAdmin {
+    accounts[_newUser] = true;
   }
 
   function invite(address _recipient) {
@@ -29,5 +35,10 @@ contract AccountRegistry is Ownable {
 
     invites[msg.sender] = false;
     accounts[msg.sender] = true;
+  }
+
+  modifier onlyInviteAdmin {
+    require(msg.sender == inviteAdmin);
+    _;
   }
 }
