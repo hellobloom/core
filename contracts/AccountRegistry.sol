@@ -8,6 +8,11 @@ import "./InviteCollateralizer.sol";
 contract AccountRegistry is Ownable {
   mapping(address => bool) public accounts;
   mapping(address => bool) public invites;
+  // Inviter address -> hashed inviter secret -> boolean
+  mapping(address => mapping(bytes32 => bool)) public inviterSecretDigests;
+  // Invitee address -> hashed invitee secret -> block number
+  mapping(address => mapping(bytes32 => uint256)) public inviteeSecretDigests;
+  // mapping(address => mapping(bytes32 => mapping(address => bytes32))) public inviteSecrets;
   mapping(address => mapping(address => bool)) pendingInvites;
   address public inviteCollateralizer;
   ERC20 public blt;
@@ -29,6 +34,35 @@ contract AccountRegistry is Ownable {
     accounts[_newUser] = true;
   }
 
+  function createInvite(bytes32 _hashedInviteSecret) onlyUser {
+    inviterSecretDigests[msg.sender][_hashedInviteSecret] = true;
+  }
+
+  function beginAcceptInvite(bytes32 _hashedInviteeSecret) onlyNonUser {
+    inviteeSecretDigests[msg.sender][_hashedInviteeSecret] = block.number;
+  }
+
+  function createInviteSecret(address _subject, string _secret) returns (bytes32) {
+    bytes32 value = keccak256(_secret, "/", _subject);
+    return value;
+  }
+
+  function finishAcceptInvite(address _inviter, string _secret) onlyNonUser {
+    bytes32 actualInviterSecret = keccak256(_secret, "/", _inviter);
+
+    // Assert this secret was actually issued by this user
+    require(inviterSecretDigests[_inviter][actualInviterSecret]);
+
+    bytes32 actualInviteeSecret = keccak256(_secret, "/", msg.sender);
+
+    // Assert this user has already demonstrated they know the secret
+    require(block.number >= inviteeSecretDigests[msg.sender][actualInviteeSecret] + 5);
+
+    inviterSecretDigests[_inviter][actualInviterSecret] = false;
+    inviteeSecretDigests[msg.sender][actualInviteeSecret] = 0;
+    accounts[msg.sender] = true;
+  }
+
   function invite(address _recipient) {
     require(accounts[msg.sender] && !invites[_recipient]);
     require(InviteCollateralizer(inviteCollateralizer).takeCollateral(msg.sender));
@@ -40,6 +74,16 @@ contract AccountRegistry is Ownable {
 
     invites[msg.sender] = false;
     accounts[msg.sender] = true;
+  }
+
+  modifier onlyNonUser {
+    require(!accounts[msg.sender]);
+    _;
+  }
+
+  modifier onlyUser {
+    require(accounts[msg.sender]);
+    _;
   }
 
   modifier nonZero(address _address) {
