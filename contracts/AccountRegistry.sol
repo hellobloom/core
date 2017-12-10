@@ -7,13 +7,13 @@ import "./InviteCollateralizer.sol";
 
 contract AccountRegistry is Ownable {
   mapping(address => bool) public accounts;
-  mapping(address => bool) public invites;
+  
   // Inviter address -> hashed inviter secret -> boolean
   mapping(address => mapping(bytes32 => bool)) public inviterSecretDigests;
+  
   // Invitee address -> hashed invitee secret -> block number
   mapping(address => mapping(bytes32 => uint256)) public inviteeSecretDigests;
-  // mapping(address => mapping(bytes32 => mapping(address => bytes32))) public inviteSecrets;
-  mapping(address => mapping(address => bool)) pendingInvites;
+  
   address public inviteCollateralizer;
   ERC20 public blt;
   address private inviteAdmin;
@@ -35,16 +35,12 @@ contract AccountRegistry is Ownable {
   }
 
   function createInvite(bytes32 _hashedInviteSecret) onlyUser {
+    require(InviteCollateralizer(inviteCollateralizer).takeCollateral(msg.sender));
     inviterSecretDigests[msg.sender][_hashedInviteSecret] = true;
   }
 
   function beginAcceptInvite(bytes32 _hashedInviteeSecret) onlyNonUser {
     inviteeSecretDigests[msg.sender][_hashedInviteeSecret] = block.number;
-  }
-
-  function createInviteSecret(address _subject, string _secret) returns (bytes32) {
-    bytes32 value = keccak256(_secret, "/", _subject);
-    return value;
   }
 
   function finishAcceptInvite(address _inviter, string _secret) onlyNonUser {
@@ -60,19 +56,6 @@ contract AccountRegistry is Ownable {
 
     inviterSecretDigests[_inviter][actualInviterSecret] = false;
     inviteeSecretDigests[msg.sender][actualInviteeSecret] = 0;
-    accounts[msg.sender] = true;
-  }
-
-  function invite(address _recipient) {
-    require(accounts[msg.sender] && !invites[_recipient]);
-    require(InviteCollateralizer(inviteCollateralizer).takeCollateral(msg.sender));
-    invites[_recipient] = true;
-  }
-
-  function acceptInvite() {
-    require(invites[msg.sender]);
-
-    invites[msg.sender] = false;
     accounts[msg.sender] = true;
   }
 
