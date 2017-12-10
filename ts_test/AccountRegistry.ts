@@ -1,6 +1,3 @@
-// import { advanceBlock } from "./helpers/advanceToBlock";
-// import { latestBlockTime } from "./helpers/latestBlockNumber";
-
 import * as BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -17,7 +14,6 @@ chai
   .should();
 
 const AccountRegistry = artifacts.require("AccountRegistry");
-// const InviteCollateralizer = artifacts.require("InviteCollateralizer");
 const MockBLT = artifacts.require("./helpers/MockBLT");
 
 contract("AccountRegistry", function([owner, alice, bob]) {
@@ -25,181 +21,138 @@ contract("AccountRegistry", function([owner, alice, bob]) {
   let registry: AccountRegistryInstance;
   let collateralizer: string;
 
-  beforeEach(async () => {
-    token = await MockBLT.new();
-    registry = await AccountRegistry.new(token.address);
-    collateralizer = await registry.inviteCollateralizer();
-  });
+  let inviterSecret: string;
+  let inviteeSecret: string;
 
   const setupOwner = async () => {
     await token.gift(owner);
     return token.approve(collateralizer, new BigNumber("1e18"));
   };
 
-  const inviteAlice = async () => {
-    await setupOwner();
-    return registry.invite(alice);
+  const hashedSecret = (secret: string, address: string) => {
+    return (
+      "0x" +
+      soliditySHA3(
+        ["string", "string", "address"],
+        [secret, "/", address]
+      ).toString("hex")
+    );
   };
 
-  it("allows existing users to invite others if they collateralize some BLT", async () => {
+  beforeEach(async () => {
+    token = await MockBLT.new();
+    registry = await AccountRegistry.new(token.address);
+    collateralizer = await registry.inviteCollateralizer();
+    inviterSecret = hashedSecret("secret", owner);
+    inviteeSecret = hashedSecret("secret", alice);
+
     await setupOwner();
-
-    (await registry.invites(alice)).should.be.false;
-    await registry.invite(alice);
-    (await registry.invites(alice)).should.be.true;
   });
 
-  it("fails if the invited user already has an account", async () => {
-    await inviteAlice();
-
-    await registry.invite(alice).should.be.rejectedWith("invalid opcode");
+  it("allows existing users to create invites if they collateralize some BLT", async () => {
+    (await registry.inviterSecretDigests(owner, inviterSecret)).should.be.false;
+    await registry.createInvite(inviterSecret);
+    (await registry.inviterSecretDigests(owner, inviterSecret)).should.be.true;
   });
 
-  it("fails if the invited user already has an invite", async () => {
-    await setupOwner();
-
-    await registry.invite(alice).should.be.fulfilled;
-    await registry.invite(alice).should.be.rejectedWith("invalid opcode");
-  });
-
-  it("fails if the inviter does not have any BLT", async () => {
-    await registry.invite(alice).should.be.rejectedWith("invalid opcode");
-  });
-
-  it("fails if the inviter has not approved the collateralizer", async () => {
-    await token.gift(owner);
-
-    await registry.invite(alice).should.be.rejectedWith("invalid opcode");
-  });
-
-  it("fails if the inviter does not have an account", async () => {
+  it("does not allow a registered user to invite without collateralizing BLT", async () => {
+    await registry.createAccount(alice);
     await token.gift(alice);
-    await token.approve(collateralizer, new BigNumber("1e18"), {
-      from: alice
-    });
 
     await registry
-      .invite(bob, { from: alice })
+      .createInvite(hashedSecret("secret", alice), { from: alice })
+      .should.be.rejectedWith("invalid opcode");
+
+    await token.approve(collateralizer, new BigNumber("1e18"), { from: alice });
+    await registry.createInvite(hashedSecret("secret", alice), { from: alice })
+      .should.be.fulfilled;
+  });
+
+  it("saves the invitee secret", async () => {
+    (await registry.inviteeSecretDigests(
+      alice,
+      inviteeSecret
+    )).should.be.bignumber.equal(0);
+
+    await registry.createInvite(inviterSecret);
+    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
+
+    (await registry.inviteeSecretDigests(
+      alice,
+      inviteeSecret
+    )).should.be.bignumber.greaterThan(0);
+  });
+
+  it("does not allow people to accept invites if they are already a user", async () => {
+    await registry.createAccount(alice);
+
+    await registry.createInvite(inviterSecret);
+    await registry
+      .beginAcceptInvite(inviteeSecret, { from: alice })
       .should.be.rejectedWith("invalid opcode");
   });
 
-  describe("private invite system", async () => {
-    let inviterSecret: string;
-    let inviteeSecret: string;
+  it("fails if the secret provided during finishAcceptInvite is wrong", async () => {
+    await registry.createInvite(inviterSecret);
+    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
+    await registry
+      .finishAcceptInvite(owner, "incorrect", { from: alice })
+      .should.be.rejectedWith("invalid opcode");
+  });
 
-    const hashedSecret = (secret: string, address: string) => {
-      return (
-        "0x" +
-        soliditySHA3(
-          ["string", "string", "address"],
-          [secret, "/", address]
-        ).toString("hex")
-      );
-    };
+  it("fails if the inviter provided during finishAcceptInvite is wrong", async () => {
+    await registry.createInvite(inviterSecret);
+    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
+    await registry
+      .finishAcceptInvite(bob, "incorrect", { from: alice })
+      .should.be.rejectedWith("invalid opcode");
+  });
 
-    beforeEach(async () => {
-      inviterSecret = hashedSecret("secret", owner);
-      inviteeSecret = hashedSecret("secret", alice);
+  it("accepts the invite if the secret and owner are both correct", async () => {
+    (await registry.accounts(alice)).should.be.false;
+
+    await registry.createInvite(inviterSecret);
+    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
+    await advanceBlocks(5);
+
+    await registry.finishAcceptInvite(owner, "secret", { from: alice }).should
+      .be.fulfilled;
+
+    (await registry.accounts(alice)).should.be.true;
+  });
+
+  it("deletes the invite secret hashes when an invite is accepted", async () => {
+    await registry.createInvite(inviterSecret);
+    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
+
+    (await registry.inviterSecretDigests(owner, inviterSecret)).should.be.true;
+    (await registry.inviteeSecretDigests(
+      alice,
+      inviteeSecret
+    )).should.be.bignumber.greaterThan(0);
+
+    await advanceBlocks(5);
+
+    await registry.finishAcceptInvite(owner, "secret", {
+      from: alice
     });
 
-    it("saves the inviter secret", async () => {
-      (await registry.inviterSecretDigests(owner, inviterSecret)).should.be
-        .false;
+    (await registry.inviterSecretDigests(owner, inviterSecret)).should.be.false;
+    (await registry.inviteeSecretDigests(
+      alice,
+      inviteeSecret
+    )).should.be.bignumber.equal(0);
+  });
 
-      await registry.createInvite(inviterSecret);
+  it("avoids frunt running the invite acceptance by requiring the demonstration and reveal be 5 blocks apart", async () => {
+    await registry.createInvite(inviterSecret);
+    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
 
-      (await registry.inviterSecretDigests(owner, inviterSecret)).should.be
-        .true;
-    });
+    await advanceBlocks(3);
 
-    it("saves the invitee secret", async () => {
-      (await registry.inviteeSecretDigests(
-        alice,
-        inviteeSecret
-      )).should.be.bignumber.equal(0);
-
-      await registry.createInvite(inviterSecret);
-      await registry.beginAcceptInvite(inviteeSecret, { from: alice });
-
-      (await registry.inviteeSecretDigests(
-        alice,
-        inviteeSecret
-      )).should.be.bignumber.greaterThan(0);
-    });
-
-    it("does not allow people to accept invites if they are already a user", async () => {
-      await registry.createAccount(alice);
-
-      await registry.createInvite(inviterSecret);
-      await registry
-        .beginAcceptInvite(inviteeSecret, { from: alice })
-        .should.be.rejectedWith("invalid opcode");
-    });
-
-    it("fails if the secret provided during finishAcceptInvite is wrong", async () => {
-      await registry.createInvite(inviterSecret);
-      await registry.beginAcceptInvite(inviteeSecret, { from: alice });
-      await registry
-        .finishAcceptInvite(owner, "incorrect", { from: alice })
-        .should.be.rejectedWith("invalid opcode");
-    });
-
-    it("fails if the inviter provided during finishAcceptInvite is wrong", async () => {
-      await registry.createInvite(inviterSecret);
-      await registry.beginAcceptInvite(inviteeSecret, { from: alice });
-      await registry
-        .finishAcceptInvite(bob, "incorrect", { from: alice })
-        .should.be.rejectedWith("invalid opcode");
-    });
-
-    it("accepts the invite if the secret and owner are both correct", async () => {
-      (await registry.accounts(alice)).should.be.false;
-
-      await registry.createInvite(inviterSecret);
-      await registry.beginAcceptInvite(inviteeSecret, { from: alice });
-      await advanceBlocks(5);
-
-      await registry.finishAcceptInvite(owner, "secret", { from: alice }).should
-        .be.fulfilled;
-
-      (await registry.accounts(alice)).should.be.true;
-    });
-
-    it("deletes the invite secret hashes when an invite is accepted", async () => {
-      await registry.createInvite(inviterSecret);
-      await registry.beginAcceptInvite(inviteeSecret, { from: alice });
-
-      (await registry.inviterSecretDigests(owner, inviterSecret)).should.be
-        .true;
-      (await registry.inviteeSecretDigests(
-        alice,
-        inviteeSecret
-      )).should.be.bignumber.greaterThan(0);
-
-      await advanceBlocks(5);
-
-      await registry.finishAcceptInvite(owner, "secret", {
-        from: alice
-      });
-
-      (await registry.inviterSecretDigests(owner, inviterSecret)).should.be
-        .false;
-      (await registry.inviteeSecretDigests(
-        alice,
-        inviteeSecret
-      )).should.be.bignumber.equal(0);
-    });
-
-    it("avoids frunt running the invite acceptance by requiring the demonstration and reveal be 5 blocks apart", async () => {
-      await registry.createInvite(inviterSecret);
-      await registry.beginAcceptInvite(inviteeSecret, { from: alice });
-
-      await advanceBlocks(3);
-
-      await registry
-        .finishAcceptInvite(owner, "secret", { from: alice })
-        .should.be.rejectedWith("invalid opcode");
-    });
+    await registry
+      .finishAcceptInvite(owner, "secret", { from: alice })
+      .should.be.rejectedWith("invalid opcode");
   });
 
   describe("invitation admin", async () => {
@@ -244,22 +197,6 @@ contract("AccountRegistry", function([owner, alice, bob]) {
       await registry
         .setInviteAdmin("0x0")
         .should.be.rejectedWith("invalid opcode");
-    });
-  });
-
-  describe("accepting invites", async () => {
-    beforeEach(inviteAlice);
-
-    it("creates an account when user accepts invite", async () => {
-      (await registry.accounts(alice)).should.be.false;
-      await registry.acceptInvite({ from: alice });
-      (await registry.accounts(alice)).should.be.true;
-    });
-
-    it("deletes the invite when user accepts it", async () => {
-      (await registry.invites(alice)).should.be.true;
-      await registry.acceptInvite({ from: alice });
-      (await registry.invites(alice)).should.be.false;
     });
   });
 });
