@@ -30,6 +30,7 @@ export interface AccountRegistryInstance extends ContractInstance {
   accounts(unnamed0: Address, options?: TransactionOptions): Promise<boolean>;
   owner(options?: TransactionOptions): Promise<Address>;
   invites(unnamed1: Address, options?: TransactionOptions): Promise<boolean>;
+  createAccount(newUser: Address, options?: TransactionOptions): Promise<void>;
   acceptInvite(options?: TransactionOptions): Promise<void>;
   blt(options?: TransactionOptions): Promise<Address>;
   transferOwnership(
@@ -77,6 +78,10 @@ export interface BLTInstance extends ContractInstance {
   ): Promise<BigNumber.BigNumber>;
   creationBlock(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  canCreateGrants(
+    unnamed2: Address,
+    options?: TransactionOptions
+  ): Promise<boolean>;
   setCanCreateGrants(
     addr: Address,
     allowed: boolean,
@@ -89,8 +94,8 @@ export interface BLTInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<boolean>;
   grants(
-    unnamed2: Address,
-    unnamed3: UInt,
+    unnamed3: Address,
+    unnamed4: UInt,
     options?: TransactionOptions
   ): Promise<
     [
@@ -204,6 +209,7 @@ export interface BLTInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<BigNumber.BigNumber>;
   claimTokens(token: Address, options?: TransactionOptions): Promise<void>;
+  vestingWhitelister(options?: TransactionOptions): Promise<Address>;
   tokenFactory(options?: TransactionOptions): Promise<Address>;
   enableTransfers(
     transfersEnabled: boolean,
@@ -316,6 +322,10 @@ export interface InviteCollateralizerInstance extends ContractInstance {
     newOwner: Address,
     options?: TransactionOptions
   ): Promise<void>;
+  collateralizations(
+    unnamed5: Address,
+    options?: TransactionOptions
+  ): Promise<[BigNumber.BigNumber, BigNumber.BigNumber]>;
 }
 
 export interface InviteCollateralizerContract {
@@ -501,6 +511,10 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
   ): Promise<BigNumber.BigNumber>;
   creationBlock(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  canCreateGrants(
+    unnamed6: Address,
+    options?: TransactionOptions
+  ): Promise<boolean>;
   setCanCreateGrants(
     addr: Address,
     allowed: boolean,
@@ -513,8 +527,8 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<boolean>;
   grants(
-    unnamed4: Address,
-    unnamed5: UInt,
+    unnamed7: Address,
+    unnamed8: UInt,
     options?: TransactionOptions
   ): Promise<
     [
@@ -628,6 +642,7 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<BigNumber.BigNumber>;
   claimTokens(token: Address, options?: TransactionOptions): Promise<void>;
+  vestingWhitelister(options?: TransactionOptions): Promise<Address>;
   tokenFactory(options?: TransactionOptions): Promise<Address>;
   enableTransfers(
     transfersEnabled: boolean,
