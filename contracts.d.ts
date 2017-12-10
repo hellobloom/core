@@ -26,11 +26,6 @@ interface ContractInstance {
 
 export interface AccountRegistryInstance extends ContractInstance {
   inviteCollateralizer(options?: TransactionOptions): Promise<Address>;
-  createInviteSecret(
-    subject: Address,
-    secret: string,
-    options?: TransactionOptions
-  ): Promise<string>;
   setInviteAdmin(
     newInviteAdmin: Address,
     options?: TransactionOptions
@@ -39,7 +34,6 @@ export interface AccountRegistryInstance extends ContractInstance {
     hashedInviteSecret: string,
     options?: TransactionOptions
   ): Promise<void>;
-  invite(recipient: Address, options?: TransactionOptions): Promise<void>;
   accounts(unnamed0: Address, options?: TransactionOptions): Promise<boolean>;
   inviterSecretDigests(
     unnamed1: Address,
@@ -47,17 +41,15 @@ export interface AccountRegistryInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<boolean>;
   owner(options?: TransactionOptions): Promise<Address>;
-  invites(unnamed3: Address, options?: TransactionOptions): Promise<boolean>;
   beginAcceptInvite(
     hashedInviteeSecret: string,
     options?: TransactionOptions
   ): Promise<void>;
   createAccount(newUser: Address, options?: TransactionOptions): Promise<void>;
-  acceptInvite(options?: TransactionOptions): Promise<void>;
   blt(options?: TransactionOptions): Promise<Address>;
   inviteeSecretDigests(
-    unnamed4: Address,
-    unnamed5: string,
+    unnamed3: Address,
+    unnamed4: string,
     options?: TransactionOptions
   ): Promise<BigNumber.BigNumber>;
   finishAcceptInvite(
@@ -111,7 +103,7 @@ export interface BLTInstance extends ContractInstance {
   creationBlock(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   canCreateGrants(
-    unnamed6: Address,
+    unnamed5: Address,
     options?: TransactionOptions
   ): Promise<boolean>;
   setCanCreateGrants(
@@ -126,8 +118,8 @@ export interface BLTInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<boolean>;
   grants(
-    unnamed7: Address,
-    unnamed8: UInt,
+    unnamed6: Address,
+    unnamed7: UInt,
     options?: TransactionOptions
   ): Promise<
     [
@@ -355,7 +347,7 @@ export interface InviteCollateralizerInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<void>;
   collateralizations(
-    unnamed9: Address,
+    unnamed8: Address,
     options?: TransactionOptions
   ): Promise<[BigNumber.BigNumber, BigNumber.BigNumber]>;
 }
@@ -544,7 +536,7 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
   creationBlock(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   canCreateGrants(
-    unnamed10: Address,
+    unnamed9: Address,
     options?: TransactionOptions
   ): Promise<boolean>;
   setCanCreateGrants(
@@ -559,8 +551,8 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<boolean>;
   grants(
-    unnamed11: Address,
-    unnamed12: UInt,
+    unnamed10: Address,
+    unnamed11: UInt,
     options?: TransactionOptions
   ): Promise<
     [
