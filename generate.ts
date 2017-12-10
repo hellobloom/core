@@ -146,7 +146,7 @@ function translateOutputs(outputs: FunctionMemberInput[]) {
   if (outputs.length === 1) {
     valueType = translateOutput(outputs[0]);
   } else if (outputs.length === 0) {
-    valueType = "void";
+    valueType = "Web3.TransactionReceipt";
   } else {
     valueType = `[${outputs.map(translateOutput).join(", ")}]`;
   }
