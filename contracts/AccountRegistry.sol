@@ -22,8 +22,8 @@ contract AccountRegistry is Ownable {
   event InviteAccepted(address indexed inviter, address indexed recipient);
   event AccountCreated(address indexed newUser);
 
-  function AccountRegistry(ERC20 _blt) {
-    inviteCollateralizer = new InviteCollateralizer(_blt);
+  function AccountRegistry(ERC20 _blt, address _seizedTokensWallet) {
+    inviteCollateralizer = new InviteCollateralizer(_blt, _seizedTokensWallet);
     blt = _blt;
     accounts[owner] = true;
     inviteAdmin = owner;
