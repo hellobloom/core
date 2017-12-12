@@ -20,7 +20,7 @@ contract AccountRegistry is Ownable {
   // this is what `ecrecover` produces when working with signed text.
   mapping(address => Invite) public invites;
 
-  address public inviteCollateralizer;
+  InviteCollateralizer public inviteCollateralizer;
   ERC20 public blt;
   address private inviteAdmin;
 
@@ -28,11 +28,15 @@ contract AccountRegistry is Ownable {
   event InviteAccepted(address indexed inviter, address indexed recipient);
   event AccountCreated(address indexed newUser);
 
-  function AccountRegistry(ERC20 _blt, address _seizedTokensWallet) {
-    inviteCollateralizer = new InviteCollateralizer(_blt, _seizedTokensWallet);
+  function AccountRegistry(ERC20 _blt, InviteCollateralizer _inviteCollateralizer) {
     blt = _blt;
     accounts[owner] = true;
     inviteAdmin = owner;
+    inviteCollateralizer = _inviteCollateralizer;
+  }
+
+  function setInviteCollateralizer(InviteCollateralizer _newInviteCollateralizer) nonZero(_newInviteCollateralizer) onlyOwner {
+    inviteCollateralizer = _newInviteCollateralizer;
   }
 
   function setInviteAdmin(address _newInviteAdmin) onlyOwner nonZero(_newInviteAdmin) {
@@ -45,7 +49,7 @@ contract AccountRegistry is Ownable {
   }
 
   function createInvite(bytes _sig) onlyUser {
-    require(InviteCollateralizer(inviteCollateralizer).takeCollateral(msg.sender));
+    require(inviteCollateralizer.takeCollateral(msg.sender));
 
     address signer = recoverSigner(_sig);
     require(inviteDoesNotExist(signer));
