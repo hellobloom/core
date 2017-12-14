@@ -31,37 +31,26 @@ export interface AccountRegistryInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<Web3.TransactionReceipt>;
   createInvite(
-    hashedInviteSecret: string,
+    sig: string,
     options?: TransactionOptions
   ): Promise<Web3.TransactionReceipt>;
   accounts(unnamed0: Address, options?: TransactionOptions): Promise<boolean>;
-  inviterSecretDigests(
-    unnamed1: Address,
-    unnamed2: string,
-    options?: TransactionOptions
-  ): Promise<boolean>;
   owner(options?: TransactionOptions): Promise<Address>;
-  beginAcceptInvite(
-    hashedInviteeSecret: string,
+  invites(
+    unnamed1: Address,
     options?: TransactionOptions
-  ): Promise<Web3.TransactionReceipt>;
+  ): Promise<[Address, Address]>;
   createAccount(
     newUser: Address,
     options?: TransactionOptions
   ): Promise<Web3.TransactionReceipt>;
   blt(options?: TransactionOptions): Promise<Address>;
-  inviteeSecretDigests(
-    unnamed3: Address,
-    unnamed4: string,
-    options?: TransactionOptions
-  ): Promise<BigNumber.BigNumber>;
-  finishAcceptInvite(
-    inviter: Address,
-    secret: string,
-    options?: TransactionOptions
-  ): Promise<Web3.TransactionReceipt>;
   transferOwnership(
     newOwner: Address,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
+  acceptInvite(
+    sig: string,
     options?: TransactionOptions
   ): Promise<Web3.TransactionReceipt>;
 }
@@ -109,7 +98,7 @@ export interface BLTInstance extends ContractInstance {
   creationBlock(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   canCreateGrants(
-    unnamed5: Address,
+    unnamed2: Address,
     options?: TransactionOptions
   ): Promise<boolean>;
   setCanCreateGrants(
@@ -124,8 +113,8 @@ export interface BLTInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<boolean>;
   grants(
-    unnamed6: Address,
-    unnamed7: UInt,
+    unnamed3: Address,
+    unnamed4: UInt,
     options?: TransactionOptions
   ): Promise<
     [
@@ -289,6 +278,20 @@ export interface ConvertLibContract {
   at(address: string): ConvertLibInstance;
 }
 
+export interface ECRecoveryInstance extends ContractInstance {
+  recover(
+    hash: string,
+    sig: string,
+    options?: TransactionOptions
+  ): Promise<Address>;
+}
+
+export interface ECRecoveryContract {
+  new: () => Promise<ECRecoveryInstance>;
+  deployed(): Promise<ECRecoveryInstance>;
+  at(address: string): ECRecoveryInstance;
+}
+
 export interface ERC20Instance extends ContractInstance {
   approve(
     spender: Address,
@@ -358,8 +361,8 @@ export interface InviteCollateralizerInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<Web3.TransactionReceipt>;
   collateralizations(
-    unnamed8: Address,
-    unnamed9: UInt,
+    unnamed5: Address,
+    unnamed6: UInt,
     options?: TransactionOptions
   ): Promise<[BigNumber.BigNumber, BigNumber.BigNumber, boolean]>;
   reclaim(options?: TransactionOptions): Promise<boolean>;
@@ -581,7 +584,7 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
   creationBlock(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   totalSupply(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   canCreateGrants(
-    unnamed10: Address,
+    unnamed7: Address,
     options?: TransactionOptions
   ): Promise<boolean>;
   setCanCreateGrants(
@@ -596,8 +599,8 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     options?: TransactionOptions
   ): Promise<boolean>;
   grants(
-    unnamed11: Address,
-    unnamed12: UInt,
+    unnamed8: Address,
+    unnamed9: UInt,
     options?: TransactionOptions
   ): Promise<
     [

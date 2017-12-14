@@ -1,10 +1,11 @@
 import * as BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-const { soliditySHA3 } = require("ethereumjs-abi");
+const walletTools = require("ethereumjs-wallet");
+const { privateToAddress } = require("ethereumjs-util");
+import { signAddress } from "./../src/signAddress";
 
 import { MockBLTInstance, AccountRegistryInstance } from "./../truffle";
-import { advanceBlocks } from "./helpers/advanceBlock";
 
 const chaiBignumber = require("chai-bignumber");
 
@@ -21,38 +22,46 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
   let registry: AccountRegistryInstance;
   let collateralizer: string;
 
+  let invitePrivateKey: Buffer;
+  let invitePublicAddress: string;
   let inviterSecret: string;
-  let inviteeSecret: string;
+  let recipientSecret: string;
 
   const setupOwner = async () => {
     await token.gift(owner);
     return token.approve(collateralizer, new BigNumber("1e18"));
   };
 
-  const hashedSecret = (secret: string, address: string) => {
-    return (
-      "0x" +
-      soliditySHA3(
-        ["string", "string", "address"],
-        [secret, "/", address]
-      ).toString("hex")
-    );
-  };
+  const signFor = (user: string) =>
+    signAddress({
+      address: user,
+      privKey: invitePrivateKey
+    });
 
   beforeEach(async () => {
     token = await MockBLT.new();
     registry = await AccountRegistry.new(token.address, seizedTokensWallet);
     collateralizer = await registry.inviteCollateralizer();
-    inviterSecret = hashedSecret("secret", owner);
-    inviteeSecret = hashedSecret("secret", alice);
+    invitePrivateKey = walletTools.generate().getPrivateKey();
+    invitePublicAddress =
+      "0x" + privateToAddress(invitePrivateKey).toString("hex");
+    inviterSecret = signFor(owner);
+    recipientSecret = signFor(alice);
 
     await setupOwner();
   });
 
   it("allows existing users to create invites if they collateralize some BLT", async () => {
-    (await registry.inviterSecretDigests(owner, inviterSecret)).should.be.false;
+    (await registry.invites(invitePublicAddress)).should.deep.equal([
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000"
+    ]);
     await registry.createInvite(inviterSecret);
-    (await registry.inviterSecretDigests(owner, inviterSecret)).should.be.true;
+
+    (await registry.invites(invitePublicAddress)).should.deep.equal([
+      owner,
+      "0x0000000000000000000000000000000000000000"
+    ]);
   });
 
   it("emits an event when an invite is created", async () => {
@@ -70,27 +79,22 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
     await token.gift(alice);
 
     await registry
-      .createInvite(hashedSecret("secret", alice), { from: alice })
+      .createInvite(signFor(alice), { from: alice })
       .should.be.rejectedWith("invalid opcode");
 
     await token.approve(collateralizer, new BigNumber("1e18"), { from: alice });
-    await registry.createInvite(hashedSecret("secret", alice), { from: alice })
-      .should.be.fulfilled;
+    await registry.createInvite(signFor(alice), { from: alice }).should.be
+      .fulfilled;
   });
 
-  it("saves the invitee secret", async () => {
-    (await registry.inviteeSecretDigests(
-      alice,
-      inviteeSecret
-    )).should.be.bignumber.equal(0);
-
+  it("saves the recipient signature", async () => {
     await registry.createInvite(inviterSecret);
-    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
+    await registry.acceptInvite(recipientSecret, { from: alice });
 
-    (await registry.inviteeSecretDigests(
-      alice,
-      inviteeSecret
-    )).should.be.bignumber.greaterThan(0);
+    (await registry.invites(invitePublicAddress)).should.deep.equal([
+      owner,
+      alice
+    ]);
   });
 
   it("does not allow people to accept invites if they are already a user", async () => {
@@ -98,23 +102,14 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
 
     await registry.createInvite(inviterSecret);
     await registry
-      .beginAcceptInvite(inviteeSecret, { from: alice })
+      .acceptInvite(recipientSecret, { from: alice })
       .should.be.rejectedWith("invalid opcode");
   });
 
-  it("fails if the secret provided during finishAcceptInvite is wrong", async () => {
+  it("fails if the inviter provided during acceptInvite is wrong", async () => {
     await registry.createInvite(inviterSecret);
-    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
     await registry
-      .finishAcceptInvite(owner, "incorrect", { from: alice })
-      .should.be.rejectedWith("invalid opcode");
-  });
-
-  it("fails if the inviter provided during finishAcceptInvite is wrong", async () => {
-    await registry.createInvite(inviterSecret);
-    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
-    await registry
-      .finishAcceptInvite(bob, "incorrect", { from: alice })
+      .acceptInvite(recipientSecret, { from: bob })
       .should.be.rejectedWith("invalid opcode");
   });
 
@@ -122,21 +117,14 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
     (await registry.accounts(alice)).should.be.false;
 
     await registry.createInvite(inviterSecret);
-    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
-    await advanceBlocks(5);
-
-    await registry.finishAcceptInvite(owner, "secret", { from: alice }).should
-      .be.fulfilled;
+    await registry.acceptInvite(recipientSecret, { from: alice });
 
     (await registry.accounts(alice)).should.be.true;
   });
 
   it("emits an event when an invite is accepted", async () => {
     await registry.createInvite(inviterSecret);
-    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
-    await advanceBlocks(5);
-
-    const { logs } = await registry.finishAcceptInvite(owner, "secret", {
+    const { logs } = await registry.acceptInvite(recipientSecret, {
       from: alice
     });
 
@@ -153,10 +141,7 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
 
   it("emits an event that an account was created when an invite was accepted", async () => {
     await registry.createInvite(inviterSecret);
-    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
-    await advanceBlocks(5);
-
-    const { logs } = await registry.finishAcceptInvite(owner, "secret", {
+    const { logs } = await registry.acceptInvite(recipientSecret, {
       from: alice
     });
 
@@ -165,40 +150,6 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
     });
 
     should.exist(accountCreatedMatch);
-  });
-
-  it("deletes the invite secret hashes when an invite is accepted", async () => {
-    await registry.createInvite(inviterSecret);
-    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
-
-    (await registry.inviterSecretDigests(owner, inviterSecret)).should.be.true;
-    (await registry.inviteeSecretDigests(
-      alice,
-      inviteeSecret
-    )).should.be.bignumber.greaterThan(0);
-
-    await advanceBlocks(5);
-
-    await registry.finishAcceptInvite(owner, "secret", {
-      from: alice
-    });
-
-    (await registry.inviterSecretDigests(owner, inviterSecret)).should.be.false;
-    (await registry.inviteeSecretDigests(
-      alice,
-      inviteeSecret
-    )).should.be.bignumber.equal(0);
-  });
-
-  it("avoids frunt running the invite acceptance by requiring the demonstration and reveal be 5 blocks apart", async () => {
-    await registry.createInvite(inviterSecret);
-    await registry.beginAcceptInvite(inviteeSecret, { from: alice });
-
-    await advanceBlocks(3);
-
-    await registry
-      .finishAcceptInvite(owner, "secret", { from: alice })
-      .should.be.rejectedWith("invalid opcode");
   });
 
   describe("invitation admin", async () => {
