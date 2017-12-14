@@ -25,6 +25,10 @@ interface ContractInstance {
 }
 
 export interface AccountRegistryInstance extends ContractInstance {
+  setInviteCollateralizer(
+    newInviteCollateralizer: Address,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
   inviteCollateralizer(options?: TransactionOptions): Promise<Address>;
   setInviteAdmin(
     newInviteAdmin: Address,
@@ -58,7 +62,7 @@ export interface AccountRegistryInstance extends ContractInstance {
 export interface AccountRegistryContract {
   new: (
     blt: Address,
-    seizedTokensWallet: Address
+    inviteCollateralizer: Address
   ) => Promise<AccountRegistryInstance>;
   deployed(): Promise<AccountRegistryInstance>;
   at(address: string): AccountRegistryInstance;

@@ -6,6 +6,7 @@ const { privateToAddress } = require("ethereumjs-util");
 import { signAddress } from "./../src/signAddress";
 
 import { MockBLTInstance, AccountRegistryInstance } from "./../truffle";
+import { InviteCollateralizerInstance } from "../contracts";
 
 const chaiBignumber = require("chai-bignumber");
 
@@ -15,12 +16,13 @@ const should = chai
   .should();
 
 const AccountRegistry = artifacts.require("AccountRegistry");
+const InviteCollateralizer = artifacts.require("InviteCollateralizer");
 const MockBLT = artifacts.require("./helpers/MockBLT");
 
 contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
   let token: MockBLTInstance;
   let registry: AccountRegistryInstance;
-  let collateralizer: string;
+  let collateralizer: InviteCollateralizerInstance;
 
   let invitePrivateKey: Buffer;
   let invitePublicAddress: string;
@@ -29,7 +31,7 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
 
   const setupOwner = async () => {
     await token.gift(owner);
-    return token.approve(collateralizer, new BigNumber("1e18"));
+    return token.approve(collateralizer.address, new BigNumber("1e18"));
   };
 
   const signFor = (user: string) =>
@@ -40,8 +42,14 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
 
   beforeEach(async () => {
     token = await MockBLT.new();
-    registry = await AccountRegistry.new(token.address, seizedTokensWallet);
-    collateralizer = await registry.inviteCollateralizer();
+    collateralizer = await InviteCollateralizer.new(
+      token.address,
+      seizedTokensWallet
+    );
+
+    registry = await AccountRegistry.new(token.address, collateralizer.address);
+    await collateralizer.changeCollateralTaker(registry.address);
+
     invitePrivateKey = walletTools.generate().getPrivateKey();
     invitePublicAddress =
       "0x" + privateToAddress(invitePrivateKey).toString("hex");
@@ -82,7 +90,9 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
       .createInvite(signFor(alice), { from: alice })
       .should.be.rejectedWith("invalid opcode");
 
-    await token.approve(collateralizer, new BigNumber("1e18"), { from: alice });
+    await token.approve(collateralizer.address, new BigNumber("1e18"), {
+      from: alice
+    });
     await registry.createInvite(signFor(alice), { from: alice }).should.be
       .fulfilled;
   });
@@ -150,6 +160,38 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
     });
 
     should.exist(accountCreatedMatch);
+  });
+
+  describe("configuring the invite collateralizer", async () => {
+    let differentCollateralizer: InviteCollateralizerInstance;
+    let collateralizerAddressBefore: string;
+
+    beforeEach(async () => {
+      differentCollateralizer = await InviteCollateralizer.new("0x1", "0x2");
+      collateralizerAddressBefore = await registry.inviteCollateralizer();
+    });
+
+    it("allows the owner to change the invite collateralizer", async () => {
+      await registry.setInviteCollateralizer(differentCollateralizer.address);
+      const collateralizerAddressAfter = await registry.inviteCollateralizer();
+
+      collateralizerAddressBefore.should.be.equal(collateralizer.address);
+      collateralizerAddressAfter.should.be.equal(
+        differentCollateralizer.address
+      );
+    });
+
+    it("doesn't allow anyone else to change the invite collateralizer", async () => {
+      await registry
+        .setInviteCollateralizer(differentCollateralizer.address, {
+          from: alice
+        })
+        .should.be.rejectedWith("invalid opcode");
+      const collateralizerAddressAfter = await registry.inviteCollateralizer();
+
+      collateralizerAddressBefore.should.be.equal(collateralizer.address);
+      collateralizerAddressAfter.should.be.equal(collateralizer.address);
+    });
   });
 
   describe("invitation admin", async () => {
