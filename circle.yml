@@ -1,0 +1,77 @@
+version: 2
+jobs:
+  install_dependencies:
+    docker:
+      - image: circleci/node:6.12.2
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: dependency-cache-{{ checksum "yarn.lock" }}
+
+      - run:
+          name: Yarn install
+          command: yarn
+
+      - save_cache:
+          key: dependency-cache-{{ checksum "yarn.lock" }}
+          paths:
+            - ./node_modules
+
+      - restore_cache:
+          key: dependency-cache-{{ checksum "ethpm.json" }}
+
+      - run:
+          name: Truffle install
+          command: ./node_modules/.bin/truffle install
+
+      - save_cache:
+          key: dependency-cache-{{ checksum "ethpm.json" }}
+          paths:
+            - ./installed_contracts
+
+  test:
+    docker:
+      - image: circleci/node:6.12.2
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: dependency-cache-{{ checksum "yarn.lock" }}
+
+      - restore_cache:
+          key: dependency-cache-{{ checksum "ethpm.json" }}
+
+      - run:
+          name: Test suite
+          command: bin/test
+
+  verify_typings:
+    docker:
+      - image: circleci/node:6.12.2
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: dependency-cache-{{ checksum "yarn.lock" }}
+
+      - restore_cache:
+          key: dependency-cache-{{ checksum "ethpm.json" }}
+
+      - run:
+          name: Check that typings are in sync
+          command: bin/compile-typings && git diff --exit-code
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - install_dependencies
+
+      - test:
+          requires:
+            - install_dependencies
+
+      - verify_typings:
+          requires:
+            - install_dependencies
