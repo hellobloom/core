@@ -1,23 +1,22 @@
 import * as BigNumber from "bignumber.js";
-import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
 import * as Web3 from "web3";
 
 import { increaseTime } from "./helpers/increaseTime";
 
 import { MockBLTInstance, InviteCollateralizerInstance } from "./../truffle";
+import { EVMThrow } from "./helpers/EVMThrow";
 
-const chaiBignumber = require("chai-bignumber");
-
-const should = chai
-  .use(chaiAsPromised)
-  .use(chaiBignumber(web3.BigNumber))
-  .should();
+import { should } from "./test_setup";
 
 const InviteCollateralizer = artifacts.require("InviteCollateralizer");
 const MockBLT = artifacts.require("./helpers/MockBLT");
 
-contract("InviteCollateralizer", function([owner, alice, bob, seizedTokensWallet]) {
+contract("InviteCollateralizer", function([
+  owner,
+  alice,
+  bob,
+  seizedTokensWallet
+]) {
   let token: MockBLTInstance;
   let collateralizer: InviteCollateralizerInstance;
 
@@ -28,7 +27,10 @@ contract("InviteCollateralizer", function([owner, alice, bob, seizedTokensWallet
 
   beforeEach(async () => {
     token = await MockBLT.new();
-    collateralizer = await InviteCollateralizer.new(token.address, seizedTokensWallet);
+    collateralizer = await InviteCollateralizer.new(
+      token.address,
+      seizedTokensWallet
+    );
     await setupOwner();
   });
 
@@ -82,7 +84,7 @@ contract("InviteCollateralizer", function([owner, alice, bob, seizedTokensWallet
 
     await increaseTime(60 * 60 * 24 * 364);
 
-    await collateralizer.reclaim().should.be.rejectedWith("invalid opcode");
+    await collateralizer.reclaim().should.be.rejectedWith(EVMThrow);
 
     await increaseTime(60 * 60 * 24 * 2);
 
@@ -93,7 +95,7 @@ contract("InviteCollateralizer", function([owner, alice, bob, seizedTokensWallet
     // Give the collateralizer some BLT so it doesn't fail due to an empty balance alone
     await token.gift(collateralizer.address);
 
-    await collateralizer.reclaim().should.be.rejectedWith("invalid opcode");
+    await collateralizer.reclaim().should.be.rejectedWith(EVMThrow);
   });
 
   it("lets a user collateralize BLT multiple times", async () => {
@@ -138,7 +140,7 @@ contract("InviteCollateralizer", function([owner, alice, bob, seizedTokensWallet
     );
 
     // Another reclaim should fail since nothing can be claimed
-    await collateralizer.reclaim().should.be.rejectedWith("invalid opcode");
+    await collateralizer.reclaim().should.be.rejectedWith(EVMThrow);
 
     // Fast forward to after the second collateral is reclaimable. Now balance should go to zero.
     await increaseTime(60 * 60 * 24 * 183);
@@ -171,7 +173,9 @@ contract("InviteCollateralizer", function([owner, alice, bob, seizedTokensWallet
       });
       await collateralizer.takeCollateral(alice);
 
-      await collateralizer.seize(alice, 0, { from: bob }).should.be.rejectedWith("invalid opcode");
+      await collateralizer
+        .seize(alice, 0, { from: bob })
+        .should.be.rejectedWith(EVMThrow);
     });
 
     it("marks the seized collateral as claimed", async () => {
@@ -181,9 +185,15 @@ contract("InviteCollateralizer", function([owner, alice, bob, seizedTokensWallet
       });
       await collateralizer.takeCollateral(alice);
 
-      const [, , claimedBefore] = await collateralizer.collateralizations(alice, 0);
+      const [, , claimedBefore] = await collateralizer.collateralizations(
+        alice,
+        0
+      );
       await collateralizer.seize(alice, 0);
-      const [, , claimedAfter] = await collateralizer.collateralizations(alice, 0);
+      const [, , claimedAfter] = await collateralizer.collateralizations(
+        alice,
+        0
+      );
 
       claimedBefore.should.be.false;
       claimedAfter.should.be.true;
@@ -199,7 +209,11 @@ contract("InviteCollateralizer", function([owner, alice, bob, seizedTokensWallet
       const { logs } = await collateralizer.seize(alice, 0);
 
       const match = logs.find(log => {
-        return log.event === "CollateralSeized" && log.args.owner === alice && (log.args.collateralId as BigNumber.BigNumber).eq(0);
+        return (
+          log.event === "CollateralSeized" &&
+          log.args.owner === alice &&
+          (log.args.collateralId as BigNumber.BigNumber).eq(0)
+        );
       });
 
       should.exist(match);
@@ -213,13 +227,18 @@ contract("InviteCollateralizer", function([owner, alice, bob, seizedTokensWallet
         from: bob
       });
 
-      await collateralizer.takeCollateral(bob, { from: alice }).should.be.rejectedWith("invalid opcode");
+      await collateralizer
+        .takeCollateral(bob, { from: alice })
+        .should.be.rejectedWith(EVMThrow);
       await collateralizer.changeCollateralTaker(alice);
-      await collateralizer.takeCollateral(bob, { from: alice }).should.be.fulfilled;
+      await collateralizer.takeCollateral(bob, { from: alice }).should.be
+        .fulfilled;
     });
 
     it("does not allow anyone besides the owner to change the collateral taker", async () => {
-      await collateralizer.changeCollateralTaker(alice, { from: alice }).should.be.rejectedWith("invalid opcode");
+      await collateralizer
+        .changeCollateralTaker(alice, { from: alice })
+        .should.be.rejectedWith(EVMThrow);
     });
 
     it("allows the owner to change the collateral seizer", async () => {
@@ -229,13 +248,17 @@ contract("InviteCollateralizer", function([owner, alice, bob, seizedTokensWallet
       });
       await collateralizer.takeCollateral(bob);
 
-      await collateralizer.seize(bob, 0, { from: alice }).should.be.rejectedWith("invalid opcode");
+      await collateralizer
+        .seize(bob, 0, { from: alice })
+        .should.be.rejectedWith(EVMThrow);
       await collateralizer.changeCollateralSeizer(alice);
       await collateralizer.seize(bob, 0, { from: alice }).should.be.fulfilled;
-    })
+    });
 
     it("does not allow anyone besides the owner to change the collateral seizer", async () => {
-      await collateralizer.changeCollateralSeizer(alice, { from: alice }).should.be.rejectedWith("invalid opcode");
+      await collateralizer
+        .changeCollateralSeizer(alice, { from: alice })
+        .should.be.rejectedWith(EVMThrow);
     });
   });
 
@@ -243,11 +266,15 @@ contract("InviteCollateralizer", function([owner, alice, bob, seizedTokensWallet
     it("allows the owner to change the collateral amount", async () => {
       await collateralizer.changeCollateralAmount(new BigNumber("2e17"));
       await collateralizer.takeCollateral(owner);
-      (await token.balanceOf(collateralizer.address)).should.be.bignumber.equal("2e17");
+      (await token.balanceOf(collateralizer.address)).should.be.bignumber.equal(
+        "2e17"
+      );
     });
 
     it("does not allow otehrs to change the collateral amount", async () => {
-      await collateralizer.changeCollateralAmount(new BigNumber("2e17"), { from: alice }).should.be.rejectedWith("invalid opcode");
+      await collateralizer
+        .changeCollateralAmount(new BigNumber("2e17"), { from: alice })
+        .should.be.rejectedWith(EVMThrow);
     });
   });
 
@@ -257,8 +284,9 @@ contract("InviteCollateralizer", function([owner, alice, bob, seizedTokensWallet
     });
 
     it("does not allow otehrs to change the collateral amount", async () => {
-      await collateralizer.changeSeizedTokensWallet(alice, { from: alice }).should.be.rejectedWith("invalid opcode");
+      await collateralizer
+        .changeSeizedTokensWallet(alice, { from: alice })
+        .should.be.rejectedWith(EVMThrow);
     });
   });
-
 });
