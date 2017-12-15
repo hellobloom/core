@@ -1,6 +1,4 @@
 import * as BigNumber from "bignumber.js";
-import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
 import * as Web3 from "web3";
 
 import { increaseTime } from "./helpers/increaseTime";
@@ -8,12 +6,7 @@ import { increaseTime } from "./helpers/increaseTime";
 import { MockBLTInstance, InviteCollateralizerInstance } from "./../truffle";
 import { EVMThrow } from "./helpers/EVMThrow";
 
-const chaiBignumber = require("chai-bignumber");
-
-const should = chai
-  .use(chaiAsPromised)
-  .use(chaiBignumber(web3.BigNumber))
-  .should();
+import { should } from "./test_setup";
 
 const InviteCollateralizer = artifacts.require("InviteCollateralizer");
 const MockBLT = artifacts.require("./helpers/MockBLT");

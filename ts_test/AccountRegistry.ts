@@ -1,6 +1,4 @@
 import * as BigNumber from "bignumber.js";
-import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
 const walletTools = require("ethereumjs-wallet");
 const { privateToAddress } = require("ethereumjs-util");
 import { signAddress } from "./../src/signAddress";
@@ -9,12 +7,7 @@ import { MockBLTInstance, AccountRegistryInstance } from "./../truffle";
 import { InviteCollateralizerInstance } from "../contracts";
 import { EVMThrow } from "./helpers/EVMThrow";
 
-const chaiBignumber = require("chai-bignumber");
-
-const should = chai
-  .use(chaiAsPromised)
-  .use(chaiBignumber(web3.BigNumber))
-  .should();
+import { should } from "./test_setup";
 
 const AccountRegistry = artifacts.require("AccountRegistry");
 const InviteCollateralizer = artifacts.require("InviteCollateralizer");
