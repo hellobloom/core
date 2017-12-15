@@ -24,7 +24,7 @@
     "chai-as-promised": "^7.1.1",
     "chai-bignumber": "^2.0.1",
     "ethereumjs-abi": "^0.6.5",
-    "ethereumjs-testrpc": "^4.1.1",
+    "ganache-cli": "^6.0.3",
     "prettier": "^1.9.2",
     "solidity-coverage": "^0.2.2",
     "truffle-hdwallet-provider": "^0.0.3",
