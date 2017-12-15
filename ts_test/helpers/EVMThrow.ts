@@ -1,1 +1,1 @@
-export const EVMThrow = "invalid opcode";
+export const EVMThrow = "VM Exception while processing transaction: revert";
