@@ -7,6 +7,7 @@ import { signAddress } from "./../src/signAddress";
 
 import { MockBLTInstance, AccountRegistryInstance } from "./../truffle";
 import { InviteCollateralizerInstance } from "../contracts";
+import { EVMThrow } from "./helpers/EVMThrow";
 
 const chaiBignumber = require("chai-bignumber");
 
@@ -88,7 +89,7 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
 
     await registry
       .createInvite(signFor(alice), { from: alice })
-      .should.be.rejectedWith("invalid opcode");
+      .should.be.rejectedWith(EVMThrow);
 
     await token.approve(collateralizer.address, new BigNumber("1e18"), {
       from: alice
@@ -113,14 +114,14 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
     await registry.createInvite(inviterSecret);
     await registry
       .acceptInvite(recipientSecret, { from: alice })
-      .should.be.rejectedWith("invalid opcode");
+      .should.be.rejectedWith(EVMThrow);
   });
 
   it("fails if the inviter provided during acceptInvite is wrong", async () => {
     await registry.createInvite(inviterSecret);
     await registry
       .acceptInvite(recipientSecret, { from: bob })
-      .should.be.rejectedWith("invalid opcode");
+      .should.be.rejectedWith(EVMThrow);
   });
 
   it("accepts the invite if the secret and owner are both correct", async () => {
@@ -186,7 +187,7 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
         .setInviteCollateralizer(differentCollateralizer.address, {
           from: alice
         })
-        .should.be.rejectedWith("invalid opcode");
+        .should.be.rejectedWith(EVMThrow);
       const collateralizerAddressAfter = await registry.inviteCollateralizer();
 
       collateralizerAddressBefore.should.be.equal(collateralizer.address);
@@ -206,20 +207,18 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
     it("does not allow anyone else to instantly create accounts", async () => {
       await registry
         .createAccount(bob, { from: alice })
-        .should.be.rejectedWith("invalid opcode");
+        .should.be.rejectedWith(EVMThrow);
     });
 
     it("throws an error if the user already has an account", async () => {
       await registry.createAccount(bob).should.be.fulfilled;
-      await registry
-        .createAccount(bob)
-        .should.be.rejectedWith("invalid opcode");
+      await registry.createAccount(bob).should.be.rejectedWith(EVMThrow);
     });
 
     it("supports changing the invite admin", async () => {
       await registry
         .createAccount(bob, { from: alice })
-        .should.be.rejectedWith("invalid opcode");
+        .should.be.rejectedWith(EVMThrow);
 
       await registry.setInviteAdmin(alice);
 
@@ -229,13 +228,11 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
     it("only allows the owner to change the invite admin", async () => {
       await registry
         .setInviteAdmin(alice, { from: alice })
-        .should.be.rejectedWith("invalid opcode");
+        .should.be.rejectedWith(EVMThrow);
     });
 
     it("does not allow setting the invite admin to zero", async () => {
-      await registry
-        .setInviteAdmin("0x0")
-        .should.be.rejectedWith("invalid opcode");
+      await registry.setInviteAdmin("0x0").should.be.rejectedWith(EVMThrow);
     });
   });
 });
