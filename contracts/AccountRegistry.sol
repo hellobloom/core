@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity 0.4.18;
 
 import "zeppelin/ownership/Ownable.sol";
 import "zeppelin/token/SafeERC20.sol";
@@ -28,27 +28,27 @@ contract AccountRegistry is Ownable {
   event InviteAccepted(address indexed inviter, address indexed recipient);
   event AccountCreated(address indexed newUser);
 
-  function AccountRegistry(ERC20 _blt, InviteCollateralizer _inviteCollateralizer) {
+  function AccountRegistry(ERC20 _blt, InviteCollateralizer _inviteCollateralizer) public {
     blt = _blt;
     accounts[owner] = true;
     inviteAdmin = owner;
     inviteCollateralizer = _inviteCollateralizer;
   }
 
-  function setInviteCollateralizer(InviteCollateralizer _newInviteCollateralizer) nonZero(_newInviteCollateralizer) onlyOwner {
+  function setInviteCollateralizer(InviteCollateralizer _newInviteCollateralizer) public nonZero(_newInviteCollateralizer) onlyOwner {
     inviteCollateralizer = _newInviteCollateralizer;
   }
 
-  function setInviteAdmin(address _newInviteAdmin) onlyOwner nonZero(_newInviteAdmin) {
+  function setInviteAdmin(address _newInviteAdmin) public onlyOwner nonZero(_newInviteAdmin) {
     inviteAdmin = _newInviteAdmin;
   }
 
-  function createAccount(address _newUser) onlyInviteAdmin {
+  function createAccount(address _newUser) public onlyInviteAdmin {
     require(!accounts[_newUser]);
     createAccountFor(_newUser);
   }
 
-  function createInvite(bytes _sig) onlyUser {
+  function createInvite(bytes _sig) public onlyUser {
     require(inviteCollateralizer.takeCollateral(msg.sender));
 
     address signer = recoverSigner(_sig);
@@ -58,7 +58,7 @@ contract AccountRegistry is Ownable {
     InviteCreated(msg.sender);
   }
 
-  function acceptInvite(bytes _sig) onlyNonUser {
+  function acceptInvite(bytes _sig) public onlyNonUser {
     address signer = recoverSigner(_sig);
     require(inviteExists(signer) && inviteHasNotBeenAccepted(signer));
 
@@ -67,7 +67,7 @@ contract AccountRegistry is Ownable {
     InviteAccepted(invites[signer].creator, msg.sender);
   }
 
-  function recoverSigner(bytes _sig) private returns (address) {
+  function recoverSigner(bytes _sig) private view returns (address) {
     address signer = ECRecovery.recover(keccak256(msg.sender), _sig);
     require(signer != address(0));
 
@@ -79,15 +79,15 @@ contract AccountRegistry is Ownable {
     AccountCreated(_newUser);
   }
 
-  function inviteHasNotBeenAccepted(address _signer) internal returns (bool) {
+  function inviteHasNotBeenAccepted(address _signer) internal view returns (bool) {
     return invites[_signer].recipient == address(0);
   }
 
-  function inviteDoesNotExist(address _signer) internal returns (bool) {
+  function inviteDoesNotExist(address _signer) internal view returns (bool) {
     return !inviteExists(_signer);
   }
 
-  function inviteExists(address _signer) internal returns (bool) {
+  function inviteExists(address _signer) internal view returns (bool) {
     return invites[_signer].creator != address(0);
   }
 
