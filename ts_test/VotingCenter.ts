@@ -1,4 +1,3 @@
-import * as Web3 from "web3";
 const multihash = require("multihashes");
 const { bufferToHex, stripHexPrefix } = require("ethereumjs-util");
 import "./test_setup";
@@ -39,7 +38,7 @@ contract("VotingCenter", function([alice]) {
     );
 
     const poll = Poll.at(pollAddress);
-    const [hashFn, size, hash] = await poll.pollDataMultihash();
+    const [hashFn, size, hash] = await poll.pollDataMultihash.call();
 
     const ipfsHashOnPoll = Buffer.concat([
       Buffer.from([hashFn.toNumber()]),
@@ -51,7 +50,6 @@ contract("VotingCenter", function([alice]) {
   });
 
   it("emits an event when a poll is created", async () => {
-    // @ts-ignore
     const { logs } = await votingCenter.createPoll(
       ipfsHash,
       10,
@@ -60,7 +58,7 @@ contract("VotingCenter", function([alice]) {
     );
 
     const matchingLog = logs.find(
-      (log: Web3.LogEntry<{ poll: string; author: string }>) =>
+      log =>
         log.event === "PollCreated" &&
         log.args.poll === pollAddress &&
         log.args.author === alice

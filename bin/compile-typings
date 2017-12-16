@@ -5,7 +5,7 @@ compile_typings() {
 }
 
 format_typings() {
-  ./node_modules/.bin/prettier
+  ./node_modules/.bin/prettier --parser typescript
 }
 
 update_typings() {

@@ -105,7 +105,7 @@ contract("InviteCollateralizer", function([
     (await token.balanceOf(collateralizer.address)).should.be.bignumber.equal(
       "2e17"
     );
-    const ownerBalanceBeforeReclaim = await token.balanceOf(owner);
+    const ownerBalanceBeforeReclaim = await token.balanceOf.call(owner);
 
     await increaseTime(60 * 60 * 24 * 366);
 
@@ -185,12 +185,12 @@ contract("InviteCollateralizer", function([
       });
       await collateralizer.takeCollateral(alice);
 
-      const [, , claimedBefore] = await collateralizer.collateralizations(
+      const [, , claimedBefore] = await collateralizer.collateralizations.call(
         alice,
         0
       );
       await collateralizer.seize(alice, 0);
-      const [, , claimedAfter] = await collateralizer.collateralizations(
+      const [, , claimedAfter] = await collateralizer.collateralizations.call(
         alice,
         0
       );
