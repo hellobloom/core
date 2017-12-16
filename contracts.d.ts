@@ -282,6 +282,14 @@ export interface ConvertLibContract {
   at(address: string): ConvertLibInstance;
 }
 
+export interface DependentOnIPFSInstance extends ContractInstance {}
+
+export interface DependentOnIPFSContract {
+  new: () => Promise<DependentOnIPFSInstance>;
+  deployed(): Promise<DependentOnIPFSInstance>;
+  at(address: string): DependentOnIPFSInstance;
+}
+
 export interface ECRecoveryInstance extends ContractInstance {
   recover(
     hash: string,
@@ -762,6 +770,36 @@ export interface OwnableContract {
   at(address: string): OwnableInstance;
 }
 
+export interface PollInstance extends ContractInstance {
+  endTime(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  startTime(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  pollDataMultihash(
+    options?: TransactionOptions
+  ): Promise<[BigNumber.BigNumber, BigNumber.BigNumber, string]>;
+  author(options?: TransactionOptions): Promise<Address>;
+  numChoices(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  votes(
+    unnamed10: Address,
+    options?: TransactionOptions
+  ): Promise<BigNumber.BigNumber>;
+  vote(
+    choice: UInt,
+    options?: TransactionOptions
+  ): Promise<Web3.TransactionReceipt>;
+}
+
+export interface PollContract {
+  new: (
+    ipfsHash: string,
+    numChoices: UInt,
+    startTime: UInt,
+    endTime: UInt,
+    author: Address
+  ) => Promise<PollInstance>;
+  deployed(): Promise<PollInstance>;
+  at(address: string): PollInstance;
+}
+
 export interface SafeERC20Instance extends ContractInstance {}
 
 export interface SafeERC20Contract {
@@ -798,4 +836,21 @@ export interface TokenControllerContract {
   new: () => Promise<TokenControllerInstance>;
   deployed(): Promise<TokenControllerInstance>;
   at(address: string): TokenControllerInstance;
+}
+
+export interface VotingCenterInstance extends ContractInstance {
+  polls(unnamed11: UInt, options?: TransactionOptions): Promise<Address>;
+  createPoll(
+    ipfsHash: string,
+    numOptions: UInt,
+    startTime: UInt,
+    endTime: UInt,
+    options?: TransactionOptions
+  ): Promise<Address>;
+}
+
+export interface VotingCenterContract {
+  new: () => Promise<VotingCenterInstance>;
+  deployed(): Promise<VotingCenterInstance>;
+  at(address: string): VotingCenterInstance;
 }
