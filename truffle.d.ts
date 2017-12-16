@@ -8,7 +8,11 @@ import {
   AccountRegistryContract,
   InviteCollateralizerContract,
   MiniMeVestedTokenContract,
-  BLTContract
+  BLTContract,
+  PollContract,
+  PollInstance,
+  VotingCenterContract,
+  VotingCenterInstance
 } from "./contracts";
 
 declare global {
@@ -86,6 +90,8 @@ interface Artifacts {
   require(name: "AccountRegistry"): AccountRegistryContract;
   require(name: "InviteCollateralizer"): InviteCollateralizerContract;
   require(name: "MiniMeVestedToken"): MiniMeVestedTokenContract;
+  require(name: "Poll"): PollContract;
+  require(name: "VotingCenter"): VotingCenterContract;
   require(name: "BLT"): BLTContract;
   require(name: "./helpers/MockBLT"): MockBLTContract;
 }
@@ -100,5 +106,9 @@ export {
   InviteCollateralizerContract,
   MiniMeVestedTokenContract,
   BLTContract,
-  MockBLTInstance
+  MockBLTInstance,
+  PollContract,
+  PollInstance,
+  VotingCenterContract,
+  VotingCenterInstance
 };
