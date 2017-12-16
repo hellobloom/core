@@ -1,25 +1,20 @@
-const multihash = require("multihashes");
-const { bufferToHex, stripHexPrefix } = require("ethereumjs-util");
 import "./test_setup";
 import { latestBlockTime } from "./helpers/blockInfo";
 import { VotingCenterInstance } from "../truffle";
 import { should } from "./test_setup";
+import * as ipfs from "../src/ipfs";
 
 const VotingCenter = artifacts.require("VotingCenter");
 const Poll = artifacts.require("Poll");
 
 contract("VotingCenter", function([alice]) {
   let votingCenter: VotingCenterInstance;
-  let originalIpfsBuffer: Buffer;
   let ipfsHash: string;
   let pollAddress: string;
 
   beforeEach(async () => {
     votingCenter = await VotingCenter.new();
-    originalIpfsBuffer = multihash.fromB58String(
-      "Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe"
-    );
-    ipfsHash = bufferToHex(originalIpfsBuffer);
+    ipfsHash = ipfs.toHex("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe");
 
     pollAddress = await votingCenter.createPoll.call(
       ipfsHash,
@@ -38,15 +33,9 @@ contract("VotingCenter", function([alice]) {
     );
 
     const poll = Poll.at(pollAddress);
-    const [hashFn, size, hash] = await poll.pollDataMultihash.call();
-
-    const ipfsHashOnPoll = Buffer.concat([
-      Buffer.from([hashFn.toNumber()]),
-      Buffer.from([size.toNumber()]),
-      new Buffer(stripHexPrefix(hash), "hex")
-    ]);
-
-    ipfsHashOnPoll.toString("hex").should.equal(stripHexPrefix(ipfsHash));
+    ipfs
+      .fromStruct(await poll.pollDataMultihash.call())
+      .should.equal("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe");
   });
 
   it("emits an event when a poll is created", async () => {
