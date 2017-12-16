@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity 0.4.18;
 
 contract DependentOnIPFS {
   struct IPFSMultihash {
@@ -7,7 +7,7 @@ contract DependentOnIPFS {
     bytes32 hash;
   }
 
-  function ipfsMultihashFromBytes(bytes _multihashBytes) internal returns (IPFSMultihash) {
+  function ipfsMultihashFromBytes(bytes _multihashBytes) internal pure returns (IPFSMultihash) {
     uint8 _fn;
     uint8 _size;
     bytes32 _hash;

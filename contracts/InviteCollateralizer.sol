@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity 0.4.18;
 
 import "zeppelin/ownership/Ownable.sol";
 import "zeppelin/token/SafeERC20.sol";
@@ -27,14 +27,14 @@ contract InviteCollateralizer is Ownable {
   event CollateralPosted(address indexed owner, uint64 releaseDate, uint256 amount);
   event CollateralSeized(address indexed owner, uint256 collateralId);
 
-  function InviteCollateralizer(ERC20 _blt, address _seizedTokensWallet) {
+  function InviteCollateralizer(ERC20 _blt, address _seizedTokensWallet) public {
     blt = _blt;
     seizedTokensWallet = _seizedTokensWallet;
     collateralTaker = owner;
     collateralSeizer = owner;
   }
 
-  function takeCollateral(address _owner) onlyCollateralTaker returns (bool) {
+  function takeCollateral(address _owner) public onlyCollateralTaker returns (bool) {
     require(blt.transferFrom(_owner, address(this), collateralAmount));
 
     uint64 releaseDate = uint64(now) + 1 years;
@@ -44,7 +44,7 @@ contract InviteCollateralizer is Ownable {
     return true;
   }
 
-  function reclaim() returns (bool) {
+  function reclaim() public returns (bool) {
     require(collateralizations[msg.sender].length > 0);
 
     uint256 reclaimableAmount = 0;
@@ -65,7 +65,7 @@ contract InviteCollateralizer is Ownable {
     return blt.transfer(msg.sender, reclaimableAmount);
   }
 
-  function seize(address _subject, uint256 _collateralId) onlyCollateralSeizer {
+  function seize(address _subject, uint256 _collateralId) public onlyCollateralSeizer {
     require(collateralizations[_subject].length >= _collateralId + 1);
     require(!collateralizations[_subject][_collateralId].claimed);
 
@@ -74,20 +74,20 @@ contract InviteCollateralizer is Ownable {
     CollateralSeized(_subject, _collateralId);
   }
 
-  function changeCollateralTaker(address _newCollateralTaker) nonZero(_newCollateralTaker) onlyOwner {
+  function changeCollateralTaker(address _newCollateralTaker) public nonZero(_newCollateralTaker) onlyOwner {
     collateralTaker = _newCollateralTaker;
   }
 
-  function changeCollateralSeizer(address _newCollateralSeizer) nonZero(_newCollateralSeizer) onlyOwner {
+  function changeCollateralSeizer(address _newCollateralSeizer) public nonZero(_newCollateralSeizer) onlyOwner {
     collateralSeizer = _newCollateralSeizer;
   }
 
-  function changeCollateralAmount(uint256 _newAmount) onlyOwner {
+  function changeCollateralAmount(uint256 _newAmount) public onlyOwner {
     require(_newAmount > 0);
     collateralAmount = _newAmount;
   }
 
-  function changeSeizedTokensWallet(address _newSeizedTokensWallet) nonZero(_newSeizedTokensWallet) onlyOwner {
+  function changeSeizedTokensWallet(address _newSeizedTokensWallet) public nonZero(_newSeizedTokensWallet) onlyOwner {
     seizedTokensWallet = _newSeizedTokensWallet; 
   }
 

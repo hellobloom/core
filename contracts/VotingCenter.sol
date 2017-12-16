@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity 0.4.18;
 
 import "./Poll.sol";
 
@@ -12,7 +12,7 @@ contract VotingCenter {
     uint16 _numOptions,
     uint256 _startTime,
     uint256 _endTime
-  ) returns (address) {
+  ) public returns (address) {
     Poll newPoll = new Poll(_ipfsHash, _numOptions, _startTime, _endTime, msg.sender);
     polls.push(newPoll);
 
