@@ -2,8 +2,8 @@ pragma solidity 0.4.18;
 
 
 /**
- * Pulled from OpenZeppelin: https://git.io/vbaRf
- * When this is in a public release we will switch to not vendoring this file
+ * @dev Pulled from OpenZeppelin: https://git.io/vbaRf
+ *   When this is in a public release we will switch to not vendoring this file
  *
  * @title Eliptic curve signature operations
  *

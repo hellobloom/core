@@ -3,6 +3,13 @@ pragma solidity 0.4.18;
 import "./VotingCenter.sol";
 import "./DependentOnIPFS.sol";
 
+/**
+ * @title Voteable poll with associated IPFS data
+ *
+ * A poll records votes on a variable number of choices. A poll specifies
+ * a window during which users can vote. Information like the poll title and
+ * the descriptions for each option are stored on IPFS.
+ */
 contract Poll is DependentOnIPFS {
   IPFSMultihash public pollDataMultihash;
   uint16 public numChoices;
@@ -28,6 +35,10 @@ contract Poll is DependentOnIPFS {
     author = _author;
   }
 
+  /**
+   * @dev Cast or change your vote
+   * @param _choice The index of the option in the corresponding IPFS document.
+   */
   function vote(uint16 _choice) public duringPoll {
     // Choices are indexed from 1 since the mapping returns 0 for "no vote cast"
     require(_choice <= numChoices && _choice > 0);
