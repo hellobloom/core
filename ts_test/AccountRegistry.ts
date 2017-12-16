@@ -162,7 +162,7 @@ contract("AccountRegistry", function([owner, alice, bob, seizedTokensWallet]) {
 
     beforeEach(async () => {
       differentCollateralizer = await InviteCollateralizer.new("0x1", "0x2");
-      collateralizerAddressBefore = await registry.inviteCollateralizer();
+      collateralizerAddressBefore = await registry.inviteCollateralizer.call();
     });
 
     it("allows the owner to change the invite collateralizer", async () => {

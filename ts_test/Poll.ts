@@ -85,7 +85,7 @@ contract("Poll", function([alice]) {
   });
 
   it("exposes an IPFS hash", async () => {
-    const [hashFn, size, hash] = await poll.pollDataMultihash();
+    const [hashFn, size, hash] = await poll.pollDataMultihash.call();
     const ipfsHashBuffer = Buffer.concat([
       Buffer.from([hashFn.toNumber()]),
       Buffer.from([size.toNumber()]),

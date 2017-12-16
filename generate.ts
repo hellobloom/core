@@ -137,9 +137,11 @@ function buildFunctionMember(member: FunctionMember) {
     args += ", ";
   }
 
-  return `${member.name}(${args}options?: TransactionOptions): ${translateOutputs(
-    member.outputs
-  )};`;
+  const functionSignature = `(${args}options?: TransactionOptions)`;
+  return `${member.name}: {
+    ${functionSignature}: Promise<Web3.TransactionReceipt>;
+    call${functionSignature}: ${translateOutputs(member.outputs)};
+  }`;
 }
 
 function translateOutputs(outputs: FunctionMemberInput[]) {
