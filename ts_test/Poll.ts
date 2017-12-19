@@ -81,7 +81,7 @@ contract("Poll", function([alice]) {
 
   it("exposes an IPFS hash", async () => {
     ipfs
-      .fromStruct(await poll.pollDataMultihash.call())
+      .fromHex(await poll.pollDataMultihash.call())
       .should.equal("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe");
   });
 
