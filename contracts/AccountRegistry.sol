@@ -113,26 +113,6 @@ contract AccountRegistry is Ownable {
   }
 
   /**
-   * @dev Recover the address associated with the public key that signed the provided signature
-   * @param _sig Signature of `msg.sender`
-   */
-  function recoverSigner(bytes _sig) private view returns (address) {
-    address signer = ECRecovery.recover(keccak256(msg.sender), _sig);
-    require(signer != address(0));
-
-    return signer;
-  }
-
-  /**
-   * @dev Create an account and emit an event
-   * @param _newUser Address of the new user
-   */
-  function createAccountFor(address _newUser) private {
-    accounts[_newUser] = true;
-    AccountCreated(_newUser);
-  }
-
-  /**
    * @dev Check if an invite has not been set on the struct meaning it hasn't been accepted
    */
   function inviteHasNotBeenAccepted(address _signer) internal view returns (bool) {
@@ -151,6 +131,26 @@ contract AccountRegistry is Ownable {
    */
   function inviteExists(address _signer) internal view returns (bool) {
     return invites[_signer].creator != address(0);
+  }
+
+  /**
+   * @dev Recover the address associated with the public key that signed the provided signature
+   * @param _sig Signature of `msg.sender`
+   */
+  function recoverSigner(bytes _sig) private view returns (address) {
+    address signer = ECRecovery.recover(keccak256(msg.sender), _sig);
+    require(signer != address(0));
+
+    return signer;
+  }
+
+  /**
+   * @dev Create an account and emit an event
+   * @param _newUser Address of the new user
+   */
+  function createAccountFor(address _newUser) private {
+    accounts[_newUser] = true;
+    AccountCreated(_newUser);
   }
 
   /**

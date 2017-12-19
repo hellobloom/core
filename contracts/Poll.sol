@@ -11,6 +11,9 @@ import "./DependentOnIPFS.sol";
  * the descriptions for each option are stored on IPFS.
  */
 contract Poll is DependentOnIPFS {
+  // There isn't a way around using time to determine when votes can be cast
+  // solhint-disable not-rely-on-time
+
   bytes public pollDataMultihash;
   uint16 public numChoices;
   uint256 public startTime;
@@ -19,7 +22,7 @@ contract Poll is DependentOnIPFS {
 
   mapping(address => uint16) public votes;
 
-  event Vote(address indexed voter, uint16 indexed choice);
+  event VoteCast(address indexed voter, uint16 indexed choice);
 
   function Poll(
     bytes _ipfsHash,
@@ -47,7 +50,7 @@ contract Poll is DependentOnIPFS {
     require(_choice <= numChoices && _choice > 0);
 
     votes[msg.sender] = _choice;
-    Vote(msg.sender, _choice);
+    VoteCast(msg.sender, _choice);
   }
 
   modifier duringPoll {

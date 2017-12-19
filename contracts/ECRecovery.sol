@@ -27,6 +27,8 @@ library ECRecovery {
       return (address(0));
     }
 
+    // Extracting these values isn't possible without assembly
+    // solhint-disable no-inline-assembly
     // Divide the signature in r, s and v variables
     assembly {
       r := mload(add(sig, 32))

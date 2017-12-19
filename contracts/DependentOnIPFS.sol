@@ -30,6 +30,8 @@ contract DependentOnIPFS {
 
     uint8 _size;
 
+    // There isn't another way to extract only this byte into a uint8
+    // solhint-disable no-inline-assembly
     assembly {
       // Seek forward 33 bytes beyond the solidity length value and the hash function byte
       _size := byte(0, mload(add(_multihashBytes, 33)))
