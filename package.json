@@ -27,6 +27,7 @@
     "ganache-cli": "^6.0.3",
     "multihashes": "^0.4.12",
     "prettier": "^1.9.2",
+    "solhint": "^1.1.9",
     "solidity-coverage": "^0.2.2",
     "truffle-hdwallet-provider": "^0.0.3",
     "ts-node": "^4.0.0",
