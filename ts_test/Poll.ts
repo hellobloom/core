@@ -70,7 +70,7 @@ contract("Poll", function([alice]) {
 
     const matchingLog = logs.find(log => {
       return (
-        log.event === "Vote" &&
+        log.event === "VoteCast" &&
         log.args.voter === alice &&
         (log.args.choice as BigNumber.BigNumber).equals(new BigNumber(1))
       );
