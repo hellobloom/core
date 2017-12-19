@@ -1482,9 +1482,7 @@ export interface PollInstance extends ContractInstance {
   };
   pollDataMultihash: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(
-      options?: TransactionOptions
-    ): Promise<[BigNumber.BigNumber, BigNumber.BigNumber, string]>;
+    call(options?: TransactionOptions): Promise<string>;
   };
   author: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;

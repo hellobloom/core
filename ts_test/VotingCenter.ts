@@ -34,7 +34,7 @@ contract("VotingCenter", function([alice]) {
 
     const poll = Poll.at(pollAddress);
     ipfs
-      .fromStruct(await poll.pollDataMultihash.call())
+      .fromHex(await poll.pollDataMultihash.call())
       .should.equal("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe");
   });
 

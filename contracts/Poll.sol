@@ -11,7 +11,7 @@ import "./DependentOnIPFS.sol";
  * the descriptions for each option are stored on IPFS.
  */
 contract Poll is DependentOnIPFS {
-  IPFSMultihash public pollDataMultihash;
+  bytes public pollDataMultihash;
   uint16 public numChoices;
   uint256 public startTime;
   uint256 public endTime;
@@ -31,8 +31,10 @@ contract Poll is DependentOnIPFS {
     numChoices = _numChoices;
     startTime = _startTime;
     endTime = _endTime;
-    pollDataMultihash = ipfsMultihashFromBytes(_ipfsHash);
+    pollDataMultihash = _ipfsHash;
     author = _author;
+
+    require(isValidIPFSMultihash(pollDataMultihash));
   }
 
   /**

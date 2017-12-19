@@ -6,8 +6,6 @@ var Poll = artifacts.require("Poll");
 module.exports = function(deployer) {
   deployer.deploy(ECRecovery);
   deployer.link(ECRecovery, AccountRegistry);
-  deployer.deploy(Poll);
-
   deployer
     .deploy(BLT)
     .then(() => BLT.deployed())
