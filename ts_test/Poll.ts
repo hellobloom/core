@@ -88,4 +88,24 @@ contract("Poll", function([alice]) {
   it("exposes an author", async () => {
     (await poll.author()).should.be.equal(alice);
   });
+
+  it("rejects polls with a start date earlier than now", async () => {
+    await Poll.new(
+      ipfs.toHex("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe"),
+      10,
+      100,
+      200,
+      alice
+    ).should.be.rejectedWith(EVMThrow);
+  });
+
+  it("rejects polls with an end date that is not later than the start date", async () => {
+    await Poll.new(
+      ipfs.toHex("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe"),
+      10,
+      latestBlockTime() + 10,
+      latestBlockTime() + 10,
+      alice
+    ).should.be.rejectedWith(EVMThrow);
+  });
 });
