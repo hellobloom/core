@@ -7,6 +7,10 @@ import "zeppelin/token/ERC20.sol";
 import "./AccountRegistry.sol";
 
 contract InviteCollateralizer is Ownable {
+  // We need to rely on time for lockup periods. The amount that miners can manipulate
+  // a timestamp is not a concern for this behavior since token lockups are for several months
+  // solhint-disable not-rely-on-time
+
   using SafeMath for uint256;
   using SafeERC20 for ERC20;
 
