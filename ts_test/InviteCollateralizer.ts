@@ -271,9 +271,24 @@ contract("InviteCollateralizer", function([
       );
     });
 
-    it("does not allow otehrs to change the collateral amount", async () => {
+    it("does not allow others to change the collateral amount", async () => {
       await collateralizer
         .changeCollateralAmount(new BigNumber("2e17"), { from: alice })
+        .should.be.rejectedWith(EVMThrow);
+    });
+  });
+
+  describe("changing the lockup duration", async () => {
+    it("allows the owner to change the lockup duration", async () => {
+      await collateralizer.changeLockupDuration(15768000).should.be.fulfilled;
+      (await collateralizer.lockupDuration()).should.be.bignumber.equal(
+        "15768000"
+      );
+    });
+
+    it("does not allow others to change the lockup duration", async () => {
+      await collateralizer
+        .changeLockupDuration(15768000, { from: alice })
         .should.be.rejectedWith(EVMThrow);
     });
   });

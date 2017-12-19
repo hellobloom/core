@@ -656,9 +656,22 @@ export interface ERC20BasicContract {
 }
 
 export interface InviteCollateralizerInstance extends ContractInstance {
+  changeLockupDuration: {
+    (newLockupDuration: UInt, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      newLockupDuration: UInt,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
   seizedTokensWallet: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<Address>;
+  };
+  lockupDuration: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   };
   changeCollateralTaker: {
     (newCollateralTaker: Address, options?: TransactionOptions): Promise<

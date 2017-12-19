@@ -14,6 +14,7 @@ contract InviteCollateralizer is Ownable {
   address public seizedTokensWallet;
   mapping (address => Collateralization[]) public collateralizations;
   uint256 public collateralAmount = 1e17;
+  uint64 public lockupDuration = 1 years;
 
   address private collateralTaker;
   address private collateralSeizer;
@@ -37,7 +38,7 @@ contract InviteCollateralizer is Ownable {
   function takeCollateral(address _owner) public onlyCollateralTaker returns (bool) {
     require(blt.transferFrom(_owner, address(this), collateralAmount));
 
-    uint64 releaseDate = uint64(now) + 1 years;
+    uint64 releaseDate = uint64(now) + lockupDuration;
     CollateralPosted(_owner, releaseDate, collateralAmount);
     collateralizations[_owner].push(Collateralization(collateralAmount, releaseDate, false));
 
@@ -89,6 +90,10 @@ contract InviteCollateralizer is Ownable {
 
   function changeSeizedTokensWallet(address _newSeizedTokensWallet) public nonZero(_newSeizedTokensWallet) onlyOwner {
     seizedTokensWallet = _newSeizedTokensWallet; 
+  }
+
+  function changeLockupDuration(uint64 _newLockupDuration) public onlyOwner {
+    lockupDuration = _newLockupDuration;
   }
 
   modifier nonZero(address _address) {
