@@ -11,26 +11,25 @@ contract("VotingCenter", function([alice]) {
   let votingCenter: VotingCenterInstance;
   let ipfsHash: string;
   let pollAddress: string;
+  let startTime: number;
+  let endTime: number;
 
   beforeEach(async () => {
     votingCenter = await VotingCenter.new();
     ipfsHash = ipfs.toHex("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe");
+    startTime = latestBlockTime() + 10;
+    endTime = startTime + 100;
 
     pollAddress = await votingCenter.createPoll.call(
       ipfsHash,
       10,
-      latestBlockTime(),
-      latestBlockTime() + 100
+      startTime,
+      endTime
     );
   });
 
   it("lets anyone create a poll", async () => {
-    await votingCenter.createPoll(
-      ipfsHash,
-      10,
-      latestBlockTime(),
-      latestBlockTime() + 100
-    );
+    await votingCenter.createPoll(ipfsHash, 10, startTime, endTime);
 
     const poll = Poll.at(pollAddress);
     ipfs
@@ -42,8 +41,8 @@ contract("VotingCenter", function([alice]) {
     const { logs } = await votingCenter.createPoll(
       ipfsHash,
       10,
-      latestBlockTime(),
-      latestBlockTime() + 100
+      startTime,
+      endTime
     );
 
     const matchingLog = logs.find(
@@ -57,12 +56,7 @@ contract("VotingCenter", function([alice]) {
   });
 
   it("sets the author on the Poll", async () => {
-    await votingCenter.createPoll(
-      ipfsHash,
-      10,
-      latestBlockTime(),
-      latestBlockTime() + 100
-    );
+    await votingCenter.createPoll(ipfsHash, 10, startTime, endTime);
 
     const poll = Poll.at(pollAddress);
     (await poll.author()).should.be.equal(alice);

@@ -28,13 +28,14 @@ contract Poll is DependentOnIPFS {
     uint256 _endTime,
     address _author
   ) public {
+    require(_startTime >= now && _endTime > _startTime);
+    require(isValidIPFSMultihash(_ipfsHash));
+
     numChoices = _numChoices;
     startTime = _startTime;
     endTime = _endTime;
     pollDataMultihash = _ipfsHash;
     author = _author;
-
-    require(isValidIPFSMultihash(pollDataMultihash));
   }
 
   /**
