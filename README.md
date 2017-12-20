@@ -1,16 +1,8 @@
-## Outline
+# Bloom Core Contracts
 
-- Account Registry
-    - Tracks accounts by address
-    - Tracks pending invites as `mapping(address => mapping(address => bool))`
-    - Tracks invites as `mapping(address => bool)`
-    - Should only allow the collateralizer transition things from pending invite to invite
-    - `createAccount` converts an invite to an account
-- Invite Collateralizer
-    - Locks up a certain amount of BLT
-    - Finalizes invites when BLT is secured
-    - Locks up for specified period
+This repo houses the core contracts developed for the Bloom protocol. This README outlines the happy paths of the protocol as a method of explaining the role of each contract and how they are used.
 
-### Extra Credit
+## Prerequisites
 
-- Maybe the registry should be hooked up to an `InvitePromotionGateway` which could include both a simple bloom contract and the invite collateralizer?
+These contracts assume that the [Bloom token sale](https://github.com/hellobloom/crowdsale) is over and people can freely transfer BLT (our ERC20 token) to each other.
+
