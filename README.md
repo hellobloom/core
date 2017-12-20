@@ -88,3 +88,11 @@ const inviteStruct = await accountRegistry.invites(signingAddressString);
 const inviter = inviteStruct[0];   // Should be Alice's address
 const recipient = inviteStruct[1]; // Should be 0x0 until Bob accepts
 ```
+
+## Sharing an Invite
+
+A private invite for another user is fascilitated via the private key generated specifically for the invite. To avoid confusion, we'll refer to this key as the "shared secret."
+
+After Alice submits her signature via the `createInvite` function, she should securely send the shared secret out of band with Bob. This invite model intentionally makes a tradeoff for the sake of user experience: if the shared secret is leaked to a malicious third party before the invite is accepted then the attacker can claim the user's invite. This is an important compromise to make in order to support an invite system that doesn't require knowing the ETH address of the user you are inviting. Requiring the inviter to know the recipients addres would add significant friction to onboarding new users.
+
+A well-built dApp can design the invite experience to reduce the risk of malicious users claiming invites. For example, when Alice creates an invite, the dApp can generate the shared secret and sign Alice's address server side. The invite can be stored along side a normal identifier such that Bob only has to visit `https://example.hellobloom.io/invite/123`. When Bob provides the address he would like to use on Bloom's platform, his address can be signed server side as well using the shared secret. As a final precaution, before Bob accepts the invite, the dApp can ask him to confirm his email by sending an additional confirmation link before signing his invite. This dApp architecture increases the cost significantly for stealing Bloom invites. Now an attacker would need to compromise our centralized database and also access the email accounts for each user with a pending invite.
