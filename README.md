@@ -147,3 +147,14 @@ ipfs.addJSON(poll, (err, ipfsMultihash) => {
 Creating the poll via the voting center helps Bloom track which polls are meant to be part of the network. Each Poll is its own contract which people can interact with.
 
 The poll information is stored in IPFS since it would be too constly to store on the contract itself. We store the IPFS multihash with the Poll though so that anyone can recreate their own voting dApp if they would like.
+
+## Voting in a Poll
+
+Weighing in on a poll within the bloom network is easy. All you do is call the `vote` function on the corresponding `Poll` contract with the number of the choice you want (so if I called `vote(1)` in the previous example I would have voted for Vanilla).
+
+You can get a list of all polls from the `VotingCenter` contract by calling the `polls()` function. Using the `author` field on the `Poll` contract, you can do whatever filtering you want. We expect to start with two types of filters:
+
+1. Polls created by Bloom staff
+2. Polls created by Bloom users
+
+Anyonce can vote on a poll. The weighting and scoring mechanisms are not enforced on chain. We will evaluate polls by looking at the BLT balance of each voter at the end of the poll. Therefore, Alice can vote on a poll and acquire more BLT before the vote closes in order to increase her voice. If she wants, she can always change her vote until the poll closes.
