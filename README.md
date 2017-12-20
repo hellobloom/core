@@ -102,3 +102,48 @@ A well-built dApp can design the invite experience to reduce the risk of malicio
 When Bob receives his shared secret via the process described above, all he has to do is sign his own address using the shared secret and submit that signature to `acceptInvite`. The code for this signing process is identical to the "Inviting another User" section except Bob doesn't need to generate a new key.
 
 Accepting an invite is not vulnerable to transaction front running since the `acceptInvite` transaction is not revealing the secret. A malicious user could not simply submit the same signature to our account registry because the contract recovers signing public key from the signature by computing `keccak256(msg.sender)`.
+
+## Creating a poll
+
+Bloom's protocol heavily relies on community voting to make important protocol decisions. Anyone can create a Poll in the Bloom network by interacting with the `VotingCenter` contract. You don't have to have a Bloom account to *create* a poll, but the dApp will likely filter the polls it displays to include polls created by community members.
+
+For example, if Alice wanted to create a very simple poll within the Bloom network, it might look like this:
+
+```js
+// Example code for make a poll
+
+// This module exists in the repo! Checkout https://git.io/vbMUl
+const ipfsUtils = require("./src/ipfs");
+
+// Create a connection to IFPS
+const IPFS = require("ipfs-mini");
+const ipfs = new IPFS({
+  host: "ipfs.infura.io",
+  port: 5001,
+  protocol: "https"
+});
+
+// Poll data we want to store
+const poll = {
+  title: "What kind of ice cream should I buy?",
+  description: "I am hosting a party soon and I need to decide!",
+  choices: ["Vanilla", "Chocolate", "Strawberry"]
+};
+
+// Write the data to IPFS
+ipfs.addJSON(poll, (err, ipfsMultihash) => {
+  if (err) throw err;
+
+  // On success, create the poll via the voting center
+  votingCenter.createPoll(
+    ipfsUtils.toHex(ipfsMultihash),
+    poll.choices.length,
+    +new Date() / 1000 + 60 * 5, // start in 5 minutes
+    +new Date() / 1000 + 60 * 60 * 24 * 7 // end the poll in 1 week
+  );
+});
+```
+
+Creating the poll via the voting center helps Bloom track which polls are meant to be part of the network. Each Poll is its own contract which people can interact with.
+
+The poll information is stored in IPFS since it would be too constly to store on the contract itself. We store the IPFS multihash with the Poll though so that anyone can recreate their own voting dApp if they would like.
