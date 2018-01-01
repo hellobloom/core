@@ -1584,11 +1584,19 @@ export interface TokenControllerContract {
 }
 
 export interface VotingCenterInstance extends ContractInstance {
+  numPolls: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  };
   polls: {
     (unnamed11: UInt, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
     >;
     call(unnamed11: UInt, options?: TransactionOptions): Promise<Address>;
+  };
+  allPolls: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<Address[]>;
   };
   createPoll: {
     (
