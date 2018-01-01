@@ -35,4 +35,12 @@ contract VotingCenter {
 
     return address(newPoll);
   }
+
+  function allPolls() view public returns (Poll[]) {
+    return polls;
+  }
+
+  function numPolls() view public returns (uint256) {
+    return polls.length;
+  }
 }
