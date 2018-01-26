@@ -157,4 +157,4 @@ You can get a list of all polls from the `VotingCenter` contract by calling the 
 1. Polls created by Bloom staff
 2. Polls created by Bloom users
 
-Anyonce can vote on a poll. The weighting and scoring mechanisms are not enforced on chain. We will evaluate polls by looking at the BLT balance of each voter at the end of the poll. Therefore, Alice can vote on a poll and acquire more BLT before the vote closes in order to increase her voice. If she wants, she can always change her vote until the poll closes.
+Anyone can vote on a poll. The weighting and scoring mechanisms are not enforced on chain. We will evaluate polls by looking at the BLT balance of each voter at the end of the poll. Therefore, Alice can vote on a poll and acquire more BLT before the vote closes in order to increase her voice. If she wants, she can always change her vote until the poll closes.
