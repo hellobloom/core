@@ -1,8 +1,8 @@
 pragma solidity ^0.4.15;
 
 import "./MiniMeToken.sol";
-import "zeppelin/math/SafeMath.sol";
-import "zeppelin/math/Math.sol";
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "zeppelin-solidity/contracts/math/Math.sol";
 
 /*
     Based on MiniMeIrrevocableVestedToken from https://git.io/vdTQI

@@ -1,9 +1,9 @@
-pragma solidity 0.4.18;
+pragma solidity ^0.4.18;
 
-import "zeppelin/ownership/Ownable.sol";
-import "zeppelin/token/SafeERC20.sol";
-import "zeppelin/math/SafeMath.sol";
-import "zeppelin/token/ERC20.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "zeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "./AccountRegistry.sol";
 
 contract InviteCollateralizer is Ownable {

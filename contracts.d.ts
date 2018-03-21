@@ -25,36 +25,9 @@ interface ContractInstance {
 }
 
 export interface AccountRegistryInstance extends ContractInstance {
-  setInviteCollateralizer: {
-    (newInviteCollateralizer: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      newInviteCollateralizer: Address,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-  };
   inviteCollateralizer: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<Address>;
-  };
-  setInviteAdmin: {
-    (newInviteAdmin: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      newInviteAdmin: Address,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-  };
-  createInvite: {
-    (sig: string, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      sig: string,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
   };
   accounts: {
     (unnamed0: Address, options?: TransactionOptions): Promise<
@@ -75,15 +48,6 @@ export interface AccountRegistryInstance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<[Address, Address]>;
   };
-  createAccount: {
-    (newUser: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      newUser: Address,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-  };
   blt: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<Address>;
@@ -94,6 +58,43 @@ export interface AccountRegistryInstance extends ContractInstance {
     >;
     call(
       newOwner: Address,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
+
+  setInviteCollateralizer: {
+    (newInviteCollateralizer: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      newInviteCollateralizer: Address,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
+  setInviteAdmin: {
+    (newInviteAdmin: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      newInviteAdmin: Address,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
+  createAccount: {
+    (newUser: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      newUser: Address,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
+  createInvite: {
+    (sig: string, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      sig: string,
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>;
   };
@@ -490,6 +491,11 @@ export interface BLTContract {
 }
 
 export interface ControlledInstance extends ContractInstance {
+  controller: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<Address>;
+  };
+
   changeController: {
     (newController: Address, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
@@ -498,10 +504,6 @@ export interface ControlledInstance extends ContractInstance {
       newController: Address,
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>;
-  };
-  controller: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<Address>;
   };
 }
 
@@ -558,33 +560,9 @@ export interface ECRecoveryContract {
 }
 
 export interface ERC20Instance extends ContractInstance {
-  approve: {
-    (spender: Address, value: UInt, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      spender: Address,
-      value: UInt,
-      options?: TransactionOptions
-    ): Promise<boolean>;
-  };
   totalSupply: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
-  };
-  transferFrom: {
-    (
-      from: Address,
-      to: Address,
-      value: UInt,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-    call(
-      from: Address,
-      to: Address,
-      value: UInt,
-      options?: TransactionOptions
-    ): Promise<boolean>;
   };
   balanceOf: {
     (who: Address, options?: TransactionOptions): Promise<
@@ -605,6 +583,7 @@ export interface ERC20Instance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<boolean>;
   };
+
   allowance: {
     (owner: Address, spender: Address, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
@@ -614,6 +593,30 @@ export interface ERC20Instance extends ContractInstance {
       spender: Address,
       options?: TransactionOptions
     ): Promise<BigNumber.BigNumber>;
+  };
+  transferFrom: {
+    (
+      from: Address,
+      to: Address,
+      value: UInt,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+    call(
+      from: Address,
+      to: Address,
+      value: UInt,
+      options?: TransactionOptions
+    ): Promise<boolean>;
+  };
+  approve: {
+    (spender: Address, value: UInt, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      spender: Address,
+      value: UInt,
+      options?: TransactionOptions
+    ): Promise<boolean>;
   };
 }
 
@@ -656,15 +659,6 @@ export interface ERC20BasicContract {
 }
 
 export interface InviteCollateralizerInstance extends ContractInstance {
-  changeLockupDuration: {
-    (newLockupDuration: UInt, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      newLockupDuration: UInt,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-  };
   seizedTokensWallet: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<Address>;
@@ -673,12 +667,75 @@ export interface InviteCollateralizerInstance extends ContractInstance {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   };
+  collateralizations: {
+    (unnamed5: Address, unnamed6: UInt, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      unnamed5: Address,
+      unnamed6: UInt,
+      options?: TransactionOptions
+    ): Promise<[BigNumber.BigNumber, BigNumber.BigNumber, boolean]>;
+  };
+  owner: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<Address>;
+  };
+  collateralAmount: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  };
+  blt: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<Address>;
+  };
+  transferOwnership: {
+    (newOwner: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      newOwner: Address,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
+
+  takeCollateral: {
+    (owner: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(owner: Address, options?: TransactionOptions): Promise<boolean>;
+  };
+  reclaim: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<boolean>;
+  };
+  seize: {
+    (
+      subject: Address,
+      collateralId: UInt,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+    call(
+      subject: Address,
+      collateralId: UInt,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
   changeCollateralTaker: {
     (newCollateralTaker: Address, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
     >;
     call(
       newCollateralTaker: Address,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
+  changeCollateralSeizer: {
+    (newCollateralSeizer: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      newCollateralSeizer: Address,
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>;
   };
@@ -700,65 +757,12 @@ export interface InviteCollateralizerInstance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>;
   };
-  collateralizations: {
-    (unnamed5: Address, unnamed6: UInt, options?: TransactionOptions): Promise<
+  changeLockupDuration: {
+    (newLockupDuration: UInt, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
     >;
     call(
-      unnamed5: Address,
-      unnamed6: UInt,
-      options?: TransactionOptions
-    ): Promise<[BigNumber.BigNumber, BigNumber.BigNumber, boolean]>;
-  };
-  reclaim: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<boolean>;
-  };
-  changeCollateralSeizer: {
-    (newCollateralSeizer: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      newCollateralSeizer: Address,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-  };
-  owner: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<Address>;
-  };
-  collateralAmount: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
-  };
-  blt: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<Address>;
-  };
-  takeCollateral: {
-    (owner: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(owner: Address, options?: TransactionOptions): Promise<boolean>;
-  };
-  seize: {
-    (
-      subject: Address,
-      collateralId: UInt,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-    call(
-      subject: Address,
-      collateralId: UInt,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-  };
-  transferOwnership: {
-    (newOwner: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      newOwner: Address,
+      newLockupDuration: UInt,
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>;
   };
@@ -782,15 +786,6 @@ export interface MathContract {
 }
 
 export interface MetaCoinInstance extends ContractInstance {
-  getBalanceInEth: {
-    (addr: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      addr: Address,
-      options?: TransactionOptions
-    ): Promise<BigNumber.BigNumber>;
-  };
   sendCoin: {
     (receiver: Address, amount: UInt, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
@@ -800,6 +795,15 @@ export interface MetaCoinInstance extends ContractInstance {
       amount: UInt,
       options?: TransactionOptions
     ): Promise<boolean>;
+  };
+  getBalanceInEth: {
+    (addr: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      addr: Address,
+      options?: TransactionOptions
+    ): Promise<BigNumber.BigNumber>;
   };
   getBalance: {
     (addr: Address, options?: TransactionOptions): Promise<
@@ -819,15 +823,6 @@ export interface MetaCoinContract {
 }
 
 export interface MigrationsInstance extends ContractInstance {
-  upgrade: {
-    (new_address: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      new_address: Address,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-  };
   last_completed_migration: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
@@ -836,12 +831,22 @@ export interface MigrationsInstance extends ContractInstance {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<Address>;
   };
+
   setCompleted: {
     (completed: UInt, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
     >;
     call(
       completed: UInt,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
+  upgrade: {
+    (new_address: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      new_address: Address,
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>;
   };
@@ -858,23 +863,61 @@ export interface MiniMeTokenInstance extends ContractInstance {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<string>;
   };
-  approve: {
-    (spender: Address, amount: UInt, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      spender: Address,
-      amount: UInt,
-      options?: TransactionOptions
-    ): Promise<boolean>;
-  };
   creationBlock: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   };
-  totalSupply: {
+  decimals: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  };
+  changeController: {
+    (newController: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      newController: Address,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
+  version: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<string>;
+  };
+  parentToken: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<Address>;
+  };
+  symbol: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<string>;
+  };
+  transfersEnabled: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<boolean>;
+  };
+  parentSnapShotBlock: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
+  };
+  tokenFactory: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<Address>;
+  };
+  controller: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<Address>;
+  };
+
+  transfer: {
+    (to: Address, amount: UInt, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      to: Address,
+      amount: UInt,
+      options?: TransactionOptions
+    ): Promise<boolean>;
   };
   transferFrom: {
     (
@@ -890,18 +933,52 @@ export interface MiniMeTokenInstance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<boolean>;
   };
-  decimals: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
-  };
-  changeController: {
-    (newController: Address, options?: TransactionOptions): Promise<
+  balanceOf: {
+    (owner: Address, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
     >;
     call(
-      newController: Address,
+      owner: Address,
+      options?: TransactionOptions
+    ): Promise<BigNumber.BigNumber>;
+  };
+  approve: {
+    (spender: Address, amount: UInt, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      spender: Address,
+      amount: UInt,
+      options?: TransactionOptions
+    ): Promise<boolean>;
+  };
+  allowance: {
+    (owner: Address, spender: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      owner: Address,
+      spender: Address,
+      options?: TransactionOptions
+    ): Promise<BigNumber.BigNumber>;
+  };
+  approveAndCall: {
+    (
+      spender: Address,
+      amount: UInt,
+      extraData: string,
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>;
+    call(
+      spender: Address,
+      amount: UInt,
+      extraData: string,
+      options?: TransactionOptions
+    ): Promise<boolean>;
+  };
+  totalSupply: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   };
   balanceOfAt: {
     (owner: Address, blockNumber: UInt, options?: TransactionOptions): Promise<
@@ -913,9 +990,14 @@ export interface MiniMeTokenInstance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<BigNumber.BigNumber>;
   };
-  version: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<string>;
+  totalSupplyAt: {
+    (blockNumber: UInt, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      blockNumber: UInt,
+      options?: TransactionOptions
+    ): Promise<BigNumber.BigNumber>;
   };
   createCloneToken: {
     (
@@ -935,19 +1017,6 @@ export interface MiniMeTokenInstance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<Address>;
   };
-  balanceOf: {
-    (owner: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      owner: Address,
-      options?: TransactionOptions
-    ): Promise<BigNumber.BigNumber>;
-  };
-  parentToken: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<Address>;
-  };
   generateTokens: {
     (owner: Address, amount: UInt, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
@@ -955,51 +1024,6 @@ export interface MiniMeTokenInstance extends ContractInstance {
     call(
       owner: Address,
       amount: UInt,
-      options?: TransactionOptions
-    ): Promise<boolean>;
-  };
-  symbol: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<string>;
-  };
-  totalSupplyAt: {
-    (blockNumber: UInt, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      blockNumber: UInt,
-      options?: TransactionOptions
-    ): Promise<BigNumber.BigNumber>;
-  };
-  transfer: {
-    (to: Address, amount: UInt, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      to: Address,
-      amount: UInt,
-      options?: TransactionOptions
-    ): Promise<boolean>;
-  };
-  transfersEnabled: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<boolean>;
-  };
-  parentSnapShotBlock: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
-  };
-  approveAndCall: {
-    (
-      spender: Address,
-      amount: UInt,
-      extraData: string,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-    call(
-      spender: Address,
-      amount: UInt,
-      extraData: string,
       options?: TransactionOptions
     ): Promise<boolean>;
   };
@@ -1013,29 +1037,6 @@ export interface MiniMeTokenInstance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<boolean>;
   };
-  allowance: {
-    (owner: Address, spender: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      owner: Address,
-      spender: Address,
-      options?: TransactionOptions
-    ): Promise<BigNumber.BigNumber>;
-  };
-  claimTokens: {
-    (token: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      token: Address,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-  };
-  tokenFactory: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<Address>;
-  };
   enableTransfers: {
     (transfersEnabled: boolean, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
@@ -1045,9 +1046,14 @@ export interface MiniMeTokenInstance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>;
   };
-  controller: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<Address>;
+  claimTokens: {
+    (token: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      token: Address,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
   };
 }
 
@@ -1095,15 +1101,6 @@ export interface MiniMeTokenFactoryContract {
 }
 
 export interface MiniMeVestedTokenInstance extends ContractInstance {
-  tokenGrantsCount: {
-    (holder: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      holder: Address,
-      options?: TransactionOptions
-    ): Promise<BigNumber.BigNumber>;
-  };
   name: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<string>;
@@ -1118,15 +1115,6 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<boolean>;
   };
-  spendableBalanceOf: {
-    (holder: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      holder: Address,
-      options?: TransactionOptions
-    ): Promise<BigNumber.BigNumber>;
-  };
   creationBlock: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
@@ -1140,30 +1128,6 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
       Web3.TransactionReceipt
     >;
     call(unnamed7: Address, options?: TransactionOptions): Promise<boolean>;
-  };
-  setCanCreateGrants: {
-    (addr: Address, allowed: boolean, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      addr: Address,
-      allowed: boolean,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-  };
-  transferFrom: {
-    (
-      from: Address,
-      to: Address,
-      value: UInt,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-    call(
-      from: Address,
-      to: Address,
-      value: UInt,
-      options?: TransactionOptions
-    ): Promise<boolean>;
   };
   grants: {
     (unnamed8: Address, unnamed9: UInt, options?: TransactionOptions): Promise<
@@ -1212,27 +1176,6 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<string>;
   };
-  tokenGrant: {
-    (holder: Address, grantId: UInt, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      holder: Address,
-      grantId: UInt,
-      options?: TransactionOptions
-    ): Promise<
-      [
-        Address,
-        BigNumber.BigNumber,
-        BigNumber.BigNumber,
-        BigNumber.BigNumber,
-        BigNumber.BigNumber,
-        BigNumber.BigNumber,
-        boolean,
-        boolean
-      ]
-    >;
-  };
   createCloneToken: {
     (
       cloneTokenName: string,
@@ -1250,15 +1193,6 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
       transfersEnabled: boolean,
       options?: TransactionOptions
     ): Promise<Address>;
-  };
-  lastTokenIsTransferableDate: {
-    (holder: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      holder: Address,
-      options?: TransactionOptions
-    ): Promise<BigNumber.BigNumber>;
   };
   balanceOf: {
     (owner: Address, options?: TransactionOptions): Promise<
@@ -1287,28 +1221,6 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<string>;
   };
-  grantVestedTokens: {
-    (
-      to: Address,
-      value: UInt,
-      start: UInt,
-      cliff: UInt,
-      vesting: UInt,
-      revokable: boolean,
-      burnsOnRevoke: boolean,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-    call(
-      to: Address,
-      value: UInt,
-      start: UInt,
-      cliff: UInt,
-      vesting: UInt,
-      revokable: boolean,
-      burnsOnRevoke: boolean,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-  };
   totalSupplyAt: {
     (blockNumber: UInt, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
@@ -1317,30 +1229,6 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
       blockNumber: UInt,
       options?: TransactionOptions
     ): Promise<BigNumber.BigNumber>;
-  };
-  transfer: {
-    (to: Address, value: UInt, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      to: Address,
-      value: UInt,
-      options?: TransactionOptions
-    ): Promise<boolean>;
-  };
-  revokeTokenGrant: {
-    (
-      holder: Address,
-      receiver: Address,
-      grantId: UInt,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
-    call(
-      holder: Address,
-      receiver: Address,
-      grantId: UInt,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>;
   };
   transfersEnabled: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
@@ -1363,16 +1251,6 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
       extraData: string,
       options?: TransactionOptions
     ): Promise<boolean>;
-  };
-  transferableTokens: {
-    (holder: Address, time: UInt, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(
-      holder: Address,
-      time: UInt,
-      options?: TransactionOptions
-    ): Promise<BigNumber.BigNumber>;
   };
   destroyTokens: {
     (owner: Address, amount: UInt, options?: TransactionOptions): Promise<
@@ -1424,6 +1302,72 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<Address>;
   };
+
+  transfer: {
+    (to: Address, value: UInt, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      to: Address,
+      value: UInt,
+      options?: TransactionOptions
+    ): Promise<boolean>;
+  };
+  transferFrom: {
+    (
+      from: Address,
+      to: Address,
+      value: UInt,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+    call(
+      from: Address,
+      to: Address,
+      value: UInt,
+      options?: TransactionOptions
+    ): Promise<boolean>;
+  };
+  spendableBalanceOf: {
+    (holder: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      holder: Address,
+      options?: TransactionOptions
+    ): Promise<BigNumber.BigNumber>;
+  };
+  grantVestedTokens: {
+    (
+      to: Address,
+      value: UInt,
+      start: UInt,
+      cliff: UInt,
+      vesting: UInt,
+      revokable: boolean,
+      burnsOnRevoke: boolean,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+    call(
+      to: Address,
+      value: UInt,
+      start: UInt,
+      cliff: UInt,
+      vesting: UInt,
+      revokable: boolean,
+      burnsOnRevoke: boolean,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
+  setCanCreateGrants: {
+    (addr: Address, allowed: boolean, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      addr: Address,
+      allowed: boolean,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
   changeVestingWhitelister: {
     (newWhitelister: Address, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
@@ -1432,6 +1376,69 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
       newWhitelister: Address,
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>;
+  };
+  revokeTokenGrant: {
+    (
+      holder: Address,
+      receiver: Address,
+      grantId: UInt,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+    call(
+      holder: Address,
+      receiver: Address,
+      grantId: UInt,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>;
+  };
+  tokenGrantsCount: {
+    (holder: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      holder: Address,
+      options?: TransactionOptions
+    ): Promise<BigNumber.BigNumber>;
+  };
+  tokenGrant: {
+    (holder: Address, grantId: UInt, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      holder: Address,
+      grantId: UInt,
+      options?: TransactionOptions
+    ): Promise<
+      [
+        Address,
+        BigNumber.BigNumber,
+        BigNumber.BigNumber,
+        BigNumber.BigNumber,
+        BigNumber.BigNumber,
+        BigNumber.BigNumber,
+        boolean,
+        boolean
+      ]
+    >;
+  };
+  lastTokenIsTransferableDate: {
+    (holder: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      holder: Address,
+      options?: TransactionOptions
+    ): Promise<BigNumber.BigNumber>;
+  };
+  transferableTokens: {
+    (holder: Address, time: UInt, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(
+      holder: Address,
+      time: UInt,
+      options?: TransactionOptions
+    ): Promise<BigNumber.BigNumber>;
   };
 }
 
@@ -1454,6 +1461,7 @@ export interface OwnableInstance extends ContractInstance {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
     call(options?: TransactionOptions): Promise<Address>;
   };
+
   transferOwnership: {
     (newOwner: Address, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
@@ -1501,6 +1509,7 @@ export interface PollInstance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<BigNumber.BigNumber>;
   };
+
   vote: {
     (choice: UInt, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
@@ -1541,6 +1550,12 @@ export interface SafeMathContract {
 }
 
 export interface TokenControllerInstance extends ContractInstance {
+  proxyPayment: {
+    (owner: Address, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >;
+    call(owner: Address, options?: TransactionOptions): Promise<boolean>;
+  };
   onTransfer: {
     (
       from: Address,
@@ -1569,12 +1584,6 @@ export interface TokenControllerInstance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<boolean>;
   };
-  proxyPayment: {
-    (owner: Address, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >;
-    call(owner: Address, options?: TransactionOptions): Promise<boolean>;
-  };
 }
 
 export interface TokenControllerContract {
@@ -1584,20 +1593,13 @@ export interface TokenControllerContract {
 }
 
 export interface VotingCenterInstance extends ContractInstance {
-  numPolls: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
-  };
   polls: {
     (unnamed11: UInt, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
     >;
     call(unnamed11: UInt, options?: TransactionOptions): Promise<Address>;
   };
-  allPolls: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
-    call(options?: TransactionOptions): Promise<Address[]>;
-  };
+
   createPoll: {
     (
       ipfsHash: string,
@@ -1613,6 +1615,14 @@ export interface VotingCenterInstance extends ContractInstance {
       endTime: UInt,
       options?: TransactionOptions
     ): Promise<Address>;
+  };
+  allPolls: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<Address[]>;
+  };
+  numPolls: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>;
+    call(options?: TransactionOptions): Promise<BigNumber.BigNumber>;
   };
 }
 
