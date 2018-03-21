@@ -8,7 +8,7 @@ module.exports = function(deployer) {
   deployer.deploy(ECRecovery);
   deployer.link(ECRecovery, AccountRegistry);
   deployer
-    .deploy(BLT)
+    .deploy(BLT, "0x0")
     .then(() => BLT.deployed())
     .then(blt => (token = blt))
     .then(() =>
