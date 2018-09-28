@@ -1,181 +1,116 @@
-pragma solidity ^0.4.18;
+pragma solidity 0.4.24;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "zeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
-import "zeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "./InviteCollateralizer.sol";
-import "./ECRecovery.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./AccountRegistryInterface.sol";
 
 /**
  * @title Bloom account registry
- *
- * This contract handles user accounts within Bloom. The "invite admin" is the
- * only user which can automatically make an account for someone and this is reserved
- * for the Bloom team to create accounts for early adopters and to make the onboarding
- * experience a bit easier. Users can invite others if they use the inviteCollateralizer
- * to lock up a small amount of BLT.
- *
- * In order to invite someone, a user must generate a new public key private key pair
- * and sign their own ethereum address. The user provides this signature to the
- * `createInvite` function where the public key is recovered and the invite is created.
- * The inviter should then share the one-time-use private key out of band with the recipient.
- * The recipient accepts the invite by signing their own address and passing that signature
- * to the `acceptInvite` function. The contract should recover the same public key, demonstrating
- * that the recipient knows the secret and is likely the person intended to receive the invite.
- *
- * @dev This invite model is supposed to aid usability by not requiring the inviting user to know
- *   the Ethereum address of the recipient. If the one-time-use private key is leaked then anyone
- *   else can accept the invite. This is an intentional tradeoff of this invite system. A well built
- *   dApp should generate the private key on the backend and sign the user's address for them. Likewise,
- *   the signing should also happen on the backend (not visible to the user) for signing an address to
- *   accept an invite. This reduces the private key exposure so that the dApp can still require traditional
- *   checks like verifying an associated email address before finally signing the user's Ethereum address.
- *
- * @dev The private key generated for this invite system should NEVER be used for an Ethereum address.
- *   The private key should be used only for the invite flow and then it should effectively be discarded.
- *
- * @dev If a user DOES know the address of the person they are inviting then they can still use this
- *   invite system. All they have to do then is sign the address of the user being invited and share the
- *   signature with them.
+ * @notice Account Registry implements the Bloom ID data structures 
+ * and the low-level account administration functions.
+ * The account administration functions are not publicly accessible.
+ * Account Registry Logic implements the public functions which access the functions in Account Registry.
  */
-contract AccountRegistry is Ownable {
-  mapping(address => bool) public accounts;
+contract AccountRegistry is Ownable, AccountRegistryInterface{
 
-  // Inviter + recipient pair
-  struct Invite {
-    address creator;
-    address recipient;
-  }
-
-  // Mapping of public keys as Ethereum addresses to invite information
-  // NOTE: the address keys here are NOT Ethereum addresses, we just happen
-  // to work with the public keys in terms of Ethereum address strings because
-  // this is what `ecrecover` produces when working with signed text.
-  mapping(address => Invite) public invites;
-
-  InviteCollateralizer public inviteCollateralizer;
-  ERC20 public blt;
-  address private inviteAdmin;
-
-  event InviteCreated(address indexed inviter);
-  event InviteAccepted(address indexed inviter, address indexed recipient);
-  event AccountCreated(address indexed newUser);
-
-  function AccountRegistry(ERC20 _blt, InviteCollateralizer _inviteCollateralizer) public {
-    blt = _blt;
-    accounts[owner] = true;
-    inviteAdmin = owner;
-    inviteCollateralizer = _inviteCollateralizer;
-  }
-
-  function setInviteCollateralizer(InviteCollateralizer _newInviteCollateralizer) public nonZero(_newInviteCollateralizer) onlyOwner {
-    inviteCollateralizer = _newInviteCollateralizer;
-  }
-
-  function setInviteAdmin(address _newInviteAdmin) public onlyOwner nonZero(_newInviteAdmin) {
-    inviteAdmin = _newInviteAdmin;
-  }
+  address public accountRegistryLogic;
 
   /**
-   * @dev Create an account instantly. Reserved for the "invite admin" which is managed by the Bloom team
-   * @param _newUser Address of the user receiving an account
+   * @notice The AccountRegistry constructor configures the account registry logic implementation
+   *  and creates an account for the user who deployed the contract.
+   * @dev The owner is also set as the original registryAdmin, who has the privilege to
+   *  create accounts outside of the normal invitation flow.
+   * @param _accountRegistryLogic Address of deployed Account Registry Logic implementation
    */
-  function createAccount(address _newUser) public onlyInviteAdmin {
-    require(!accounts[_newUser]);
-    createAccountFor(_newUser);
+  constructor(
+    address _accountRegistryLogic
+    ) public {
+    accountRegistryLogic = _accountRegistryLogic;
   }
+
+  event AccountRegistryLogicChanged(address oldRegistryLogic, address newRegistryLogic);
 
   /**
-   * @dev Create an invite using the signing model described in the contract description
-   * @param _sig Signature for `msg.sender`
+   * @dev Zero address not allowed
    */
-  function createInvite(bytes _sig) public onlyUser {
-    require(inviteCollateralizer.takeCollateral(msg.sender));
-
-    address signer = recoverSigner(_sig);
-    require(inviteDoesNotExist(signer));
-
-    invites[signer] = Invite(msg.sender, address(0));
-    InviteCreated(msg.sender);
-  }
-
-  /**
-   * @dev Accept an invite using the signing model described in the contract description
-   * @param _sig Signature for `msg.sender` via the same key that issued the initial invite
-   */
-  function acceptInvite(bytes _sig) public onlyNonUser {
-    address signer = recoverSigner(_sig);
-    require(inviteExists(signer) && inviteHasNotBeenAccepted(signer));
-
-    invites[signer].recipient = msg.sender;
-    createAccountFor(msg.sender);
-    InviteAccepted(invites[signer].creator, msg.sender);
-  }
-
-  /**
-   * @dev Check if an invite has not been set on the struct meaning it hasn't been accepted
-   */
-  function inviteHasNotBeenAccepted(address _signer) internal view returns (bool) {
-    return invites[_signer].recipient == address(0);
-  }
-
-  /**
-   * @dev Check that an invite hasn't already been created with this signer
-   */
-  function inviteDoesNotExist(address _signer) internal view returns (bool) {
-    return !inviteExists(_signer);
-  }
-
-  /**
-   * @dev Check that an invite has already been created with this signer
-   */
-  function inviteExists(address _signer) internal view returns (bool) {
-    return invites[_signer].creator != address(0);
-  }
-
-  /**
-   * @dev Recover the address associated with the public key that signed the provided signature
-   * @param _sig Signature of `msg.sender`
-   */
-  function recoverSigner(bytes _sig) private view returns (address) {
-    address signer = ECRecovery.recover(keccak256(msg.sender), _sig);
-    require(signer != address(0));
-
-    return signer;
-  }
-
-  /**
-   * @dev Create an account and emit an event
-   * @param _newUser Address of the new user
-   */
-  function createAccountFor(address _newUser) private {
-    accounts[_newUser] = true;
-    AccountCreated(_newUser);
-  }
-
-  /**
-   * @dev Addresses with Bloom accounts already are not allowed
-   */
-  modifier onlyNonUser {
-    require(!accounts[msg.sender]);
-    _;
-  }
-
-  /**
-   * @dev Addresses without Bloom accounts already are not allowed
-   */
-  modifier onlyUser {
-    require(accounts[msg.sender]);
-    _;
-  }
-
   modifier nonZero(address _address) {
     require(_address != 0);
     _;
   }
 
-  modifier onlyInviteAdmin {
-    require(msg.sender == inviteAdmin);
+  modifier onlyAccountRegistryLogic() {
+    require(msg.sender == accountRegistryLogic);
     _;
+  }
+
+  // Counter to generate unique account Ids
+  uint256 numAccounts;
+  mapping(address => uint256) public accountByAddress;
+
+  /**
+   * @notice Change the address of the registry logic which has exclusive write control over this contract
+   * @dev Restricted to AccountRegistry owner and new admin address cannot be 0x0
+   * @param _newRegistryLogic Address of new registry logic implementation
+   */
+  function setRegistryLogic(address _newRegistryLogic) public onlyOwner nonZero(_newRegistryLogic) {
+    address _oldRegistryLogic = accountRegistryLogic;
+    accountRegistryLogic = _newRegistryLogic;
+    emit AccountRegistryLogicChanged(_oldRegistryLogic, accountRegistryLogic);
+  }
+
+  /**
+   * @notice Retreive account ID associated with a user's address
+   * @param _address Address to look up
+   * @return account id as uint256 if exists, otherwise reverts
+   */
+  function accountIdForAddress(address _address) public view returns (uint256) {
+    require(addressBelongsToAccount(_address));
+    return accountByAddress[_address];
+  }
+
+  /**
+   * @notice Check if an address is associated with any user account
+   * @dev Check if address is associated with any user by cross validating
+   *  the accountByAddress with addressByAccount 
+   * @param _address Address to check
+   * @return true if address has been assigned to user. otherwise reverts
+   */
+  function addressBelongsToAccount(address _address) public view returns (bool) {
+    return accountByAddress[_address] > 0;
+  }
+
+  /**
+   * @notice Create an account for a user and emit an event
+   * @param _newUser Address of the new user
+   */
+  function createNewAccount(address _newUser) external onlyAccountRegistryLogic nonZero(_newUser) {
+    require(!addressBelongsToAccount(_newUser));
+    numAccounts++;
+    accountByAddress[_newUser] = numAccounts;
+  }
+
+  /**
+   * @notice Add an address to an existing id 
+   * @param _newAddress Address to add to account
+   * @param _sender User requesting this action
+   */
+  function addAddressToAccount(
+    address _newAddress,
+    address _sender
+    ) external onlyAccountRegistryLogic nonZero(_newAddress) {
+
+    // check if address belongs to someone else
+    require(!addressBelongsToAccount(_newAddress));
+
+    accountByAddress[_newAddress] = accountIdForAddress(_sender);
+  }
+
+  /**
+   * @notice Remove an address from an id
+   * @param _addressToRemove Address to remove from account
+   */
+  function removeAddressFromAccount(
+    address _addressToRemove
+    ) external onlyAccountRegistryLogic {
+    delete accountByAddress[_addressToRemove];
   }
 }

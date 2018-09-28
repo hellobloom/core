@@ -1,6 +1,8 @@
-pragma solidity ^0.4.18;
+pragma solidity 0.4.24;
 
 import "./Poll.sol";
+import "./AccountRegistryInterface.sol";
+import "./SigningLogicInterface.sol";
 
 /*
  * @title Bloom voting center
@@ -26,14 +28,26 @@ contract VotingCenter {
     bytes _ipfsHash,
     uint16 _numOptions,
     uint256 _startTime,
-    uint256 _endTime
+    uint256 _endTime,
+    AccountRegistryInterface _registry,
+    SigningLogicInterface _signingLogic,
+    address _pollAdmin
   ) public returns (address) {
-    Poll newPoll = new Poll(_ipfsHash, _numOptions, _startTime, _endTime, msg.sender);
+    Poll newPoll = new Poll(
+      _ipfsHash,
+      _numOptions,
+      _startTime,
+      _endTime,
+      msg.sender,
+      _registry,
+      _signingLogic,
+      _pollAdmin
+      );
     polls.push(newPoll);
 
-    PollCreated(address(newPoll), msg.sender);
+    emit PollCreated(newPoll, msg.sender);
 
-    return address(newPoll);
+    return newPoll;
   }
 
   function allPolls() view public returns (Poll[]) {
