@@ -1,7 +1,44 @@
 #!/bin/bash
 
+flag="${1:---no-reset}"
+
+should_reset_before_build() {
+  if [ $# -gt 1 ]; then
+    echo "Max of one argument accepted"
+    exit 1
+  fi
+
+  if [ "$flag" != "--reset" ] && [ "$flag" != "--no-reset" ]; then
+    echo "Unknown flag '$flag'!"
+    exit 1
+  fi
+
+  if [ "$flag" == "--reset" ]; then
+    return 0;
+  else
+    return 1;
+  fi
+}
+
+reset_build() {
+  if [ -d build ]; then
+    echo "Deleting ./build"
+    rm -r build
+  fi
+
+  if [ -f contracts.d.ts ]; then
+    echo "Deleting ./contracts.d.ts"
+    rm contracts.d.ts
+  fi
+
+  if [ -f truffle.d.ts ]; then
+    echo "Deleting ./truffle.d.ts"
+    rm truffle.d.ts
+  fi
+}
+
 compile_typings() {
-  ./node_modules/.bin/ts-node generate.ts
+  ./node_modules/.bin/ts-node generate.ts $1
 }
 
 format_typings() {
@@ -9,12 +46,16 @@ format_typings() {
 }
 
 update_typings() {
-  compile_typings | format_typings > contracts.d.ts
+  compile_typings --contracts | format_typings > contracts.d.ts
 }
 
 compile_solidity() {
-  ./node_modules/.bin/truffle compile
+  ./node_modules/.bin/truffle compile --compile-all
 }
+
+if should_reset_before_build; then
+  reset_build
+fi
 
 compile_solidity
 update_typings

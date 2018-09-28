@@ -1,20 +1,22 @@
 {
   "compilerOptions": {
     "strict": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+    "noUnusedLocals": false,
     "strictNullChecks": true,
     "outDir": "test",
     "module": "commonjs",
     "lib": ["es6", "es2017", "dom"],
     "target": "es5",
-    "plugins": [{ "name": "tslint-language-service" }]
+    "plugins": [{ "name": "tslint-language-service" }],
+    "sourceMap": true
   },
   "include": [
-    "./truffle.d.ts",
+    "./contracts.d.ts",
     "./web3.d.ts",
     "./chai-bignumber.d.ts",
+    "typings/*.d.ts",
     "ts_test/**/*.ts"
   ]
 }

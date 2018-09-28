@@ -8,3 +8,5 @@ coverage/
 
 # Don't check in our installed ethpm dependency source. Just the lockfile details.
 installed_contracts/**/*.sol
+
+truffle.js

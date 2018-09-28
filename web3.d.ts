@@ -460,6 +460,20 @@ declare module "web3" {
       data: string;
       topics: string[];
     }
+
+    type EventFilterCallback<T> = (err: Error, log: LogEntry<T>) => void
+
+    interface Filter<T> {
+      watch(callback: EventFilterCallback<T>): void
+      get(callback: (err: Error, logs: LogEntry<T>[]) => void): void
+      stopWatching(): void
+    }
+
+    type EventFilterCreator<T> = (
+      search: Partial<T>,
+      additionalFilterParameters?: Partial<FilterObject>,
+      callback?: EventFilterCallback<T>
+    ) => Filter<T>
   }
   /* tslint:disable */
   export = Web3;
