@@ -41,12 +41,17 @@ compile_typings() {
   ./node_modules/.bin/ts-node generate.ts $1
 }
 
+compile_method_manifest() {
+  ./node_modules/.bin/ts-node generate_method_manifest.ts $1
+}
+
 format_typings() {
   ./node_modules/.bin/prettier --parser typescript
 }
 
 update_typings() {
   compile_typings --contracts | format_typings > contracts.d.ts
+  compile_method_manifest | format_typings > method_manifest.ts
 }
 
 compile_solidity() {
