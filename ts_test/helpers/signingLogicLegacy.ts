@@ -1,6 +1,6 @@
 const ethSigUtil = require('eth-sig-util');
 import * as BigNumber from "bignumber.js";
-import {HashingLogic} from 'attestations-lib'
+import {HashingLogic} from '@bloomprotocol/attestations-lib'
 
 interface ITypedDataParam {
   type: string

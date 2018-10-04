@@ -4,7 +4,7 @@ import * as ethereumjsWallet from "ethereumjs-wallet";
 const ethSigUtil = require("eth-sig-util");
 import { bufferToHex } from "ethereumjs-util";
 const uuid = require('uuidv4')
-import {AttestationTypeID, HashingLogic} from 'attestations-lib'
+import {AttestationTypeID, HashingLogic} from '@bloomprotocol/attestations-lib'
 
 import { EVMThrow } from "./helpers/EVMThrow";
 import { should } from "./test_setup";
