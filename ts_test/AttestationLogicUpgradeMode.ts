@@ -18,7 +18,7 @@ import { latestBlockTime } from "./helpers/blockInfo";
 import { hashData } from "./../src/signData";
 import { soliditySign } from "./../src/signatures";
 import * as ipfs from "./../src/ipfs";
-import { HashingLogic } from "attestations-lib";
+import { HashingLogic } from "@bloomprotocol/attestations-lib";
 
 const AttestationRepo = artifacts.require("AttestationRepo");
 const AttestationLogicUpgradeMode = artifacts.require("AttestationLogicUpgradeMode");
