@@ -227,9 +227,7 @@ glob("./build/contracts/*.json", {}, (err: string, files: string[]) => {
     method_buffer += buildContract(definition, isTruffle)
   })
 
-  // buffer += `export type TContractNames = keyof typeof EContractNames\n\n`
-
-  buffer += `export type TContractNames = "` + contract_names.join(`" | "`) + `"\n\n`
+  buffer += `export type TContractNames = keyof typeof EContractNames\n\n`
 
   buffer += `export enum EContractNames {` + contract_names.map((x: string) => `'${x}' = '${x}'`).join(`,`) + `}\n\n`
 
