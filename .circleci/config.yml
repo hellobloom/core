@@ -1,5 +1,20 @@
 version: 2
 
+references:
+
+  # `restore_cache` step necessary for every build step to work
+  restore_node_modules: &restore_node_modules
+    restore_cache:
+      key: node_modules-cache-{{ checksum "package.json" }}
+
+  # Environment that provides the postgres DB `bloom-web-test`
+  environment_with_database: &environment_with_database
+    - image: circleci/node:8.9.4
+      environment:
+        PGHOST: 127.0.0.1
+        PGUSER: ubuntu
+        NODE_ENV: test
+
 jobs:
   install_dependencies:
     docker:
@@ -7,28 +22,11 @@ jobs:
     steps:
       - checkout
 
-      - run:
-          name: Huh
-          command: echo "What"
+      - run: yarn install --frozen-lockfile --prefer-offline
 
-      - restore_cache:
-          key: dependency-cache-{{ .Branch }}-{{ checksum "yarn.lock" }}
-
-      - run: 
-          name: Check yarn.lock md5 first
-          command: md5sum yarn.lock
-
-      - run:
-          name: Yarn install
-          command: yarn install --frozen-lockfile && echo "Yarn completed successfully"
-
-      - run: 
-          name: Check yarn.lock md5 second
-          command: md5sum yarn.lock
-
-
+      # Download and cache dependencies
       - save_cache:
-          key: dependency-cache-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          key: node_modules-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
 
