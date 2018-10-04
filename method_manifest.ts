@@ -13,46 +13,7 @@ interface IContractMethodManifest {
     }
   }
 }
-export type TContractNames =
-  | "AccountRegistry"
-  | "AccountRegistryBatchAdmin"
-  | "AccountRegistryInterface"
-  | "AccountRegistryLogic"
-  | "AccreditationRepo"
-  | "AirdropProxy"
-  | "ApproveAndCallFallBack"
-  | "AttestationLogic"
-  | "AttestationLogicUpgradeMode"
-  | "AttestationRepo"
-  | "AttestationRepoInterface"
-  | "BasicToken"
-  | "BLT"
-  | "Controlled"
-  | "ConvertLib"
-  | "DependentOnIPFS"
-  | "ECRecovery"
-  | "ERC20"
-  | "ERC20Basic"
-  | "HasNoEther"
-  | "Math"
-  | "MetaCoin"
-  | "Migrations"
-  | "MiniMeToken"
-  | "MiniMeTokenFactory"
-  | "MiniMeVestedToken"
-  | "MockBLT"
-  | "Ownable"
-  | "Pausable"
-  | "Poll"
-  | "SafeERC20"
-  | "SafeMath"
-  | "SigningLogic"
-  | "SigningLogicInterface"
-  | "SigningLogicLegacy"
-  | "StandardToken"
-  | "TokenController"
-  | "TokenEscrowMarketplace"
-  | "VotingCenter"
+export type TContractNames = keyof typeof EContractNames
 
 export enum EContractNames {
   "AccountRegistry" = "AccountRegistry",
@@ -107,9 +68,9 @@ export const AccountRegistry: IContractMethodManifest = {
       args: {}
     },
     accountByAddress: {
-      args_arr: ["anonymous_16364085100503"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_16364085100503: {
+        anonymous_0: {
           type: "address",
           index: 0
         }
@@ -292,9 +253,9 @@ export const AccountRegistryInterface: IContractMethodManifest = {
 export const AccountRegistryLogic: IContractMethodManifest = {
   methods: {
     pendingInvites: {
-      args_arr: ["anonymous_24886453583332"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_24886453583332: {
+        anonymous_0: {
           type: "address",
           index: 0
         }
@@ -326,9 +287,9 @@ export const AccountRegistryLogic: IContractMethodManifest = {
       }
     },
     usedSignatures: {
-      args_arr: ["anonymous_11413502634104"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_11413502634104: {
+        anonymous_0: {
           type: "bytes32",
           index: 0
         }
@@ -450,9 +411,9 @@ export const AccountRegistryLogic: IContractMethodManifest = {
 export const AccreditationRepo: IContractMethodManifest = {
   methods: {
     accreditations: {
-      args_arr: ["anonymous_12553483753202"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_12553483753202: {
+        anonymous_0: {
           type: "address",
           index: 0
         }
@@ -635,9 +596,9 @@ export const AttestationLogic: IContractMethodManifest = {
       args: {}
     },
     permittedTypesList: {
-      args_arr: ["anonymous_49015561313564"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_49015561313564: {
+        anonymous_0: {
           type: "uint256",
           index: 0
         }
@@ -665,9 +626,9 @@ export const AttestationLogic: IContractMethodManifest = {
       args: {}
     },
     usedSignatures: {
-      args_arr: ["anonymous_38443982715176"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_38443982715176: {
+        anonymous_0: {
           type: "bytes32",
           index: 0
         }
@@ -1183,13 +1144,13 @@ export const AttestationRepo: IContractMethodManifest = {
       args: {}
     },
     attestations: {
-      args_arr: ["anonymous_19433372617305", "anonymous_61150858571565"],
+      args_arr: ["anonymous_0", "anonymous_1"],
       args: {
-        anonymous_19433372617305: {
+        anonymous_0: {
           type: "uint256",
           index: 0
         },
-        anonymous_61150858571565: {
+        anonymous_1: {
           type: "uint256",
           index: 1
         }
@@ -1482,9 +1443,9 @@ export const BLT: IContractMethodManifest = {
       args: {}
     },
     canCreateGrants: {
-      args_arr: ["anonymous_60813513968916"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_60813513968916: {
+        anonymous_0: {
           type: "address",
           index: 0
         }
@@ -1521,13 +1482,13 @@ export const BLT: IContractMethodManifest = {
       }
     },
     grants: {
-      args_arr: ["anonymous_31458132456843", "anonymous_84161218513263"],
+      args_arr: ["anonymous_0", "anonymous_1"],
       args: {
-        anonymous_31458132456843: {
+        anonymous_0: {
           type: "address",
           index: 0
         },
-        anonymous_84161218513263: {
+        anonymous_1: {
           type: "uint256",
           index: 1
         }
@@ -2372,22 +2333,22 @@ export const MiniMeVestedToken: IContractMethodManifest = {
       args: {}
     },
     canCreateGrants: {
-      args_arr: ["anonymous_33086465941995"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_33086465941995: {
+        anonymous_0: {
           type: "address",
           index: 0
         }
       }
     },
     grants: {
-      args_arr: ["anonymous_44480920363609", "anonymous_17970741609464"],
+      args_arr: ["anonymous_0", "anonymous_1"],
       args: {
-        anonymous_44480920363609: {
+        anonymous_0: {
           type: "address",
           index: 0
         },
-        anonymous_17970741609464: {
+        anonymous_1: {
           type: "uint256",
           index: 1
         }
@@ -2902,9 +2863,9 @@ export const Poll: IContractMethodManifest = {
       args: {}
     },
     votes: {
-      args_arr: ["anonymous_28806259672998"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_28806259672998: {
+        anonymous_0: {
           type: "uint256",
           index: 0
         }
@@ -2935,9 +2896,9 @@ export const Poll: IContractMethodManifest = {
       args: {}
     },
     usedSignatures: {
-      args_arr: ["anonymous_36771419615491"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_36771419615491: {
+        anonymous_0: {
           type: "bytes32",
           index: 0
         }
@@ -3823,18 +3784,18 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
       }
     },
     tokenEscrow: {
-      args_arr: ["anonymous_96753792244026"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_96753792244026: {
+        anonymous_0: {
           type: "uint256",
           index: 0
         }
       }
     },
     usedSignatures: {
-      args_arr: ["anonymous_96351606995347"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_96351606995347: {
+        anonymous_0: {
           type: "bytes32",
           index: 0
         }
@@ -3964,9 +3925,9 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
 export const VotingCenter: IContractMethodManifest = {
   methods: {
     polls: {
-      args_arr: ["anonymous_43397350036566"],
+      args_arr: ["anonymous_0"],
       args: {
-        anonymous_43397350036566: {
+        anonymous_0: {
           type: "uint256",
           index: 0
         }
