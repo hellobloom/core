@@ -1,5 +1,7 @@
 pragma solidity ^0.4.6;
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 /*
     Copyright 2016, Jordi Baylina
 
@@ -28,6 +30,7 @@ pragma solidity ^0.4.6;
 
 /// @dev The token controller contract must implement these functions
 contract TokenController {
+    using SafeMath for uint256;
     /// @notice Called when `_owner` sends ether to the MiniMe Token contract
     /// @param _owner The address that sent the ether to create tokens
     /// @return True if the ether is accepted, false if it throws
@@ -227,13 +230,13 @@ contract MiniMeToken is Controlled {
 
            // First update the balance array with the new value for the address
            //  sending the tokens
-           updateValueAtNow(balances[_from], previousBalanceFrom - _amount);
+           updateValueAtNow(balances[_from], SafeMath.sub(previousBalanceFrom, _amount));
 
            // Then update the balance array with the new value for the address
            //  receiving the tokens
            var previousBalanceTo = balanceOfAt(_to, block.number);
-           require(previousBalanceTo + _amount >= previousBalanceTo); // Check for overflow
-           updateValueAtNow(balances[_to], previousBalanceTo + _amount);
+           require(SafeMath.add(previousBalanceTo,_amount) >= previousBalanceTo); // Check for overflow
+           updateValueAtNow(balances[_to], SafeMath.add(previousBalanceTo,_amount));
 
            // An event to make the transfer easy to find on the blockchain
            Transfer(_from, _to, _amount);
@@ -414,11 +417,11 @@ contract MiniMeToken is Controlled {
     function generateTokens(address _owner, uint _amount
     ) onlyController returns (bool) {
         uint curTotalSupply = totalSupply();
-        require(curTotalSupply + _amount >= curTotalSupply); // Check for overflow
+        require(SafeMath.add(curTotalSupply,_amount) >= curTotalSupply); // Check for overflow
         uint previousBalanceTo = balanceOf(_owner);
-        require(previousBalanceTo + _amount >= previousBalanceTo); // Check for overflow
-        updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
-        updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
+        require(SafeMath.add(previousBalanceTo,_amount) >= previousBalanceTo); // Check for overflow
+        updateValueAtNow(totalSupplyHistory, SafeMath.add(curTotalSupply, _amount));
+        updateValueAtNow(balances[_owner], SafeMath.add(previousBalanceTo, _amount));
         Transfer(0, _owner, _amount);
         return true;
     }
@@ -434,8 +437,8 @@ contract MiniMeToken is Controlled {
         require(curTotalSupply >= _amount);
         uint previousBalanceFrom = balanceOf(_owner);
         require(previousBalanceFrom >= _amount);
-        updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
-        updateValueAtNow(balances[_owner], previousBalanceFrom - _amount);
+        updateValueAtNow(totalSupplyHistory, SafeMath.sub(curTotalSupply, _amount));
+        updateValueAtNow(balances[_owner], SafeMath.sub(previousBalanceFrom, _amount));
         Transfer(_owner, 0, _amount);
         return true;
     }
@@ -464,19 +467,19 @@ contract MiniMeToken is Controlled {
         if (checkpoints.length == 0) return 0;
 
         // Shortcut for the actual value
-        if (_block >= checkpoints[checkpoints.length-1].fromBlock)
-            return checkpoints[checkpoints.length-1].value;
+        if (_block >= checkpoints[SafeMath.sub(checkpoints.length, 1)].fromBlock)
+            return checkpoints[SafeMath.sub(checkpoints.length, 1)].value;
         if (_block < checkpoints[0].fromBlock) return 0;
 
         // Binary search of the value in the array
         uint min = 0;
-        uint max = checkpoints.length-1;
+        uint max = SafeMath.sub(checkpoints.length, 1);
         while (max > min) {
-            uint mid = (max + min + 1)/ 2;
+            uint mid = SafeMath.div(SafeMath.add(max, SafeMath.add(min, 1)),2);
             if (checkpoints[mid].fromBlock<=_block) {
                 min = mid;
             } else {
-                max = mid-1;
+                max = SafeMath.sub(mid, 1);
             }
         }
         return checkpoints[min].value;
@@ -489,12 +492,12 @@ contract MiniMeToken is Controlled {
     function updateValueAtNow(Checkpoint[] storage checkpoints, uint _value
     ) internal  {
         if ((checkpoints.length == 0)
-        || (checkpoints[checkpoints.length -1].fromBlock < block.number)) {
-               Checkpoint storage newCheckPoint = checkpoints[ checkpoints.length++ ];
+        || (checkpoints[SafeMath.sub(checkpoints.length, 1)].fromBlock < block.number)) {
+               Checkpoint storage newCheckPoint = checkpoints[SafeMath.add(checkpoints.length, 1)];
                newCheckPoint.fromBlock =  uint128(block.number);
                newCheckPoint.value = uint128(_value);
            } else {
-               Checkpoint storage oldCheckPoint = checkpoints[checkpoints.length-1];
+               Checkpoint storage oldCheckPoint = checkpoints[SafeMath.sub(checkpoints.length,1)];
                oldCheckPoint.value = uint128(_value);
            }
     }

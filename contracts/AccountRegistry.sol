@@ -2,6 +2,7 @@ pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./AccountRegistryInterface.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title Bloom account registry
@@ -12,6 +13,7 @@ import "./AccountRegistryInterface.sol";
  */
 contract AccountRegistry is Ownable, AccountRegistryInterface{
 
+  using SafeMath for uint256;
   address public accountRegistryLogic;
 
   /**
@@ -84,7 +86,7 @@ contract AccountRegistry is Ownable, AccountRegistryInterface{
    */
   function createNewAccount(address _newUser) external onlyAccountRegistryLogic nonZero(_newUser) {
     require(!addressBelongsToAccount(_newUser));
-    numAccounts++;
+    numAccounts = SafeMath.add(numAccounts,1);
     accountByAddress[_newUser] = numAccounts;
   }
 

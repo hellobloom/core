@@ -1,4 +1,5 @@
 pragma solidity ^0.4.18;
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title IPFS hash handler
@@ -22,6 +23,7 @@ pragma solidity ^0.4.18;
  * @dev See multihash format: https://git.io/vbooc
  */
 contract DependentOnIPFS {
+  using SafeMath for uint256;
   /**
    * @dev Validate a multihash bytes value
    */
@@ -37,6 +39,6 @@ contract DependentOnIPFS {
       _size := byte(0, mload(add(_multihashBytes, 33)))
     }
 
-    return (_multihashBytes.length == _size + 2);
+    return (_multihashBytes.length == SafeMath.add(_size, 2));
   }
 }
