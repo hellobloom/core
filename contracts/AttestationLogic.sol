@@ -5,6 +5,8 @@ import "./AccountRegistryInterface.sol";
 import "./SigningLogicInterface.sol";
 import "./TokenEscrowMarketplace.sol";
 import "./AttestationRepoInterface.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 
 /**
  * @title AttestationLogic manages the interactions with AttestationRepo
@@ -423,10 +425,11 @@ contract AttestationLogic is Ownable{
    * @return true if all traits exist, false if not
    */
   function traitTypesExist(uint256[] _typeIds) public view returns (bool) {
-    for (uint256 i = 0; i < _typeIds.length; i++) {
+    for (uint256 i = 0; i < _typeIds.length; ) {
       if (_typeIds[i] >= permittedTypesList.length) {
         return false;
       }
+      i = SafeMath.add(i,1);
     }
     return true;
   }
@@ -603,7 +606,7 @@ contract AttestationLogic is Ownable{
       _subjectSig
     );
 
-    uint256 _expiresAt = now + _stakeDuration;
+    uint256 _expiresAt = SafeMath.add(now, _stakeDuration);
     require(_expiresAt < now + 366 days);
 
     submitAttestation(

@@ -1,6 +1,8 @@
 pragma solidity ^0.4.4;
 
 import "./ConvertLib.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 
 // This is just a simple example of a coin-like contract.
 // It is not standards compatible and cannot be expected to talk to other
@@ -8,6 +10,7 @@ import "./ConvertLib.sol";
 // token, see: https://github.com/ConsenSys/Tokens. Cheers!
 
 contract MetaCoin {
+	using SafeMath for uint;
 	mapping (address => uint) balances;
 
 	event Transfer(address indexed _from, address indexed _to, uint256 _value);
@@ -18,8 +21,8 @@ contract MetaCoin {
 
 	function sendCoin(address receiver, uint amount) returns(bool sufficient) {
 		if (balances[msg.sender] < amount) return false;
-		balances[msg.sender] -= amount;
-		balances[receiver] += amount;
+		balances[msg.sender] = SafeMath.sub(balances[msg.sender], amount);
+		balances[receiver] = SafeMath.add(balances[receiver], amount);
 		Transfer(msg.sender, receiver, amount);
 		return true;
 	}

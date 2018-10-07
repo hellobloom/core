@@ -3,6 +3,7 @@ pragma solidity 0.4.24;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./AccountRegistryInterface.sol";
 import "./SigningLogicInterface.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title Bloom account registry
@@ -36,7 +37,7 @@ import "./SigningLogicInterface.sol";
  *   signature with them.
  */
 contract AccountRegistryLogic is Ownable{
-
+  using SafeMath for uint256;
   SigningLogicInterface public signingLogic;
   AccountRegistryInterface public registry;
   address public registryAdmin;

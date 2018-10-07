@@ -1,11 +1,12 @@
 pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./AccountRegistryInterface.sol";
 import "./AccountRegistryLogic.sol";
 
 contract AccountRegistryBatchAdmin is Ownable{
-
+  using SafeMath for uint256;
   AccountRegistryInterface public registry;
   AccountRegistryLogic public logic;
   address public registryAdmin;
@@ -45,12 +46,13 @@ contract AccountRegistryBatchAdmin is Ownable{
    * @param _newUsers Address array of the users receiving an account
    */
   function batchCreateAccount(address[] _newUsers) public onlyRegistryAdmin {
-    for (uint256 i = 0; i < _newUsers.length; i++) {
+    for (uint256 i = 0; i < _newUsers.length; ) {
       if (registry.addressBelongsToAccount(_newUsers[i])) {
         emit addressSkipped(_newUsers[i]);
       } else {
         logic.createAccount(_newUsers[i]);
       }
+      i = SafeMath.add(i, 1);
     }
   }
 }

@@ -107,7 +107,7 @@ contract TokenEscrowMarketplace is Ownable, Pausable{
    * @dev Restricted to owner and new address cannot be 0x0
    * @param _newRegistry Address of new Account Registry contract
    */
-  function setAccountRegistry(AccountRegistryInterface _newRegistry) 
+  function setAccountRegistry(AccountRegistryInterface _newRegistry)
     external onlyOwner nonZero(_newRegistry) whenPaused {
     address oldRegistry = registry;
     registry = _newRegistry;
@@ -270,7 +270,7 @@ contract TokenEscrowMarketplace is Ownable, Pausable{
    * @param _amount Tokens to lock up
    */
   function addToEscrow(uint256 _from, uint256 _amount) private {
-    tokenEscrow[_from] = tokenEscrow[_from].add(_amount);
+    tokenEscrow[_from] = SafeMath.add(tokenEscrow[_from], _amount);
     emit TokenMarketplaceDeposit(_from, _amount);
   }
 
@@ -279,6 +279,6 @@ contract TokenEscrowMarketplace is Ownable, Pausable{
    */
   function subFromEscrow(uint256 _from, uint256 _amount) private {
     require(tokenEscrow[_from] >= _amount);
-    tokenEscrow[_from] = tokenEscrow[_from].sub(_amount);
+    tokenEscrow[_from] = SafeMath.sub(tokenEscrow[_from],_amount);
   }
 }
