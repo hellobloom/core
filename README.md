@@ -38,6 +38,9 @@ Bloom’s protocol heavily relies on community voting to make important protocol
 4. Compile contract typings `./bin/compile-typings`
 5. Run tests with `./bin/test`
 
+If you plan to use a truffleLedgerProvider, also do `yarn add @ledgerhq/hw-transport-node-hid@4.2.0`
+It was removed from package.json due to an issue with CI's test machines
+
 ## Making Changes
 
 The tests are written in Typescript. If you make changes to the contracts which impact the ABI, update the typings with:
