@@ -13,11 +13,11 @@ import "./SigningLogicInterface.sol";
 contract SigningLogic is SigningLogicInterface{
 
   bytes32 constant EIP712DOMAIN_TYPEHASH = keccak256(
-    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+    "EIP712Domain(string name,string version)"
   );
 
   bytes32 constant ATTESTATION_REQUEST_TYPEHASH = keccak256(
-    "AttestationRequest(address subject,address attester,address requester,bytes32 dataHash,bytes32 typeHash,bytes32 nonce)"
+    "AttestationRequest(address subject,address attester,address requester,bytes32 dataHash,bytes32 nonce)"
   );
 
   bytes32 constant ADD_ADDRESS_TYPEHASH = keccak256(
@@ -29,7 +29,7 @@ contract SigningLogic is SigningLogicInterface{
   );
 
   bytes32 constant ATTEST_FOR_TYPEHASH = keccak256(
-    "AttestFor(address subject,address requester,uint256 reward,bytes32 paymentNonce,bytes32 dataHash,bytes32 typeHash,bytes32 requestNonce)"
+    "AttestFor(address subject,address requester,uint256 reward,bytes32 paymentNonce,bytes32 dataHash,bytes32 requestNonce)"
   );
 
   bytes32 constant CONTEST_FOR_TYPEHASH = keccak256(
@@ -37,7 +37,7 @@ contract SigningLogic is SigningLogicInterface{
   );
 
   bytes32 constant STAKE_FOR_TYPEHASH = keccak256(
-    "StakeFor(address subject,uint256 value,bytes32 paymentNonce,bytes32 dataHash,bytes32 typeHash,bytes32 requestNonce,uint256 stakeDuration)"
+    "StakeFor(address subject,uint256 value,bytes32 paymentNonce,bytes32 dataHash,bytes32 requestNonce,uint256 stakeDuration)"
   );
 
   bytes32 constant REVOKE_STAKE_FOR_TYPEHASH = keccak256(
@@ -57,27 +57,20 @@ contract SigningLogic is SigningLogicInterface{
   constructor () public {
     DOMAIN_SEPARATOR = hash(EIP712Domain({
       name: "Bloom",
-      version: '1',
-      chainId: 4,
-      // verifyingContract: this
-      verifyingContract: 0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC
+      version: '1'
     }));
   }
 
   struct EIP712Domain {
       string  name;
       string  version;
-      uint256 chainId;
-      address verifyingContract;
   }
 
   function hash(EIP712Domain eip712Domain) internal pure returns (bytes32) {
     return keccak256(abi.encode(
       EIP712DOMAIN_TYPEHASH,
       keccak256(bytes(eip712Domain.name)),
-      keccak256(bytes(eip712Domain.version)),
-      eip712Domain.chainId,
-      eip712Domain.verifyingContract
+      keccak256(bytes(eip712Domain.version))
     ));
   }
 
@@ -86,7 +79,6 @@ contract SigningLogic is SigningLogicInterface{
       address attester;
       address requester;
       bytes32 dataHash;
-      bytes32 typeHash;
       bytes32 nonce;
   }
 
@@ -97,7 +89,6 @@ contract SigningLogic is SigningLogicInterface{
       request.attester,
       request.requester,
       request.dataHash,
-      request.typeHash,
       request.nonce
     ));
   }
@@ -138,7 +129,6 @@ contract SigningLogic is SigningLogicInterface{
       uint256 reward;
       bytes32 paymentNonce;
       bytes32 dataHash;
-      bytes32 typeHash;
       bytes32 requestNonce;
   }
 
@@ -150,7 +140,6 @@ contract SigningLogic is SigningLogicInterface{
       request.reward,
       request.paymentNonce,
       request.dataHash,
-      request.typeHash,
       request.requestNonce
     ));
   }
@@ -175,7 +164,6 @@ contract SigningLogic is SigningLogicInterface{
       uint256 value;
       bytes32 paymentNonce;
       bytes32 dataHash;
-      bytes32 typeHash;
       bytes32 requestNonce;
       uint256 stakeDuration;
   }
@@ -187,7 +175,6 @@ contract SigningLogic is SigningLogicInterface{
       request.value,
       request.paymentNonce,
       request.dataHash,
-      request.typeHash,
       request.requestNonce,
       request.stakeDuration
     ));
@@ -243,7 +230,6 @@ contract SigningLogic is SigningLogicInterface{
     address _attester,
     address _requester,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _nonce
   ) external view returns (bytes32) {
     return keccak256(
@@ -255,7 +241,6 @@ contract SigningLogic is SigningLogicInterface{
           _attester,
           _requester,
           _dataHash,
-          keccak256(abi.encodePacked(_typeIds)),
           _nonce
         ))
       )
@@ -304,7 +289,6 @@ contract SigningLogic is SigningLogicInterface{
     uint256 _reward,
     bytes32 _paymentNonce,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce
   ) external view returns (bytes32) {
     return keccak256(
@@ -317,7 +301,6 @@ contract SigningLogic is SigningLogicInterface{
           _reward,
           _paymentNonce,
           _dataHash,
-          keccak256(abi.encodePacked(_typeIds)),
           _requestNonce
         ))
       )
@@ -347,7 +330,6 @@ contract SigningLogic is SigningLogicInterface{
     uint256 _value,
     bytes32 _paymentNonce,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     uint256 _stakeDuration
   ) external view returns (bytes32) {
@@ -360,7 +342,6 @@ contract SigningLogic is SigningLogicInterface{
           _value,
           _paymentNonce,
           _dataHash,
-          keccak256(abi.encodePacked(_typeIds)),
           _requestNonce,
           _stakeDuration
         ))

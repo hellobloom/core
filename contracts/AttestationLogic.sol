@@ -47,13 +47,11 @@ contract AttestationLogic is Ownable{
     uint256 attesterId,
     uint256 requesterId,
     bytes32 dataHash,
-    uint256[] typeIds,
     uint256 stakeValue,
     uint256 expiresAt
     );
   event AttestationRejected(uint256 indexed attesterId, uint256 indexed requesterId);
   event AttestationRevoked(uint256 indexed subjectId, uint256 attestationId, uint256 indexed revokerId);
-  event TypeCreated(string traitType);
   event StakeSubmitted(uint256 indexed subjectId, uint256 indexed stakerId, uint256 attestationId, uint256 expiresAt);
   event StakedTokensReclaimed(uint256 indexed stakerId, uint256 value);
   event AccountRegistryChanged(address oldRegistry, address newRegistry);
@@ -85,12 +83,6 @@ contract AttestationLogic is Ownable{
   // Mapping of nonce per subject. Sigs can only be used once
   mapping(bytes32 => bool) public usedSignatures;
 
-  // Public list so others can check which types are supported
-  string[] public permittedTypesList;
-  // mapping for checking if a type is valid
-  // private because can't have getter for dynamically sized key
-  mapping(string => bool) private permittedTypesMapping;
-
   /**
    * @notice Function for attester to submit attestation from their own account) 
    * @dev Wrapper for attestForUser using msg.sender
@@ -100,7 +92,6 @@ contract AttestationLogic is Ownable{
    * @param _paymentNonce Nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
    * @param _requesterSig Signature authorizing payment from requester to attester
    * @param _dataHash Hash of data being attested and nonce
-   * @param _typeIds Array of trait type ids to validate
    * param _requestNonce Nonce in sig signed by subject so it can't be replayed
    * @param _subjectSig Signed authorization from subject with attestation agreement
    */
@@ -111,7 +102,6 @@ contract AttestationLogic is Ownable{
     bytes32 _paymentNonce,
     bytes _requesterSig,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     bytes _subjectSig // Sig of subject with requester, attester, dataHash, requestNonce
   ) public {
@@ -123,7 +113,6 @@ contract AttestationLogic is Ownable{
       _paymentNonce,
       _requesterSig,
       _dataHash,
-      _typeIds,
       _requestNonce,
       _subjectSig
     );
@@ -139,7 +128,6 @@ contract AttestationLogic is Ownable{
    * @param _paymentNonce nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
    * @param _requesterSig signature authorizing payment from requester to attester
    * @param _dataHash hash of data being attested and nonce
-   * @param _typeIds array of trait type ids to validate
    * param _requestNonce nonce in sig signed by subject so it can't be replayed
    * @param _subjectSig signed authorization from subject with attestation agreement
    * @param _delegationSig signature authorizing attestation on behalf of attester
@@ -152,7 +140,6 @@ contract AttestationLogic is Ownable{
     bytes32 _paymentNonce,
     bytes _requesterSig,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     bytes _subjectSig, // Sig of subject with requester, attester, dataHash, requestNonce
     bytes _delegationSig
@@ -164,7 +151,6 @@ contract AttestationLogic is Ownable{
       _reward,
       _paymentNonce,
       _dataHash,
-      _typeIds,
       _requestNonce
     );
     // Confirm attester address matches recovered address from signature
@@ -177,7 +163,6 @@ contract AttestationLogic is Ownable{
       _paymentNonce,
       _requesterSig,
       _dataHash,
-      _typeIds,
       _requestNonce,
       _subjectSig
     );
@@ -193,7 +178,6 @@ contract AttestationLogic is Ownable{
    * @param _paymentNonce nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
    * @param _requesterSig signature authorizing payment from requester to attester
    * @param _dataHash hash of data being attested and nonce
-   * @param _typeIds array of trait type ids to validate
    * param _requestNonce nonce in sig signed by subject so it can't be replayed
    * @param _subjectSig signed authorization from subject with attestation agreement
    */
@@ -205,7 +189,6 @@ contract AttestationLogic is Ownable{
     bytes32 _paymentNonce,
     bytes _requesterSig,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     bytes _subjectSig // Sig of subject with requester, attester, dataHash, requestNonce
     ) private {
@@ -215,7 +198,6 @@ contract AttestationLogic is Ownable{
       _attester,
       _requester,
       _dataHash,
-      _typeIds,
       _requestNonce,
       _subjectSig
     );
@@ -225,7 +207,6 @@ contract AttestationLogic is Ownable{
       _attester,
       _requester,
       _dataHash,
-      _typeIds,
       0,
       0
     );
@@ -324,7 +305,6 @@ contract AttestationLogic is Ownable{
    * @param _attester user completing the attestation
    * @param _requester user requesting this attestation be completed and paying for it in BLT
    * @param _dataHash hash of data being attested and nonce
-   * @param _typeIds array of trait type ids to validate
    * param _requestNonce Nonce in sig signed by subject so it can't be replayed
    * @param _subjectSig Signed authorization from subject with attestation agreement
    */
@@ -333,7 +313,6 @@ contract AttestationLogic is Ownable{
     address _attester,
     address _requester,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     bytes _subjectSig
   ) public {
@@ -347,7 +326,6 @@ contract AttestationLogic is Ownable{
       _attester,
       _requester,
       _dataHash,
-      _typeIds,
       _requestNonce
     ), _subjectSig));
   }
@@ -360,7 +338,6 @@ contract AttestationLogic is Ownable{
    * @param _attester user completing the attestation
    * @param _requester user requesting this attestation be completed and paying for it in BLT
    * @param _dataHash hash of data being attested and nonce
-   * @param _typeIds array of trait type ids to validate
    * @param _stakeValue BLT to lock up in collateral contract
    * @param _expiresAt Time when stake will expire
    */
@@ -369,7 +346,6 @@ contract AttestationLogic is Ownable{
     address _attester,
     address _requester,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     uint256 _stakeValue,
     uint256 _expiresAt
   ) private{
@@ -378,7 +354,6 @@ contract AttestationLogic is Ownable{
     uint256 _attesterId = registry.accountIdForAddress(_attester);
     uint256 _subjectId = registry.accountIdForAddress(_subject);
 
-    require(traitTypesExist(_typeIds));
 
     uint256 _attestationId = attestationRepo.writeAttestation(
       _subjectId,
@@ -394,41 +369,10 @@ contract AttestationLogic is Ownable{
       _attesterId,
       _requesterId,
       _dataHash,
-      _typeIds,
       _stakeValue,
       _expiresAt
     );
 
-  }
-
-  /**
-   * @notice Add a new traitType to permitted types
-   * @dev Restricted to contract owner
-   * Cannot be in the list already, reverts if exists
-   * @param _traitType name of new trait
-   */
-  function createType(string _traitType) public onlyAdmin {
-    require(!permittedTypesMapping[_traitType]);
-
-    permittedTypesMapping[_traitType] = true;
-    permittedTypesList.push(_traitType);
-
-    emit TypeCreated(_traitType);
-  }
-
-  /**
-   * @notice Confirm each trait exists
-   * @dev reverts if trait does not exist
-   * @param _typeIds array of trait type ids to validate
-   * @return true if all traits exist, false if not
-   */
-  function traitTypesExist(uint256[] _typeIds) public view returns (bool) {
-    for (uint256 i = 0; i < _typeIds.length; i++) {
-      if (_typeIds[i] >= permittedTypesList.length) {
-        return false;
-      }
-    }
-    return true;
   }
 
   /**
@@ -481,7 +425,6 @@ contract AttestationLogic is Ownable{
    * @param _paymentNonce Nonce in PaymentSig to add randomness to payment authorization
    * @param _paymentSig Signature from staker authorizing tokens to be released to collateral contract
    * @param _dataHash Hash of data being attested and nonce
-   * @param _typeIds Array of trait type ids being attested
    * param _requestNonce Nonce in sig signed by subject so it can't be replayed
    * @param _subjectSig Signed authorization from subject with attestation agreement
    * @param _stakeDuration Time until stake will be complete, max 1 year
@@ -492,7 +435,6 @@ contract AttestationLogic is Ownable{
     bytes32 _paymentNonce,
     bytes _paymentSig,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     bytes _subjectSig,
     uint256 _stakeDuration
@@ -504,7 +446,6 @@ contract AttestationLogic is Ownable{
       _paymentNonce,
       _paymentSig,
       _dataHash,
-      _typeIds,
       _requestNonce,
       _subjectSig,
       _stakeDuration
@@ -521,8 +462,7 @@ contract AttestationLogic is Ownable{
    * @param _paymentNonce Nonce in PaymentSig to add randomness to payment authorization
    * @param _paymentSig Signature from staker authorizing tokens to be released to collateral contract
    * @param _dataHash Hash of data being attested and nonce
-   * @param _typeIds Array of trait type ids being attested
-   * param _requestNonce Nonce in sig signed by subject so it can't be replayed
+   * @param _requestNonce Nonce in sig signed by subject so it can't be replayed
    * @param _subjectSig Signed authorization from subject with attestation agreement
    * @param _stakeDuration Time until stake will be complete, max 1 year
    * @param _delegationSig signature authorizing attestation on behalf of staker
@@ -534,7 +474,6 @@ contract AttestationLogic is Ownable{
     bytes32 _paymentNonce,
     bytes _paymentSig,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     bytes _subjectSig,
     uint256 _stakeDuration,
@@ -546,7 +485,6 @@ contract AttestationLogic is Ownable{
       _value,
       _paymentNonce,
       _dataHash,
-      _typeIds,
       _requestNonce,
       _stakeDuration
     );
@@ -558,7 +496,6 @@ contract AttestationLogic is Ownable{
       _paymentNonce,
       _paymentSig,
       _dataHash,
-      _typeIds,
       _requestNonce,
       _subjectSig,
       _stakeDuration
@@ -575,8 +512,7 @@ contract AttestationLogic is Ownable{
    * @param _paymentNonce Nonce in PaymentSig to add randomness to payment authorization
    * @param _paymentSig Signature from staker authorizing tokens to be released to collateral contract
    * @param _dataHash Hash of data being attested and nonce
-   * @param _typeIds Array of trait type ids being attested
-   * param _requestNonce Nonce in sig signed by subject so it can't be replayed
+   * @param _requestNonce Nonce in sig signed by subject so it can't be replayed
    * @param _subjectSig Signed authorization from subject with attestation agreement
    * @param _stakeDuration Time until stake will be complete, max 1 year
    */
@@ -587,7 +523,6 @@ contract AttestationLogic is Ownable{
     bytes32 _paymentNonce,
     bytes _paymentSig,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     bytes _subjectSig,
     uint256 _stakeDuration
@@ -598,7 +533,6 @@ contract AttestationLogic is Ownable{
       _staker,
       _subject,
       _dataHash,
-      _typeIds,
       _requestNonce,
       _subjectSig
     );
@@ -611,7 +545,6 @@ contract AttestationLogic is Ownable{
       _staker,
       _subject,
       _dataHash,
-      _typeIds,
       _value,
       _expiresAt
     );

@@ -146,8 +146,6 @@ contract("AttestationLogic", function(
     await attestationLogic.setAdmin(mockAdmin, {from: mockOwner})
 
     await Promise.all([
-      attestationLogic.createType("phone", {from: mockAdmin}),
-      attestationLogic.createType("email", {from: mockAdmin}),
       // token.gift(alice),
       token.gift(david, new BigNumber("1e18")),
       token.gift(david, new BigNumber("1e18")),
@@ -180,7 +178,6 @@ contract("AttestationLogic", function(
       bob,
       david,
       combinedDataHash,
-      [0, 1],
       nonce,
     )}
   );
@@ -202,7 +199,6 @@ contract("AttestationLogic", function(
       bob,
       david,
       combinedDataHash,
-      [0, 1],
       nonce,
     )}
   );
@@ -215,7 +211,6 @@ contract("AttestationLogic", function(
       new BigNumber(web3.toWei(1, "ether")).toString(10),
       nonce,
       combinedDataHash,
-      [0, 1],
       nonce,
     )}
   );
@@ -240,7 +235,6 @@ contract("AttestationLogic", function(
       paymentNonce: nonce,
       requesterSig: tokenReleaseSig,
       dataHash: combinedDataHash,
-      typeIds: [0, 1],
       requestNonce: nonce,
       subjectSig: subjectSig,
       from: bob
@@ -257,7 +251,6 @@ contract("AttestationLogic", function(
         paymentNonce,
         requesterSig,
         dataHash,
-        typeIds,
         requestNonce,
         subjectSig,
         from
@@ -273,7 +266,6 @@ contract("AttestationLogic", function(
         paymentNonce,
         requesterSig,
         dataHash,
-        typeIds,
         requestNonce,
         subjectSig,
         {
@@ -305,10 +297,6 @@ contract("AttestationLogic", function(
       await attest({from: alice}).should.be.rejectedWith(EVMThrow);
     });
 
-    it("fails if invalid type", async () => {
-      await attest({typeIds: [1, 2]}).should.be.rejectedWith(EVMThrow);
-    });
-
     it("fails if no account for subject", async () => {
       const unrelatedWallet = ethereumjsWallet.generate()
       await attest({
@@ -320,7 +308,6 @@ contract("AttestationLogic", function(
               attestDefaults.attester,
               attestDefaults.requester,
               attestDefaults.dataHash,
-              attestDefaults.typeIds,
               attestDefaults.requestNonce,
           )}
         )
@@ -334,7 +321,6 @@ contract("AttestationLogic", function(
       attesterId: BigNumber.BigNumber;
       requesterId: BigNumber.BigNumber;
       dataHash: string;
-      typeIds: BigNumber.BigNumber[];
       stakeValue: BigNumber.BigNumber;
       expiresAt: BigNumber.BigNumber;
     }
@@ -357,8 +343,6 @@ contract("AttestationLogic", function(
       matchingLog.args.attesterId.should.be.bignumber.equal(bobId);
       matchingLog.args.requesterId.should.be.bignumber.equal(davidId);
       matchingLog.args.dataHash.should.be.equal(attestDefaults.dataHash);
-      new BigNumber(matchingLog.args.typeIds[0]).toNumber().should.be.equal(attestDefaults.typeIds[0])
-      new BigNumber(matchingLog.args.typeIds[1]).toNumber().should.be.equal(attestDefaults.typeIds[1])
       matchingLog.args.stakeValue.should.be.bignumber.equal(0);
       matchingLog.args.expiresAt.should.be.bignumber.equal(0);
     });
@@ -385,75 +369,10 @@ contract("AttestationLogic", function(
               bob,
               david,
               combinedDataHash,
-              [0, 1],
               differentNonce,
             )}
         )
       }).should.be.fulfilled;
-    });
-
-    it("accepts a valid attestation for 9 traits", async () => {
-      let tempTypes = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-      for (let i in tempTypes) {
-        await attestationLogic.createType(tempTypes[i], {from: mockAdmin})
-      }
-      await attest({
-          paymentNonce: differentNonce,
-          requesterSig: ethSigUtil.signTypedDataLegacy(
-            davidPrivkey,
-            {data: getFormattedTypedDataReleaseTokens(
-              david,
-              bob,
-              new BigNumber(web3.toWei(1, "ether")).toString(10),
-              differentNonce,
-            )}
-          ),
-          typeIds: [0, 1, 2, 3, 5, 6, 7, 8, 9],
-          requestNonce: differentNonce,
-          subjectSig: ethSigUtil.signTypedDataLegacy(
-              alicePrivkey,
-              {data: getFormattedTypedDataAttestationRequest(
-                alice,
-                bob,
-                david,
-                combinedDataHash,
-                [0, 1, 2, 3, 5, 6, 7, 8, 9],
-                differentNonce,
-              )}
-          )
-      }).should.be.fulfilled;
-    });
-
-    it("rejects a valid second attestation for 9 traits if one not valid", async () => {
-      let tempTypes = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
-      for (let i in tempTypes) {
-        await attestationLogic.createType(tempTypes[i], {from: mockAdmin})
-      }
-      await attest({
-          paymentNonce: differentNonce,
-          requesterSig: ethSigUtil.signTypedDataLegacy(
-            davidPrivkey,
-            {data: getFormattedTypedDataReleaseTokens(
-              david,
-              bob,
-              new BigNumber(web3.toWei(1, "ether")).toString(10),
-              differentNonce,
-            )}
-          ),
-          typeIds: [0, 1, 2, 3, 5, 6, 7, 8, 9],
-          requestNonce: differentNonce,
-          subjectSig: ethSigUtil.signTypedDataLegacy(
-              alicePrivkey,
-              {data: getFormattedTypedDataAttestationRequest(
-                alice,
-                bob,
-                david,
-                combinedDataHash,
-                [0, 1, 2, 3, 5, 6, 7, 8, 9],
-                differentNonce,
-              )}
-          )
-      }).should.be.rejectedWith(EVMThrow);
     });
 
 
@@ -548,7 +467,6 @@ contract("AttestationLogic", function(
                 bob,
                 david,
                 attestDefaults.dataHash,
-                attestDefaults.typeIds,
                 differentNonce,
               )}
           )
@@ -591,10 +509,6 @@ contract("AttestationLogic", function(
 
     it("rejects attestations with for an invalid data hash", async () => {
       await attest({ dataHash: emailDataHash}).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects attestations with for an invalid type ids", async () => {
-      await attest({ typeIds: [1]}).should.be.rejectedWith(EVMThrow);
     });
 
     it("rejects attestations with for an invalid payment nonce", async () => {
@@ -823,7 +737,6 @@ contract("AttestationLogic", function(
       paymentNonce: nonce,
       requesterSig: tokenReleaseSig,
       dataHash: combinedDataHash,
-      typeIds: [0, 1],
       requestNonce: nonce,
       subjectSig: subjectSig,
       delegationSig: attesterDelegationSig,
@@ -841,7 +754,6 @@ contract("AttestationLogic", function(
         paymentNonce,
         requesterSig,
         dataHash,
-        typeIds,
         requestNonce,
         subjectSig,
         delegationSig,
@@ -859,7 +771,6 @@ contract("AttestationLogic", function(
         paymentNonce,
         requesterSig,
         dataHash,
-        typeIds,
         requestNonce,
         subjectSig,
         delegationSig,
@@ -929,14 +840,6 @@ contract("AttestationLogic", function(
       ).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects an attestation if the type hash is wrong", async () => {
-      await attestFor(
-        {
-          typeIds: [1]
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
     it("rejects an attestation if the request nonce is wrong", async () => {
       await attestFor(
         {
@@ -957,7 +860,6 @@ contract("AttestationLogic", function(
       paymentNonce: nonce,
       requesterSig: tokenReleaseSig,
       dataHash: combinedDataHash,
-      typeIds: [0, 1],
       requestNonce: nonce,
       subjectSig: subjectSig,
       from: bob
@@ -974,7 +876,6 @@ contract("AttestationLogic", function(
         paymentNonce,
         requesterSig,
         dataHash,
-        typeIds,
         requestNonce,
         subjectSig,
         from
@@ -990,7 +891,6 @@ contract("AttestationLogic", function(
         paymentNonce,
         requesterSig,
         dataHash,
-        typeIds,
         requestNonce,
         subjectSig,
         {

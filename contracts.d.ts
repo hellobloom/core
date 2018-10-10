@@ -576,12 +576,6 @@ export interface AttestationLogicInstance extends ContractInstance {
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
   }
-  permittedTypesList: {
-    (unnamed4: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed4: UInt, options?: TransactionOptions): Promise<string>
-    sendTransaction(unnamed4: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed4: UInt, options?: TransactionOptions): Promise<number>
-  }
   registry: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(options?: TransactionOptions): Promise<Address>
@@ -607,10 +601,10 @@ export interface AttestationLogicInstance extends ContractInstance {
     estimateGas(options?: TransactionOptions): Promise<number>
   }
   usedSignatures: {
-    (unnamed5: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed5: string, options?: TransactionOptions): Promise<boolean>
-    sendTransaction(unnamed5: string, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed5: string, options?: TransactionOptions): Promise<number>
+    (unnamed4: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(unnamed4: string, options?: TransactionOptions): Promise<boolean>
+    sendTransaction(unnamed4: string, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed4: string, options?: TransactionOptions): Promise<number>
   }
 
   TraitAttested: Web3.EventFilterCreator<{
@@ -619,7 +613,6 @@ export interface AttestationLogicInstance extends ContractInstance {
     attesterId: UInt
     requesterId: UInt
     dataHash: string
-    typeIds: UInt[]
     stakeValue: UInt
     expiresAt: UInt
   }>
@@ -627,8 +620,6 @@ export interface AttestationLogicInstance extends ContractInstance {
   AttestationRejected: Web3.EventFilterCreator<{ attesterId: UInt; requesterId: UInt }>
 
   AttestationRevoked: Web3.EventFilterCreator<{ subjectId: UInt; attestationId: UInt; revokerId: UInt }>
-
-  TypeCreated: Web3.EventFilterCreator<{ traitType: string }>
 
   StakeSubmitted: Web3.EventFilterCreator<{ subjectId: UInt; stakerId: UInt; attestationId: UInt; expiresAt: UInt }>
 
@@ -654,7 +645,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       requesterSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       options?: TransactionOptions
@@ -666,7 +656,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       requesterSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       options?: TransactionOptions
@@ -678,7 +667,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       requesterSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       options?: TransactionOptions
@@ -690,7 +678,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       requesterSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       options?: TransactionOptions
@@ -705,7 +692,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       requesterSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       delegationSig: string,
@@ -719,7 +705,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       requesterSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       delegationSig: string,
@@ -733,7 +718,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       requesterSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       delegationSig: string,
@@ -747,7 +731,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       requesterSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       delegationSig: string,
@@ -804,7 +787,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       options?: TransactionOptions
@@ -814,7 +796,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       options?: TransactionOptions
@@ -824,7 +805,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       options?: TransactionOptions
@@ -834,23 +814,10 @@ export interface AttestationLogicInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       options?: TransactionOptions
     ): Promise<number>
-  }
-  createType: {
-    (traitType: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(traitType: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(traitType: string, options?: TransactionOptions): Promise<string>
-    estimateGas(traitType: string, options?: TransactionOptions): Promise<number>
-  }
-  traitTypesExist: {
-    (typeIds: UInt[], options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(typeIds: UInt[], options?: TransactionOptions): Promise<boolean>
-    sendTransaction(typeIds: UInt[], options?: TransactionOptions): Promise<string>
-    estimateGas(typeIds: UInt[], options?: TransactionOptions): Promise<number>
   }
   revokeAttestation: {
     (subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -865,7 +832,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       paymentSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       stakeDuration: UInt,
@@ -877,7 +843,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       paymentSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       stakeDuration: UInt,
@@ -889,7 +854,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       paymentSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       stakeDuration: UInt,
@@ -901,7 +865,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       paymentSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       stakeDuration: UInt,
@@ -916,7 +879,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       paymentSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       stakeDuration: UInt,
@@ -930,7 +892,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       paymentSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       stakeDuration: UInt,
@@ -944,7 +905,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       paymentSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       stakeDuration: UInt,
@@ -958,7 +918,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       paymentNonce: string,
       paymentSig: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       subjectSig: string,
       stakeDuration: UInt,
@@ -1066,7 +1025,6 @@ export interface AttestationLogicUpgradeModeInstance extends ContractInstance {
     attesterId: UInt
     requesterId: UInt
     dataHash: string
-    typeIds: UInt[]
     stakeValue: UInt
     expiresAt: UInt
   }>
@@ -1074,21 +1032,14 @@ export interface AttestationLogicUpgradeModeInstance extends ContractInstance {
   OwnershipTransferred: Web3.EventFilterCreator<{ previousOwner: Address; newOwner: Address }>
 
   proxyWriteAttestation: {
-    (
-      subject: Address,
-      attester: Address,
-      requester: Address,
-      dataHash: string,
-      typeIds: UInt[],
-      timestamp: UInt,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>
+    (subject: Address, attester: Address, requester: Address, dataHash: string, timestamp: UInt, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >
     call(
       subject: Address,
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       timestamp: UInt,
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>
@@ -1097,7 +1048,6 @@ export interface AttestationLogicUpgradeModeInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       timestamp: UInt,
       options?: TransactionOptions
     ): Promise<string>
@@ -1106,7 +1056,6 @@ export interface AttestationLogicUpgradeModeInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       timestamp: UInt,
       options?: TransactionOptions
     ): Promise<number>
@@ -1151,14 +1100,14 @@ export interface AttestationRepoInstance extends ContractInstance {
     estimateGas(options?: TransactionOptions): Promise<number>
   }
   attestations: {
-    (unnamed6: UInt, unnamed7: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    (unnamed5: UInt, unnamed6: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(
+      unnamed5: UInt,
       unnamed6: UInt,
-      unnamed7: UInt,
       options?: TransactionOptions
     ): Promise<[BigNumber.BigNumber, BigNumber.BigNumber, BigNumber.BigNumber, BigNumber.BigNumber]>
-    sendTransaction(unnamed6: UInt, unnamed7: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed6: UInt, unnamed7: UInt, options?: TransactionOptions): Promise<number>
+    sendTransaction(unnamed5: UInt, unnamed6: UInt, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed5: UInt, unnamed6: UInt, options?: TransactionOptions): Promise<number>
   }
   transferOwnership: {
     (newOwner: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -1377,10 +1326,10 @@ export interface BLTInstance extends ContractInstance {
     estimateGas(options?: TransactionOptions): Promise<number>
   }
   canCreateGrants: {
-    (unnamed8: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed8: Address, options?: TransactionOptions): Promise<boolean>
-    sendTransaction(unnamed8: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed8: Address, options?: TransactionOptions): Promise<number>
+    (unnamed7: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(unnamed7: Address, options?: TransactionOptions): Promise<boolean>
+    sendTransaction(unnamed7: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed7: Address, options?: TransactionOptions): Promise<number>
   }
   setCanCreateGrants: {
     (addr: Address, allowed: boolean, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -1395,14 +1344,14 @@ export interface BLTInstance extends ContractInstance {
     estimateGas(from: Address, to: Address, value: UInt, options?: TransactionOptions): Promise<number>
   }
   grants: {
-    (unnamed9: Address, unnamed10: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    (unnamed8: Address, unnamed9: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(
-      unnamed9: Address,
-      unnamed10: UInt,
+      unnamed8: Address,
+      unnamed9: UInt,
       options?: TransactionOptions
     ): Promise<[Address, BigNumber.BigNumber, BigNumber.BigNumber, BigNumber.BigNumber, BigNumber.BigNumber, boolean, boolean]>
-    sendTransaction(unnamed9: Address, unnamed10: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed9: Address, unnamed10: UInt, options?: TransactionOptions): Promise<number>
+    sendTransaction(unnamed8: Address, unnamed9: UInt, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed8: Address, unnamed9: UInt, options?: TransactionOptions): Promise<number>
   }
   decimals: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -2169,20 +2118,20 @@ export interface MiniMeVestedTokenInstance extends ContractInstance {
     estimateGas(options?: TransactionOptions): Promise<number>
   }
   canCreateGrants: {
-    (unnamed11: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed11: Address, options?: TransactionOptions): Promise<boolean>
-    sendTransaction(unnamed11: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed11: Address, options?: TransactionOptions): Promise<number>
+    (unnamed10: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(unnamed10: Address, options?: TransactionOptions): Promise<boolean>
+    sendTransaction(unnamed10: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed10: Address, options?: TransactionOptions): Promise<number>
   }
   grants: {
-    (unnamed12: Address, unnamed13: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    (unnamed11: Address, unnamed12: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(
-      unnamed12: Address,
-      unnamed13: UInt,
+      unnamed11: Address,
+      unnamed12: UInt,
       options?: TransactionOptions
     ): Promise<[Address, BigNumber.BigNumber, BigNumber.BigNumber, BigNumber.BigNumber, BigNumber.BigNumber, boolean, boolean]>
-    sendTransaction(unnamed12: Address, unnamed13: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed12: Address, unnamed13: UInt, options?: TransactionOptions): Promise<number>
+    sendTransaction(unnamed11: Address, unnamed12: UInt, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed11: Address, unnamed12: UInt, options?: TransactionOptions): Promise<number>
   }
   decimals: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -2619,10 +2568,10 @@ export interface PollInstance extends ContractInstance {
     estimateGas(options?: TransactionOptions): Promise<number>
   }
   votes: {
-    (unnamed14: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed14: UInt, options?: TransactionOptions): Promise<BigNumber.BigNumber>
-    sendTransaction(unnamed14: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed14: UInt, options?: TransactionOptions): Promise<number>
+    (unnamed13: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(unnamed13: UInt, options?: TransactionOptions): Promise<BigNumber.BigNumber>
+    sendTransaction(unnamed13: UInt, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed13: UInt, options?: TransactionOptions): Promise<number>
   }
   startTime: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -2661,10 +2610,10 @@ export interface PollInstance extends ContractInstance {
     estimateGas(options?: TransactionOptions): Promise<number>
   }
   usedSignatures: {
-    (unnamed15: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed15: string, options?: TransactionOptions): Promise<boolean>
-    sendTransaction(unnamed15: string, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed15: string, options?: TransactionOptions): Promise<number>
+    (unnamed14: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(unnamed14: string, options?: TransactionOptions): Promise<boolean>
+    sendTransaction(unnamed14: string, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed14: string, options?: TransactionOptions): Promise<number>
   }
 
   VoteCast: Web3.EventFilterCreator<{ voter: Address; choice: UInt }>
@@ -2717,30 +2666,15 @@ export interface SafeMathContract {
 
 export interface SigningLogicInstance extends ContractInstance {
   generateRequestAttestationSchemaHash: {
-    (
-      subject: Address,
-      attester: Address,
-      requester: Address,
-      dataHash: string,
-      typeIds: UInt[],
-      nonce: string,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>
-    call(
-      subject: Address,
-      attester: Address,
-      requester: Address,
-      dataHash: string,
-      typeIds: UInt[],
-      nonce: string,
-      options?: TransactionOptions
-    ): Promise<string>
+    (subject: Address, attester: Address, requester: Address, dataHash: string, nonce: string, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >
+    call(subject: Address, attester: Address, requester: Address, dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
     sendTransaction(
       subject: Address,
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       nonce: string,
       options?: TransactionOptions
     ): Promise<string>
@@ -2749,7 +2683,6 @@ export interface SigningLogicInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       nonce: string,
       options?: TransactionOptions
     ): Promise<number>
@@ -2773,7 +2706,6 @@ export interface SigningLogicInstance extends ContractInstance {
       reward: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>
@@ -2783,7 +2715,6 @@ export interface SigningLogicInstance extends ContractInstance {
       reward: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       options?: TransactionOptions
     ): Promise<string>
@@ -2793,7 +2724,6 @@ export interface SigningLogicInstance extends ContractInstance {
       reward: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       options?: TransactionOptions
     ): Promise<string>
@@ -2803,7 +2733,6 @@ export interface SigningLogicInstance extends ContractInstance {
       reward: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       options?: TransactionOptions
     ): Promise<number>
@@ -2820,7 +2749,6 @@ export interface SigningLogicInstance extends ContractInstance {
       value: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       stakeDuration: UInt,
       options?: TransactionOptions
@@ -2830,7 +2758,6 @@ export interface SigningLogicInstance extends ContractInstance {
       value: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       stakeDuration: UInt,
       options?: TransactionOptions
@@ -2840,7 +2767,6 @@ export interface SigningLogicInstance extends ContractInstance {
       value: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       stakeDuration: UInt,
       options?: TransactionOptions
@@ -2850,7 +2776,6 @@ export interface SigningLogicInstance extends ContractInstance {
       value: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       stakeDuration: UInt,
       options?: TransactionOptions
@@ -2896,30 +2821,15 @@ export interface SigningLogicInterfaceInstance extends ContractInstance {
     estimateGas(hash: string, sig: string, options?: TransactionOptions): Promise<number>
   }
   generateRequestAttestationSchemaHash: {
-    (
-      subject: Address,
-      attester: Address,
-      requester: Address,
-      dataHash: string,
-      typeIds: UInt[],
-      nonce: string,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>
-    call(
-      subject: Address,
-      attester: Address,
-      requester: Address,
-      dataHash: string,
-      typeIds: UInt[],
-      nonce: string,
-      options?: TransactionOptions
-    ): Promise<string>
+    (subject: Address, attester: Address, requester: Address, dataHash: string, nonce: string, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >
+    call(subject: Address, attester: Address, requester: Address, dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
     sendTransaction(
       subject: Address,
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       nonce: string,
       options?: TransactionOptions
     ): Promise<string>
@@ -2928,7 +2838,6 @@ export interface SigningLogicInterfaceInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       nonce: string,
       options?: TransactionOptions
     ): Promise<number>
@@ -2940,7 +2849,6 @@ export interface SigningLogicInterfaceInstance extends ContractInstance {
       reward: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>
@@ -2950,7 +2858,6 @@ export interface SigningLogicInterfaceInstance extends ContractInstance {
       reward: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       options?: TransactionOptions
     ): Promise<string>
@@ -2960,7 +2867,6 @@ export interface SigningLogicInterfaceInstance extends ContractInstance {
       reward: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       options?: TransactionOptions
     ): Promise<string>
@@ -2970,7 +2876,6 @@ export interface SigningLogicInterfaceInstance extends ContractInstance {
       reward: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       options?: TransactionOptions
     ): Promise<number>
@@ -2987,7 +2892,6 @@ export interface SigningLogicInterfaceInstance extends ContractInstance {
       value: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       stakeDuration: UInt,
       options?: TransactionOptions
@@ -2997,7 +2901,6 @@ export interface SigningLogicInterfaceInstance extends ContractInstance {
       value: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       stakeDuration: UInt,
       options?: TransactionOptions
@@ -3007,7 +2910,6 @@ export interface SigningLogicInterfaceInstance extends ContractInstance {
       value: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       stakeDuration: UInt,
       options?: TransactionOptions
@@ -3017,7 +2919,6 @@ export interface SigningLogicInterfaceInstance extends ContractInstance {
       value: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       stakeDuration: UInt,
       options?: TransactionOptions
@@ -3063,30 +2964,15 @@ export interface SigningLogicInterfaceContract {
 
 export interface SigningLogicLegacyInstance extends ContractInstance {
   generateRequestAttestationSchemaHash: {
-    (
-      subject: Address,
-      attester: Address,
-      requester: Address,
-      dataHash: string,
-      typeIds: UInt[],
-      nonce: string,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>
-    call(
-      subject: Address,
-      attester: Address,
-      requester: Address,
-      dataHash: string,
-      typeIds: UInt[],
-      nonce: string,
-      options?: TransactionOptions
-    ): Promise<string>
+    (subject: Address, attester: Address, requester: Address, dataHash: string, nonce: string, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >
+    call(subject: Address, attester: Address, requester: Address, dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
     sendTransaction(
       subject: Address,
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       nonce: string,
       options?: TransactionOptions
     ): Promise<string>
@@ -3095,7 +2981,6 @@ export interface SigningLogicLegacyInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       dataHash: string,
-      typeIds: UInt[],
       nonce: string,
       options?: TransactionOptions
     ): Promise<number>
@@ -3119,7 +3004,6 @@ export interface SigningLogicLegacyInstance extends ContractInstance {
       reward: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>
@@ -3129,7 +3013,6 @@ export interface SigningLogicLegacyInstance extends ContractInstance {
       reward: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       options?: TransactionOptions
     ): Promise<string>
@@ -3139,7 +3022,6 @@ export interface SigningLogicLegacyInstance extends ContractInstance {
       reward: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       options?: TransactionOptions
     ): Promise<string>
@@ -3149,7 +3031,6 @@ export interface SigningLogicLegacyInstance extends ContractInstance {
       reward: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       options?: TransactionOptions
     ): Promise<number>
@@ -3166,7 +3047,6 @@ export interface SigningLogicLegacyInstance extends ContractInstance {
       value: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       stakeDuration: UInt,
       options?: TransactionOptions
@@ -3176,7 +3056,6 @@ export interface SigningLogicLegacyInstance extends ContractInstance {
       value: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       stakeDuration: UInt,
       options?: TransactionOptions
@@ -3186,7 +3065,6 @@ export interface SigningLogicLegacyInstance extends ContractInstance {
       value: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       stakeDuration: UInt,
       options?: TransactionOptions
@@ -3196,7 +3074,6 @@ export interface SigningLogicLegacyInstance extends ContractInstance {
       value: UInt,
       paymentNonce: string,
       dataHash: string,
-      typeIds: UInt[],
       requestNonce: string,
       stakeDuration: UInt,
       options?: TransactionOptions
@@ -3378,16 +3255,16 @@ export interface TokenEscrowMarketplaceInstance extends ContractInstance {
     estimateGas(newOwner: Address, options?: TransactionOptions): Promise<number>
   }
   tokenEscrow: {
-    (unnamed16: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed16: UInt, options?: TransactionOptions): Promise<BigNumber.BigNumber>
-    sendTransaction(unnamed16: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed16: UInt, options?: TransactionOptions): Promise<number>
+    (unnamed15: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(unnamed15: UInt, options?: TransactionOptions): Promise<BigNumber.BigNumber>
+    sendTransaction(unnamed15: UInt, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed15: UInt, options?: TransactionOptions): Promise<number>
   }
   usedSignatures: {
-    (unnamed17: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed17: string, options?: TransactionOptions): Promise<boolean>
-    sendTransaction(unnamed17: string, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed17: string, options?: TransactionOptions): Promise<number>
+    (unnamed16: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(unnamed16: string, options?: TransactionOptions): Promise<boolean>
+    sendTransaction(unnamed16: string, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed16: string, options?: TransactionOptions): Promise<number>
   }
   token: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -3495,10 +3372,10 @@ export interface TokenEscrowMarketplaceContract {
 
 export interface VotingCenterInstance extends ContractInstance {
   polls: {
-    (unnamed18: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed18: UInt, options?: TransactionOptions): Promise<Address>
-    sendTransaction(unnamed18: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed18: UInt, options?: TransactionOptions): Promise<number>
+    (unnamed17: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(unnamed17: UInt, options?: TransactionOptions): Promise<Address>
+    sendTransaction(unnamed17: UInt, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed17: UInt, options?: TransactionOptions): Promise<number>
   }
   PollCreated: Web3.EventFilterCreator<{ poll: Address; author: Address }>
 
