@@ -34,6 +34,9 @@ contract SigningLogicInterface {
     uint256 _subjectId,
     uint256 _attestationId
     ) external view returns (bytes32);
+  function generateRevokeAttestationForDelegationSchemaHash(
+    bytes32 _link
+    ) external view returns (bytes32);
   function generateAddAddressSchemaHash(
     address _senderAddress,
     bytes32 _nonce

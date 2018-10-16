@@ -44,6 +44,10 @@ contract SigningLogic is SigningLogicInterface{
     "RevokeStakeFor(uint256 subjectId,uint256 attestationId)"
   );
 
+  bytes32 constant REVOKE_ATTESTATION_FOR_TYPEHASH = keccak256(
+    "RevokeAttestationFor(bytes32 link)"
+  );
+
   bytes32 constant VOTE_FOR_TYPEHASH = keccak256(
     "VoteFor(uint16 choice,address voter,bytes32 nonce,address poll)"
   );
@@ -190,6 +194,17 @@ contract SigningLogic is SigningLogicInterface{
       REVOKE_STAKE_FOR_TYPEHASH,
       request.subjectId,
       request.attestationId
+    ));
+  }
+
+  struct RevokeAttestationFor {
+      bytes32 link;
+  }
+
+  function hash(RevokeAttestationFor request) internal pure returns (bytes32) {
+    return keccak256(abi.encode(
+      REVOKE_ATTESTATION_FOR_TYPEHASH,
+      request.link
     ));
   }
 
@@ -360,6 +375,20 @@ contract SigningLogic is SigningLogicInterface{
         hash(RevokeStakeFor(
           _subjectId,
           _attestationId
+        ))
+      )
+      );
+  }
+
+  function generateRevokeAttestationForDelegationSchemaHash(
+    bytes32 _link
+  ) external view returns (bytes32) {
+    return keccak256(
+      abi.encodePacked(
+        "\x19\x01",
+        DOMAIN_SEPARATOR,
+        hash(RevokeAttestationFor(
+          _link
         ))
       )
       );

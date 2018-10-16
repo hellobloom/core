@@ -799,15 +799,28 @@ export const AttestationLogic: IContractMethodManifest = {
       }
     },
     revokeAttestation: {
-      args_arr: ["_subjectId", "_attestationId"],
+      args_arr: ["_link"],
       args: {
-        _subjectId: {
-          type: "uint256",
+        _link: {
+          type: "bytes32",
+          index: 0
+        }
+      }
+    },
+    revokeAttestation: {
+      args_arr: ["_link", "_sender", "_delegationSig"],
+      args: {
+        _link: {
+          type: "bytes32",
           index: 0
         },
-        _attestationId: {
-          type: "uint256",
+        _sender: {
+          type: "address",
           index: 1
+        },
+        _delegationSig: {
+          type: "bytes",
+          index: 2
         }
       }
     },
@@ -3042,6 +3055,15 @@ export const SigningLogic: IContractMethodManifest = {
         }
       }
     },
+    generateRevokeAttestationForDelegationSchemaHash: {
+      args_arr: ["_link"],
+      args: {
+        _link: {
+          type: "bytes32",
+          index: 0
+        }
+      }
+    },
     generateVoteForDelegationSchemaHash: {
       args_arr: ["_choice", "_voter", "_nonce", "_poll"],
       args: {
@@ -3221,6 +3243,15 @@ export const SigningLogicInterface: IContractMethodManifest = {
         _attestationId: {
           type: "uint256",
           index: 1
+        }
+      }
+    },
+    generateRevokeAttestationForDelegationSchemaHash: {
+      args_arr: ["_link"],
+      args: {
+        _link: {
+          type: "bytes32",
+          index: 0
         }
       }
     },
@@ -3445,6 +3476,15 @@ export const SigningLogicLegacy: IContractMethodManifest = {
         _attestationId: {
           type: "uint256",
           index: 1
+        }
+      }
+    },
+    generateRevokeAttestationForDelegationSchemaHash: {
+      args_arr: ["_link"],
+      args: {
+        _link: {
+          type: "bytes32",
+          index: 0
         }
       }
     },

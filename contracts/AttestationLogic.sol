@@ -51,7 +51,8 @@ contract AttestationLogic is Ownable{
     uint256 expiresAt
     );
   event AttestationRejected(uint256 indexed attesterId, uint256 indexed requesterId);
-  event AttestationRevoked(uint256 indexed subjectId, uint256 attestationId, uint256 indexed revokerId);
+  event StakeRevoked(uint256 indexed subjectId, uint256 attestationId, uint256 indexed stakerId);
+  event AttestationRevoked(bytes32 link, uint256 indexed attesterId);
   event StakeSubmitted(uint256 indexed subjectId, uint256 indexed stakerId, uint256 attestationId, uint256 expiresAt);
   event StakedTokensReclaimed(uint256 indexed stakerId, uint256 value);
   event AccountRegistryChanged(address oldRegistry, address newRegistry);
@@ -376,44 +377,47 @@ contract AttestationLogic is Ownable{
   }
 
   /**
-   * @notice Revoke an attestation by the subject, attester or the admin
-   * @dev Verify valid certainty level and user addresses
-   * @param _subjectId user this attestation is about
-   * @param _attestationId Id of the attestation to revoke
+   * @notice Revoke an attestation
+   * @dev Link is included in dataHash and cannot be directly connected to a BloomID
+   * @param _link bytes string embedded in dataHash to link revocation
    */
   function revokeAttestation(
-    uint256 _subjectId,
-    uint256 _attestationId
+    bytes32 _link
     ) public {
+      revokeAttestationForUser(_link, msg.sender);
+  }
 
-      uint256 _senderId = registry.accountIdForAddress(msg.sender);
+  /**
+   * @notice Revoke an attestation
+   * @dev Link is included in dataHash and cannot be directly connected to a BloomID
+   * @param _link bytes string embedded in dataHash to link revocation
+   */
+  function revokeAttestation(
+    bytes32 _link,
+    address _sender,
+    bytes _delegationSig
+    ) public onlyAdmin {
+    bytes32 _delegationDigest = signingLogic.generateRevokeAttestationForDelegationSchemaHash(
+      _link
+    );
+    require(_sender == signingLogic.recoverSigner(_delegationDigest, _delegationSig));
+      revokeAttestationForUser(_link, _sender);
+  }
 
-      uint256 _attesterId;
-      uint256 _completedAt;
-      uint256 _stakeValue;
-      uint256 _expiresAt;
+  /**
+   * @notice Revoke an attestation
+   * @dev Link is included in dataHash and cannot be directly connected to a BloomID
+   * @param _link bytes string embedded in dataHash to link revocation
+   * @param _sender address identify revoker
+   */
+  function revokeAttestationForUser(
+    bytes32 _link,
+    address _sender
+    ) private {
 
-      ( _attesterId,
-        _completedAt,
-        _stakeValue,
-        _expiresAt
-      ) = attestationRepo.readAttestation(
-        _subjectId,
-        _attestationId
-      );
+      uint256 _senderId = registry.accountIdForAddress(_sender);
 
-      require(
-        _senderId == _subjectId ||
-        _senderId == _attesterId ||
-        msg.sender == admin
-      );
-
-      require(_completedAt > 0);
-
-      require(_stakeValue == 0);
-
-      attestationRepo.revokeAttestation(_subjectId, _attestationId);
-      emit AttestationRevoked(_subjectId, _attestationId, _senderId);
+      emit AttestationRevoked(_link, _senderId);
   }
 
 
@@ -686,6 +690,7 @@ contract AttestationLogic is Ownable{
     );
     attestationRepo.transferTokensToStaker(_staker, _stakeValue);
     emit StakedTokensReclaimed(_stakerId, _stakeValue);
+    emit StakeRevoked(_subjectId, _attestationId, _stakerId);
   }
 
   function setAdmin(address _newAdmin) public onlyOwner nonZero(_newAdmin) {

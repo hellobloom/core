@@ -80,6 +80,13 @@ contract SigningLogicLegacy is SigningLogicInterface{
       )
   );
 
+  bytes32 constant REVOKE_ATTESTATION_FOR_TYPEHASH = keccak256(
+      abi.encodePacked(
+        "string action",
+        "bytes link"
+      )
+  );
+
   bytes32 constant VOTE_FOR_TYPEHASH = keccak256(
       abi.encodePacked(
         "uint16 choice",
@@ -233,6 +240,23 @@ contract SigningLogicLegacy is SigningLogicInterface{
             request.dataHash,
             request.requestNonce,
             request.stakeDuration
+          )
+        )
+    ));
+  }
+
+  struct RevokeAttestationFor {
+      bytes32 link;
+  }
+
+  function hash(RevokeAttestationFor request) internal pure returns (bytes32) {
+    return keccak256(
+      abi.encodePacked(
+        REVOKE_ATTESTATION_FOR_TYPEHASH,
+        keccak256(
+          abi.encodePacked(
+            "revokeAttestation",
+            request.link
           )
         )
     ));
@@ -408,6 +432,16 @@ contract SigningLogicLegacy is SigningLogicInterface{
       RevokeStakeFor(
         _subjectId,
         _attestationId
+      )
+    );
+  }
+
+  function generateRevokeAttestationForDelegationSchemaHash(
+    bytes32 _link
+  ) external view returns (bytes32) {
+    return hash(
+      RevokeAttestationFor(
+        _link
       )
     );
   }

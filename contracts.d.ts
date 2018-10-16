@@ -619,7 +619,9 @@ export interface AttestationLogicInstance extends ContractInstance {
 
   AttestationRejected: Web3.EventFilterCreator<{ attesterId: UInt; requesterId: UInt }>
 
-  AttestationRevoked: Web3.EventFilterCreator<{ subjectId: UInt; attestationId: UInt; revokerId: UInt }>
+  StakeRevoked: Web3.EventFilterCreator<{ subjectId: UInt; attestationId: UInt; stakerId: UInt }>
+
+  AttestationRevoked: Web3.EventFilterCreator<{ link: string; attesterId: UInt }>
 
   StakeSubmitted: Web3.EventFilterCreator<{ subjectId: UInt; stakerId: UInt; attestationId: UInt; expiresAt: UInt }>
 
@@ -820,10 +822,16 @@ export interface AttestationLogicInstance extends ContractInstance {
     ): Promise<number>
   }
   revokeAttestation: {
-    (subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<number>
+    (link: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(link: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(link: string, options?: TransactionOptions): Promise<string>
+    estimateGas(link: string, options?: TransactionOptions): Promise<number>
+  }
+  revokeAttestation: {
+    (link: string, sender: Address, delegationSig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(link: string, sender: Address, delegationSig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(link: string, sender: Address, delegationSig: string, options?: TransactionOptions): Promise<string>
+    estimateGas(link: string, sender: Address, delegationSig: string, options?: TransactionOptions): Promise<number>
   }
   stake: {
     (
@@ -2787,6 +2795,12 @@ export interface SigningLogicInstance extends ContractInstance {
     sendTransaction(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<string>
     estimateGas(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<number>
   }
+  generateRevokeAttestationForDelegationSchemaHash: {
+    (link: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(link: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(link: string, options?: TransactionOptions): Promise<string>
+    estimateGas(link: string, options?: TransactionOptions): Promise<number>
+  }
   generateVoteForDelegationSchemaHash: {
     (choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<string>
@@ -2929,6 +2943,12 @@ export interface SigningLogicInterfaceInstance extends ContractInstance {
     call(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<string>
     sendTransaction(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<string>
     estimateGas(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<number>
+  }
+  generateRevokeAttestationForDelegationSchemaHash: {
+    (link: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(link: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(link: string, options?: TransactionOptions): Promise<string>
+    estimateGas(link: string, options?: TransactionOptions): Promise<number>
   }
   generateAddAddressSchemaHash: {
     (senderAddress: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -3084,6 +3104,12 @@ export interface SigningLogicLegacyInstance extends ContractInstance {
     call(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<string>
     sendTransaction(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<string>
     estimateGas(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<number>
+  }
+  generateRevokeAttestationForDelegationSchemaHash: {
+    (link: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(link: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(link: string, options?: TransactionOptions): Promise<string>
+    estimateGas(link: string, options?: TransactionOptions): Promise<number>
   }
   generateVoteForDelegationSchemaHash: {
     (choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
