@@ -807,7 +807,7 @@ export const AttestationLogic: IContractMethodManifest = {
         }
       }
     },
-    revokeAttestation: {
+    revokeAttestationFor: {
       args_arr: ["_link", "_sender", "_delegationSig"],
       args: {
         _link: {

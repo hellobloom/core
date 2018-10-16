@@ -393,33 +393,6 @@ contract("AttestationLogic", function(
       expiresAt.should.be.bignumber.equal(new BigNumber(latestBlockTime() + oneYear - oneDay));
     });
 
-    it("Fails to revoke an attestation if it has an active stake", async () => {
-      await stake({paymentSig: tokenReleaseSig}).should.be.fulfilled;
-      await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
-        {
-          from: david
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("Allows an attestation to be revoked if stake revoked first", async () => {
-      await stake({paymentSig: tokenReleaseSig}).should.be.fulfilled;
-      await attestationLogic.revokeStake(
-        aliceId,
-        0,
-        {from: david}
-      ).should.be.fulfilled
-      await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
-        {
-          from: david
-        }
-      ).should.be.fulfilled
-    });
-
   });
 
   context("delegating staking", () => {
@@ -724,7 +697,7 @@ contract("AttestationLogic", function(
       value: BigNumber.BigNumber;
     }
 
-    it("Emits an event when stake revoked", async () => {
+    it("Emits a token release event when stake revoked", async () => {
       await stake({paymentSig: tokenReleaseSig}).should.be.fulfilled;
       await increaseTime(oneDay)
       const {logs} = ((await attestationLogic.revokeStake(aliceId, 0, {from: david}).should.be.fulfilled
@@ -741,6 +714,32 @@ contract("AttestationLogic", function(
 
       matchingLog.args.stakerId.should.be.bignumber.equal(davidId);
       matchingLog.args.value.should.be.bignumber.equal(new BigNumber("1e18"));
+    });
+
+    interface RevokeEventArgs {
+      subectId: BigNumber.BigNumber;
+      attestationId: BigNumber.BigNumber;
+      stakerId: BigNumber.BigNumber;
+    }
+
+    it("Emits an event when stake revoked", async () => {
+      await stake({paymentSig: tokenReleaseSig}).should.be.fulfilled;
+      await increaseTime(oneDay)
+      const {logs} = ((await attestationLogic.revokeStake(aliceId, 0, {from: david}).should.be.fulfilled
+      ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
+        RevokeEventArgs
+      >;
+
+      const matchingLog = logs.find(
+        log => log.event === "StakeRevoked"
+      );
+
+      should.exist(matchingLog);
+      if (!matchingLog) return;
+
+      matchingLog.args.subectId.should.be.bignumber.equal(aliceId);
+      matchingLog.args.attestationId.should.be.bignumber.equal(0);
+      matchingLog.args.stakerId.should.be.bignumber.equal(davidId);
     });
 
     it("Zeroes the value of the stake", async () => {

@@ -111,6 +111,15 @@ export const getFormattedTypedDataRevokeStakeFor = (
   ]
 }
 
+export const getFormattedTypedDataRevokeAttestationFor = (
+  link: string,
+): ITypedDataParam[] => {
+  return [
+      {type: 'string', name: 'action', value: 'revokeAttestation'},
+      {type: 'bytes32', name: 'link', value: link},
+  ]
+}
+
 export const getFormattedTypedDataVoteFor = (
   choice: number,
   voter: string,

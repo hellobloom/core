@@ -83,7 +83,7 @@ contract SigningLogicLegacy is SigningLogicInterface{
   bytes32 constant REVOKE_ATTESTATION_FOR_TYPEHASH = keccak256(
       abi.encodePacked(
         "string action",
-        "bytes link"
+        "bytes32 link"
       )
   );
 

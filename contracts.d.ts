@@ -827,7 +827,7 @@ export interface AttestationLogicInstance extends ContractInstance {
     sendTransaction(link: string, options?: TransactionOptions): Promise<string>
     estimateGas(link: string, options?: TransactionOptions): Promise<number>
   }
-  revokeAttestation: {
+  revokeAttestationFor: {
     (link: string, sender: Address, delegationSig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(link: string, sender: Address, delegationSig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     sendTransaction(link: string, sender: Address, delegationSig: string, options?: TransactionOptions): Promise<string>

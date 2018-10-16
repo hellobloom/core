@@ -23,7 +23,8 @@ import {
   getFormattedTypedDataAttestationRequest, 
   getFormattedTypedDataReleaseTokens, 
   getFormattedTypedDataAttestFor, 
-  getFormattedTypedDataContestFor 
+  getFormattedTypedDataContestFor, 
+  getFormattedTypedDataRevokeAttestationFor
 } from "./helpers/signingLogicLegacy";
 import { generateSigNonce } from "../src/signData";
 
@@ -852,127 +853,35 @@ contract("AttestationLogic", function(
 
   context("revoking attestations", () => {
 
-    const attestDefaults = {
-      subject: alice,
-      attester: bob,
-      requester: david,
-      reward: new BigNumber(web3.toWei(1, "ether")),
-      paymentNonce: nonce,
-      requesterSig: tokenReleaseSig,
-      dataHash: combinedDataHash,
-      requestNonce: nonce,
-      subjectSig: subjectSig,
-      from: bob
-    };
-
-    const attest = async (
-      props: Partial<typeof attestDefaults> = attestDefaults
-    ) => {
-      let {
-        subject,
-        attester,
-        requester,
-        reward,
-        paymentNonce,
-        requesterSig,
-        dataHash,
-        requestNonce,
-        subjectSig,
-        from
-      } = {
-        ...attestDefaults,
-        ...props
-      };
-
-      return attestationLogic.attest(
-        subject,
-        requester,
-        reward,
-        paymentNonce,
-        requesterSig,
-        dataHash,
-        requestNonce,
-        subjectSig,
-        {
-          from
-        }
-      );
-    };
-
-    it("Allows admin to revoke an attestation", async () => {
-      await attest().should.be.fulfilled;
-      await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
-        {
-          from: mockAdmin
-        }
-      ).should.be.fulfilled;
-    });
-
-    it("Allows subject to revoke an attestation", async () => {
-      await attest().should.be.fulfilled;
-      await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
-        {
-          from: alice
-        }
-      ).should.be.fulfilled;
-    });
+    const revokeLink = '0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
 
     it("Allows attester to revoke an attestation", async () => {
-      await attest().should.be.fulfilled;
       await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
+        revokeLink,
         {
           from: bob
         }
       ).should.be.fulfilled;
     });
 
-    it("Does not allow anyone else to revoke an attestation", async () => {
-      await attest().should.be.fulfilled;
+    it("Does not allow someone without a BloomID to submit a revocation", async () => {
       await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
+        revokeLink,
         {
-          from: david
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("Does not allow an attestation to be revoked twice", async () => {
-      await attest().should.be.fulfilled;
-      await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
-        {
-          from: mockAdmin
-        }
-      ).should.be.fulfilled;
-      await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
-        {
-          from: mockAdmin
+          from: carl
         }
       ).should.be.rejectedWith(EVMThrow);
     });
 
     interface RevokeEventArgs {
-      subjectId: BigNumber.BigNumber;
-      attestationId: BigNumber.BigNumber;
-      revokerId: BigNumber.BigNumber;
+      link: string;
+      attesterId: BigNumber.BigNumber;
     }
 
     it("emits an event when attestation is revoked", async () => {
-      await attest().should.be.fulfilled;
       const { logs } = ((
         await attestationLogic.revokeAttestation(
-          aliceId,
-          0,
+          revokeLink,
           {
             from: mockAdmin
           })
@@ -987,9 +896,91 @@ contract("AttestationLogic", function(
       should.exist(matchingLog);
       if (!matchingLog) return;
 
-      matchingLog.args.subjectId.should.be.bignumber.equal(aliceId);
-      matchingLog.args.revokerId.should.be.bignumber.equal(mockAdminId);
-      matchingLog.args.attestationId.should.be.bignumber.equal(0);
+      matchingLog.args.link.should.be.equal(revokeLink);
+      matchingLog.args.attesterId.should.be.bignumber.equal(mockAdminId);
+    });
+
+  });
+
+  context("delegated revoking attestations", () => {
+
+    const revokeLink = '0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
+    const differentRevokeLink = '0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
+    const revokeAttestationDelegationSig = ethSigUtil.signTypedDataLegacy(
+      bobPrivkey,
+      {data: getFormattedTypedDataRevokeAttestationFor(
+        revokeLink,
+      )}
+    )
+
+    const recoveredETHAddress: string = ethSigUtil.recoverTypedSignatureLegacy({
+      data: getFormattedTypedDataRevokeAttestationFor(
+        revokeLink,
+      ),
+      sig: revokeAttestationDelegationSig,
+    })
+
+
+    it("Allows admin to revoke an attestation on behalf of an attester", async () => {
+      await attestationLogic.revokeAttestationFor(
+        revokeLink,
+        bob,
+        revokeAttestationDelegationSig,
+        {
+          from: mockAdmin
+        }
+      ).should.be.fulfilled;
+    });
+
+    it("does not allow anyone else to revoke an attestation on behalf of an attester", async () => {
+      await attestationLogic.revokeAttestationFor(
+        revokeLink,
+        bob,
+        revokeAttestationDelegationSig,
+        {
+          from: alice
+        }
+      ).should.be.rejectedWith(EVMThrow);
+    });
+
+    it("Fails is link is wrong", async () => {
+      await attestationLogic.revokeAttestationFor(
+        differentRevokeLink,
+        bob,
+        revokeAttestationDelegationSig,
+        {
+          from: mockAdmin
+        }
+      ).should.be.rejectedWith(EVMThrow);
+    });
+
+    interface RevokeEventArgs {
+      link: string;
+      attesterId: BigNumber.BigNumber;
+    }
+
+    it("emits an event when attestation is revoked", async () => {
+      const { logs } = ((
+        await attestationLogic.revokeAttestationFor(
+          revokeLink,
+          bob,
+          revokeAttestationDelegationSig,
+          {
+            from: mockAdmin
+          })
+      ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
+        RevokeEventArgs
+      >;
+
+      const matchingLog = logs.find(
+        log => log.event === "AttestationRevoked"
+      );
+
+      should.exist(matchingLog);
+      if (!matchingLog) return;
+
+      matchingLog.args.link.should.be.equal(revokeLink);
+      matchingLog.args.attesterId.should.be.bignumber.equal(bobId);
     });
 
   });

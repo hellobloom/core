@@ -392,15 +392,15 @@ contract AttestationLogic is Ownable{
    * @dev Link is included in dataHash and cannot be directly connected to a BloomID
    * @param _link bytes string embedded in dataHash to link revocation
    */
-  function revokeAttestation(
+  function revokeAttestationFor(
     bytes32 _link,
     address _sender,
     bytes _delegationSig
     ) public onlyAdmin {
-    bytes32 _delegationDigest = signingLogic.generateRevokeAttestationForDelegationSchemaHash(
-      _link
-    );
-    require(_sender == signingLogic.recoverSigner(_delegationDigest, _delegationSig));
+      bytes32 _delegationDigest = signingLogic.generateRevokeAttestationForDelegationSchemaHash(
+        _link
+      );
+      require(_sender == signingLogic.recoverSigner(_delegationDigest, _delegationSig));
       revokeAttestationForUser(_link, _sender);
   }
 
