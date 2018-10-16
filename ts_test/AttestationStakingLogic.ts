@@ -717,7 +717,7 @@ contract("AttestationLogic", function(
     });
 
     interface RevokeEventArgs {
-      subectId: BigNumber.BigNumber;
+      subjectId: BigNumber.BigNumber;
       attestationId: BigNumber.BigNumber;
       stakerId: BigNumber.BigNumber;
     }
@@ -737,7 +737,7 @@ contract("AttestationLogic", function(
       should.exist(matchingLog);
       if (!matchingLog) return;
 
-      matchingLog.args.subectId.should.be.bignumber.equal(aliceId);
+      matchingLog.args.subjectId.should.be.bignumber.equal(aliceId);
       matchingLog.args.attestationId.should.be.bignumber.equal(0);
       matchingLog.args.stakerId.should.be.bignumber.equal(davidId);
     });
