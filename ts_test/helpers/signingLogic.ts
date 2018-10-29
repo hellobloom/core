@@ -11,8 +11,6 @@ interface IFormattedTypedData {
     domain: {
       name: string
       version: string
-      chainId: number
-      verifyingContract: string
     }
     message: {[key: string]: string},
 }
@@ -27,7 +25,6 @@ export const getFormattedTypedDataAttestationRequest= (
   attester: string,
   requester: string,
   dataHash: string,
-  typeIds: number[],
   requestNonce: string,
 ): IFormattedTypedData => {
   return {
@@ -43,7 +40,6 @@ export const getFormattedTypedDataAttestationRequest= (
         { name: 'attester', type: 'address'},
         { name: 'requester', type: 'address'},
         { name: 'dataHash', type: 'bytes32'},
-        { name: 'typeHash', type: 'bytes32'},
         { name: 'nonce', type: 'bytes32'}
       ]
     },
@@ -51,17 +47,12 @@ export const getFormattedTypedDataAttestationRequest= (
     domain: {
       name: 'Bloom',
       version: '1',
-      // Rinkeby
-      chainId: 4,
-      // Dummy contract address for testing
-      verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
     },
     message: {
       subject: subject,
       attester: attester,
       requester: requester,
       dataHash: dataHash,
-      typeHash: soliditySha3({ type: 'uint256[]', value: typeIds }),
       nonce: requestNonce
     }
   }
@@ -88,10 +79,6 @@ export const getFormattedTypedDataAddAddress = (
     domain: {
       name: 'Bloom',
       version: '1',
-      // Rinkeby
-      chainId: 4,
-      // Dummy contract address for testing
-      verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
     },
     message: {
       sender: sender,
@@ -125,10 +112,6 @@ export const getFormattedTypedDataReleaseTokens = (
     domain: {
       name: 'Bloom',
       version: '1',
-      // Rinkeby
-      chainId: 4,
-      // Dummy contract address for testing
-      verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
     },
     message: {
       sender: sender,
@@ -145,7 +128,6 @@ export const getFormattedTypedDataAttestFor = (
   reward: string,
   paymentNonce: string,
   dataHash: string,
-  typeIds: number[],
   requestNonce: string,
 ): IFormattedTypedData => {
   return {
@@ -162,7 +144,6 @@ export const getFormattedTypedDataAttestFor = (
         { name: 'reward', type: 'uint256'},
         { name: 'paymentNonce', type: 'bytes32'},
         { name: 'dataHash', type: 'bytes32'},
-        { name: 'typeHash', type: 'bytes32'},
         { name: 'requestNonce', type: 'bytes32'},
       ]
     },
@@ -170,10 +151,6 @@ export const getFormattedTypedDataAttestFor = (
     domain: {
       name: 'Bloom',
       version: '1',
-      // Rinkeby
-      chainId: 4,
-      // Dummy contract address for testing
-      verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
     },
     message: {
       subject: subject,
@@ -181,7 +158,6 @@ export const getFormattedTypedDataAttestFor = (
       reward: reward,
       paymentNonce: paymentNonce,
       dataHash: dataHash,
-      typeHash: soliditySha3({ type: 'uint256[]', value: typeIds }),
       requestNonce: requestNonce,
     }
   }
@@ -210,10 +186,6 @@ export const getFormattedTypedDataContestFor = (
     domain: {
       name: 'Bloom',
       version: '1',
-      // Rinkeby
-      chainId: 4,
-      // Dummy contract address for testing
-      verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
     },
     message: {
       requester: requester,
@@ -228,7 +200,6 @@ export const getFormattedTypedDataStakeFor = (
   value: string,
   paymentNonce: string,
   dataHash: string,
-  typeIds: number[],
   requestNonce: string,
   stakeDuration: number,
 ): IFormattedTypedData => {
@@ -245,7 +216,6 @@ export const getFormattedTypedDataStakeFor = (
         { name: 'value', type: 'uint256'},
         { name: 'paymentNonce', type: 'bytes32'},
         { name: 'dataHash', type: 'bytes32'},
-        { name: 'typeHash', type: 'bytes32'},
         { name: 'requestNonce', type: 'bytes32'},
         { name: 'stakeDuration', type: 'uint256'},
       ]
@@ -254,17 +224,12 @@ export const getFormattedTypedDataStakeFor = (
     domain: {
       name: 'Bloom',
       version: '1',
-      // Rinkeby
-      chainId: 4,
-      // Dummy contract address for testing
-      verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
     },
     message: {
       subject: subject,
       value: value,
       paymentNonce: paymentNonce,
       dataHash: dataHash,
-      typeHash: soliditySha3({ type: 'uint256[]', value: typeIds }),
       requestNonce: requestNonce,
       stakeDuration: stakeDuration.toString(10),
     }
@@ -292,10 +257,6 @@ export const getFormattedTypedDataRevokeStakeFor = (
     domain: {
       name: 'Bloom',
       version: '1',
-      // Rinkeby
-      chainId: 4,
-      // Dummy contract address for testing
-      verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
     },
     message: {
       subjectId: subjectId.toString(10),
@@ -329,10 +290,6 @@ export const getFormattedTypedDataVoteFor = (
     domain: {
       name: 'Bloom',
       version: '1',
-      // Rinkeby
-      chainId: 4,
-      // Dummy contract address for testing
-      verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
     },
     message: {
       choice: choice.toString(10),
@@ -366,10 +323,6 @@ export const getFormattedTypedDataLockupTokensFor = (
     domain: {
       name: 'Bloom',
       version: '1',
-      // Rinkeby
-      chainId: 4,
-      // Dummy contract address for testing
-      verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
     },
     message: {
       sender: sender,

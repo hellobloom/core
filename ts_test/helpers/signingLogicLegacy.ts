@@ -13,7 +13,6 @@ export const getFormattedTypedDataAttestationRequest= (
   attester: string,
   requester: string,
   dataHash: string,
-  typeIds: number[],
   requestNonce: string,
 ): ITypedDataParam[] => {
   return [
@@ -21,11 +20,6 @@ export const getFormattedTypedDataAttestationRequest= (
       {type: 'address', name: 'attester', value: attester},
       {type: 'address', name: 'requester', value: requester},
       {type: 'bytes32', name: 'dataHash', value: dataHash},
-      {
-        type: 'bytes32',
-        name: 'typeHash',
-        value: HashingLogic.hashAttestationTypes(typeIds),
-      },
       {type: 'bytes32', name: 'nonce', value: requestNonce},
   ]
 }
@@ -61,7 +55,6 @@ export const getFormattedTypedDataAttestFor = (
   reward: string,
   paymentNonce: string,
   dataHash: string,
-  typeIds: number[],
   requestNonce: string,
 ): ITypedDataParam[] => {
   return [
@@ -71,11 +64,6 @@ export const getFormattedTypedDataAttestFor = (
       {type: 'uint256', name: 'reward', value: reward},
       {type: 'bytes32', name: 'paymentNonce', value: paymentNonce},
       {type: 'bytes32', name: 'dataHash', value: dataHash},
-      {
-        type: 'bytes32',
-        name: 'typeHash',
-        value: HashingLogic.hashAttestationTypes(typeIds),
-      },
       {type: 'bytes32', name: 'requestNonce', value: requestNonce},
   ]
 }
@@ -98,7 +86,6 @@ export const getFormattedTypedDataStakeFor = (
   value: string,
   paymentNonce: string,
   dataHash: string,
-  typeIds: number[],
   requestNonce: string,
   stakeDuration: number,
 ): ITypedDataParam[] => {
@@ -108,13 +95,8 @@ export const getFormattedTypedDataStakeFor = (
       {type: 'uint256', name: 'value', value: value},
       {type: 'bytes32', name: 'paymentNonce', value: paymentNonce},
       {type: 'bytes32', name: 'dataHash', value: dataHash},
-      {
-        type: 'bytes32',
-        name: 'typeHash',
-        value: HashingLogic.hashAttestationTypes(typeIds),
-      },
       {type: 'bytes32', name: 'requestNonce', value: requestNonce},
-      {type: 'uint256', name: 'stakeDuration', value: stakeDuration},
+      {type: 'uint256', name: 'stakeDuration', value: stakeDuration.toString(10)},
   ]
 }
 
@@ -126,6 +108,15 @@ export const getFormattedTypedDataRevokeStakeFor = (
       {type: 'string', name: 'action', value: 'revokeStake'},
       {type: 'uint256', name: 'subjectId', value: subjectId.toString(10)},
       {type: 'uint256', name: 'attestationId', value: attestationId.toString(10)},
+  ]
+}
+
+export const getFormattedTypedDataRevokeAttestationFor = (
+  link: string,
+): ITypedDataParam[] => {
+  return [
+      {type: 'string', name: 'action', value: 'revokeAttestation'},
+      {type: 'bytes32', name: 'link', value: link},
   ]
 }
 

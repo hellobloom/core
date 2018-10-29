@@ -11,8 +11,6 @@
   },
   "dependencies": {
     "@bloomprotocol/attestations-lib": "^0.4.3",
-    "@ledgerhq/hw-transport-node-hid": "4.2.0",
-    "@ledgerhq/web3-subprovider": "4.2.0",
     "eth-gas-reporter": "^0.1.9",
     "eth-sig-util": "^2.0.1",
     "ethereumjs-util": "^5.1.2",
@@ -28,6 +26,7 @@
     "web3-utils": "^1.0.0-beta.33"
   },
   "devDependencies": {
+    "@ledgerhq/web3-subprovider": "4.2.0",
     "@types/bignumber.js": "^4.0.3",
     "@types/chai": "^4.0.4",
     "@types/chai-as-promised": "^7.1.0",

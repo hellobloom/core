@@ -46,7 +46,7 @@ module.exports = {
         )
       },
       network_id: 2
-    }
+    },
     mainnetLedger: {
       provider: function() {
         return LedgerProvider(

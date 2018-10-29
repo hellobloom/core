@@ -18,7 +18,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
         "address attester",
         "address requester",
         "bytes32 dataHash",
-        "bytes32 typeHash",
         "bytes32 nonce"
       )
   );
@@ -48,7 +47,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
         "uint256 reward", 
         "bytes32 paymentNonce",
         "bytes32 dataHash",
-        "bytes32 typeHash",
         "bytes32 requestNonce"
       )
   );
@@ -69,7 +67,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
         "uint256 value", 
         "bytes32 paymentNonce",
         "bytes32 dataHash",
-        "bytes32 typeHash",
         "bytes32 requestNonce",
         "uint256 stakeDuration"
       )
@@ -83,6 +80,13 @@ contract SigningLogicLegacy is SigningLogicInterface{
       )
   );
 
+  bytes32 constant REVOKE_ATTESTATION_FOR_TYPEHASH = keccak256(
+      abi.encodePacked(
+        "string action",
+        "bytes32 link"
+      )
+  );
+
   bytes32 constant VOTE_FOR_TYPEHASH = keccak256(
       abi.encodePacked(
         "uint16 choice",
@@ -92,7 +96,7 @@ contract SigningLogicLegacy is SigningLogicInterface{
       )
   );
 
-  bytes32 constant LOCKUP_TOKENS_FOR = keccak256(
+  bytes32 constant LOCKUP_TOKENS_FOR_TYPEHASH = keccak256(
       abi.encodePacked(
         "string action",
         "address sender",
@@ -106,7 +110,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
       address attester;
       address requester;
       bytes32 dataHash;
-      bytes32 typeHash;
       bytes32 nonce;
   }
 
@@ -120,7 +123,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
             request.attester,
             request.requester,
             request.dataHash,
-            request.typeHash,
             request.nonce
           )
         )
@@ -174,7 +176,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
       uint256 reward;
       bytes32 paymentNonce;
       bytes32 dataHash;
-      bytes32 typeHash;
       bytes32 requestNonce;
   }
 
@@ -190,7 +191,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
             request.reward,
             request.paymentNonce,
             request.dataHash,
-            request.typeHash,
             request.requestNonce
           )
         )
@@ -223,7 +223,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
       uint256 value;
       bytes32 paymentNonce;
       bytes32 dataHash;
-      bytes32 typeHash;
       bytes32 requestNonce;
       uint256 stakeDuration;
   }
@@ -239,9 +238,25 @@ contract SigningLogicLegacy is SigningLogicInterface{
             request.value,
             request.paymentNonce,
             request.dataHash,
-            request.typeHash,
             request.requestNonce,
             request.stakeDuration
+          )
+        )
+    ));
+  }
+
+  struct RevokeAttestationFor {
+      bytes32 link;
+  }
+
+  function hash(RevokeAttestationFor request) internal pure returns (bytes32) {
+    return keccak256(
+      abi.encodePacked(
+        REVOKE_ATTESTATION_FOR_TYPEHASH,
+        keccak256(
+          abi.encodePacked(
+            "revokeAttestation",
+            request.link
           )
         )
     ));
@@ -297,7 +312,7 @@ contract SigningLogicLegacy is SigningLogicInterface{
   function hash(LockupTokensFor request) internal pure returns (bytes32) {
     return keccak256(
       abi.encodePacked(
-        LOCKUP_TOKENS_FOR,
+        LOCKUP_TOKENS_FOR_TYPEHASH,
         keccak256(
           abi.encodePacked(
             "lockup",
@@ -314,7 +329,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
     address _attester,
     address _requester,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _nonce
   ) external view returns (bytes32) {
     return hash(
@@ -323,7 +337,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
         _attester,
         _requester,
         _dataHash,
-        keccak256(abi.encodePacked(_typeIds)),
         _nonce
       )
     );
@@ -363,7 +376,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
     uint256 _reward,
     bytes32 _paymentNonce,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce
   ) external view returns (bytes32) {
     return hash(
@@ -373,7 +385,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
         _reward,
         _paymentNonce,
         _dataHash,
-        keccak256(abi.encodePacked(_typeIds)),
         _requestNonce
       )
     );
@@ -398,7 +409,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
     uint256 _value,
     bytes32 _paymentNonce,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     uint256 _stakeDuration
   ) external view returns (bytes32) {
@@ -408,7 +418,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
         _value,
         _paymentNonce,
         _dataHash,
-        keccak256(abi.encodePacked(_typeIds)),
         _requestNonce,
         _stakeDuration
       )
@@ -423,6 +432,16 @@ contract SigningLogicLegacy is SigningLogicInterface{
       RevokeStakeFor(
         _subjectId,
         _attestationId
+      )
+    );
+  }
+
+  function generateRevokeAttestationForDelegationSchemaHash(
+    bytes32 _link
+  ) external view returns (bytes32) {
+    return hash(
+      RevokeAttestationFor(
+        _link
       )
     );
   }
