@@ -53,6 +53,7 @@ interface Artifacts {
   require(name: "ERC20"): ERC20Contract
   require(name: "ERC20Basic"): ERC20BasicContract
   require(name: "HasNoEther"): HasNoEtherContract
+  require(name: "Initializable"): InitializableContract
   require(name: "Math"): MathContract
   require(name: "MetaCoin"): MetaCoinContract
   require(name: "Migrations"): MigrationsContract
@@ -1775,6 +1776,38 @@ export interface HasNoEtherContract {
   new: (options?: TransactionOptions) => Promise<HasNoEtherInstance>
   deployed(): Promise<HasNoEtherInstance>
   at(address: string): HasNoEtherInstance
+}
+
+export interface InitializableInstance extends ContractInstance {
+  initializing: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(options?: TransactionOptions): Promise<boolean>
+    sendTransaction(options?: TransactionOptions): Promise<string>
+    estimateGas(options?: TransactionOptions): Promise<number>
+  }
+  initializer: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(options?: TransactionOptions): Promise<Address>
+    sendTransaction(options?: TransactionOptions): Promise<string>
+    estimateGas(options?: TransactionOptions): Promise<number>
+  }
+
+  InitializationStarted: Web3.EventFilterCreator<{ initializer: Address }>
+
+  InitializationEnded: Web3.EventFilterCreator<{}>
+
+  endInitialization: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(options?: TransactionOptions): Promise<string>
+    estimateGas(options?: TransactionOptions): Promise<number>
+  }
+}
+
+export interface InitializableContract {
+  new: (initializer: Address, options?: TransactionOptions) => Promise<InitializableInstance>
+  deployed(): Promise<InitializableInstance>
+  at(address: string): InitializableInstance
 }
 
 export interface MathInstance extends ContractInstance {}

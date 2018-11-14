@@ -36,6 +36,7 @@ export enum EContractNames {
   "ERC20" = "ERC20",
   "ERC20Basic" = "ERC20Basic",
   "HasNoEther" = "HasNoEther",
+  "Initializable" = "Initializable",
   "Math" = "Math",
   "MetaCoin" = "MetaCoin",
   "Migrations" = "Migrations",
@@ -1921,6 +1922,24 @@ export const HasNoEther: IContractMethodManifest = {
     },
 
     reclaimEther: {
+      args_arr: [],
+      args: {}
+    }
+  }
+}
+
+export const Initializable: IContractMethodManifest = {
+  methods: {
+    initializing: {
+      args_arr: [],
+      args: {}
+    },
+    initializer: {
+      args_arr: [],
+      args: {}
+    },
+
+    endInitialization: {
       args_arr: [],
       args: {}
     }
