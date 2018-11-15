@@ -14,9 +14,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
 
   bytes32 constant ATTESTATION_REQUEST_TYPEHASH = keccak256(
       abi.encodePacked(
-        "address subject",
-        "address attester",
-        "address requester",
         "bytes32 dataHash",
         "bytes32 nonce"
       )
@@ -106,9 +103,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
   );
 
   struct AttestationRequest {
-      address subject;
-      address attester;
-      address requester;
       bytes32 dataHash;
       bytes32 nonce;
   }
@@ -119,9 +113,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
         ATTESTATION_REQUEST_TYPEHASH,
         keccak256(
           abi.encodePacked(
-            request.subject,
-            request.attester,
-            request.requester,
             request.dataHash,
             request.nonce
           )
@@ -325,17 +316,11 @@ contract SigningLogicLegacy is SigningLogicInterface{
   }
 
   function generateRequestAttestationSchemaHash(
-    address _subject,
-    address _attester,
-    address _requester,
     bytes32 _dataHash,
     bytes32 _nonce
   ) external view returns (bytes32) {
     return hash(
       AttestationRequest(
-        _subject,
-        _attester,
-        _requester,
         _dataHash,
         _nonce
       )

@@ -3,9 +3,6 @@ pragma solidity 0.4.24;
 contract SigningLogicInterface {
   function recoverSigner(bytes32 _hash, bytes _sig) external pure returns (address);
   function generateRequestAttestationSchemaHash(
-    address _subject,
-    address _attester,
-    address _requester,
     bytes32 _dataHash,
     bytes32 _nonce
     ) external view returns (bytes32);

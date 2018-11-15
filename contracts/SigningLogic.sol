@@ -17,7 +17,7 @@ contract SigningLogic is SigningLogicInterface{
   );
 
   bytes32 constant ATTESTATION_REQUEST_TYPEHASH = keccak256(
-    "AttestationRequest(address subject,address attester,address requester,bytes32 dataHash,bytes32 nonce)"
+    "AttestationRequest(bytes32 dataHash,bytes32 nonce)"
   );
 
   bytes32 constant ADD_ADDRESS_TYPEHASH = keccak256(
@@ -79,9 +79,6 @@ contract SigningLogic is SigningLogicInterface{
   }
 
   struct AttestationRequest {
-      address subject;
-      address attester;
-      address requester;
       bytes32 dataHash;
       bytes32 nonce;
   }
@@ -89,9 +86,6 @@ contract SigningLogic is SigningLogicInterface{
   function hash(AttestationRequest request) internal pure returns (bytes32) {
     return keccak256(abi.encode(
       ATTESTATION_REQUEST_TYPEHASH,
-      request.subject,
-      request.attester,
-      request.requester,
       request.dataHash,
       request.nonce
     ));
@@ -241,9 +235,6 @@ contract SigningLogic is SigningLogicInterface{
   }
 
   function generateRequestAttestationSchemaHash(
-    address _subject,
-    address _attester,
-    address _requester,
     bytes32 _dataHash,
     bytes32 _nonce
   ) external view returns (bytes32) {
@@ -252,9 +243,6 @@ contract SigningLogic is SigningLogicInterface{
         "\x19\x01",
         DOMAIN_SEPARATOR,
         hash(AttestationRequest(
-          _subject,
-          _attester,
-          _requester,
           _dataHash,
           _nonce
         ))

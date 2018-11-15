@@ -600,23 +600,6 @@ export const AttestationLogic: IContractMethodManifest = {
       args_arr: [],
       args: {}
     },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    admin: {
-      args_arr: [],
-      args: {}
-    },
     usedSignatures: {
       args_arr: ["anonymous_0"],
       args: {
@@ -771,31 +754,23 @@ export const AttestationLogic: IContractMethodManifest = {
       }
     },
     validateSubjectSig: {
-      args_arr: ["_subject", "_attester", "_requester", "_dataHash", "_requestNonce", "_subjectSig"],
+      args_arr: ["_subject", "_dataHash", "_requestNonce", "_subjectSig"],
       args: {
         _subject: {
           type: "address",
           index: 0
         },
-        _attester: {
-          type: "address",
-          index: 1
-        },
-        _requester: {
-          type: "address",
-          index: 2
-        },
         _dataHash: {
           type: "bytes32",
-          index: 3
+          index: 1
         },
         _requestNonce: {
           type: "bytes32",
-          index: 4
+          index: 2
         },
         _subjectSig: {
           type: "bytes",
-          index: 5
+          index: 3
         }
       }
     },
@@ -822,208 +797,6 @@ export const AttestationLogic: IContractMethodManifest = {
         _delegationSig: {
           type: "bytes",
           index: 2
-        }
-      }
-    },
-    stake: {
-      args_arr: ["_subject", "_value", "_paymentNonce", "_paymentSig", "_dataHash", "_requestNonce", "_subjectSig", "_stakeDuration"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _value: {
-          type: "uint256",
-          index: 1
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _paymentSig: {
-          type: "bytes",
-          index: 3
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 4
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 5
-        },
-        _subjectSig: {
-          type: "bytes",
-          index: 6
-        },
-        _stakeDuration: {
-          type: "uint256",
-          index: 7
-        }
-      }
-    },
-    stakeFor: {
-      args_arr: [
-        "_subject",
-        "_staker",
-        "_value",
-        "_paymentNonce",
-        "_paymentSig",
-        "_dataHash",
-        "_requestNonce",
-        "_subjectSig",
-        "_stakeDuration",
-        "_delegationSig"
-      ],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _staker: {
-          type: "address",
-          index: 1
-        },
-        _value: {
-          type: "uint256",
-          index: 2
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 3
-        },
-        _paymentSig: {
-          type: "bytes",
-          index: 4
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 5
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 6
-        },
-        _subjectSig: {
-          type: "bytes",
-          index: 7
-        },
-        _stakeDuration: {
-          type: "uint256",
-          index: 8
-        },
-        _delegationSig: {
-          type: "bytes",
-          index: 9
-        }
-      }
-    },
-    reclaimStakedTokens: {
-      args_arr: ["_attestationId", "_subjectId"],
-      args: {
-        _attestationId: {
-          type: "uint256",
-          index: 0
-        },
-        _subjectId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    reclaimStakedTokensFor: {
-      args_arr: ["_subjectId", "_staker", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _staker: {
-          type: "address",
-          index: 1
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 2
-        }
-      }
-    },
-    revokeStake: {
-      args_arr: ["_subjectId", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    revokeStakeFor: {
-      args_arr: ["_subjectId", "_staker", "_attestationId", "_delegationSig"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _staker: {
-          type: "address",
-          index: 1
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 2
-        },
-        _delegationSig: {
-          type: "bytes",
-          index: 3
-        }
-      }
-    },
-    setAdmin: {
-      args_arr: ["_newAdmin"],
-      args: {
-        _newAdmin: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setAccountRegistry: {
-      args_arr: ["_newRegistry"],
-      args: {
-        _newRegistry: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setSigningLogic: {
-      args_arr: ["_newSigningLogic"],
-      args: {
-        _newSigningLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setAttestationRepo: {
-      args_arr: ["_newAttestationRepo"],
-      args: {
-        _newAttestationRepo: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setTokenEscrowMarketplace: {
-      args_arr: ["_newTokenEscrowMarketplace"],
-      args: {
-        _newTokenEscrowMarketplace: {
-          type: "address",
-          index: 0
         }
       }
     }
@@ -2928,27 +2701,15 @@ export const SafeMath: IContractMethodManifest = {
 export const SigningLogic: IContractMethodManifest = {
   methods: {
     generateRequestAttestationSchemaHash: {
-      args_arr: ["_subject", "_attester", "_requester", "_dataHash", "_nonce"],
+      args_arr: ["_dataHash", "_nonce"],
       args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _attester: {
-          type: "address",
-          index: 1
-        },
-        _requester: {
-          type: "address",
-          index: 2
-        },
         _dataHash: {
           type: "bytes32",
-          index: 3
+          index: 0
         },
         _nonce: {
           type: "bytes32",
-          index: 4
+          index: 1
         }
       }
     },
@@ -3153,27 +2914,15 @@ export const SigningLogicInterface: IContractMethodManifest = {
       }
     },
     generateRequestAttestationSchemaHash: {
-      args_arr: ["_subject", "_attester", "_requester", "_dataHash", "_nonce"],
+      args_arr: ["_dataHash", "_nonce"],
       args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _attester: {
-          type: "address",
-          index: 1
-        },
-        _requester: {
-          type: "address",
-          index: 2
-        },
         _dataHash: {
           type: "bytes32",
-          index: 3
+          index: 0
         },
         _nonce: {
           type: "bytes32",
-          index: 4
+          index: 1
         }
       }
     },
@@ -3352,27 +3101,15 @@ export const SigningLogicInterface: IContractMethodManifest = {
 export const SigningLogicLegacy: IContractMethodManifest = {
   methods: {
     generateRequestAttestationSchemaHash: {
-      args_arr: ["_subject", "_attester", "_requester", "_dataHash", "_nonce"],
+      args_arr: ["_dataHash", "_nonce"],
       args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _attester: {
-          type: "address",
-          index: 1
-        },
-        _requester: {
-          type: "address",
-          index: 2
-        },
         _dataHash: {
           type: "bytes32",
-          index: 3
+          index: 0
         },
         _nonce: {
           type: "bytes32",
-          index: 4
+          index: 1
         }
       }
     },
