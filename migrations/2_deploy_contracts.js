@@ -5,10 +5,8 @@ var AccountRegistryBatchAdmin = artifacts.require("AccountRegistryBatchAdmin")
 var AccountRegistryLogic = artifacts.require("AccountRegistryLogic")
 var SigningLogic = artifacts.require("SigningLogic")
 var SigningLogicLegacy = artifacts.require("SigningLogicLegacy")
-var AttestationRepo = artifacts.require("AttestationRepo")
 var AttestationLogic = artifacts.require("AttestationLogic")
 var TokenEscrowMarketplace = artifacts.require("TokenEscrowMarketplace")
-var AttestationLogicUpgradeMode = artifacts.require("AttestationLogicUpgradeMode")
 var AirdropProxy = artifacts.require("AirdropProxy")
 var Poll = artifacts.require("Poll")
 
@@ -19,7 +17,6 @@ module.exports = function(deployer) {
   deployer.deploy(ECRecovery)
   deployer.link(ECRecovery, SigningLogic)
   deployer.link(ECRecovery, SigningLogicLegacy)
-  deployer.link(ECRecovery, AttestationRepo)
 
   deployer
     .deploy(BLT)
@@ -46,18 +43,11 @@ module.exports = function(deployer) {
     .then(ap => (airdropProxy = ap))
     .then(() => airdropProxy.transferOwnership(adminAddress))
 
-    .then(() => deployer.deploy(
-      AttestationRepo,
-      token.address,
-      "0x0"
-    ))
-    .then(() => AttestationRepo.deployed())
-    .then(ar => (attestationRepo = ar))
     .then(() =>
       deployer.deploy(
         AttestationLogic,
+        adminAddress,
         registry.address,
-        attestationRepo.address,
         signingLogic.address,
         "0x0",
       ))
@@ -74,13 +64,6 @@ module.exports = function(deployer) {
     .then(() => TokenEscrowMarketplace.deployed())
     .then(te => (tokenEscrowMarketplace = te))
 
-    .then(() => deployer.deploy(
-      AttestationLogicUpgradeMode,
-      registry.address,
-      attestationRepo.address,
-    ))
-    .then(() => AttestationLogicUpgradeMode.deployed())
-    .then(a => attestationLogicUpgradeMode = a)
     .then(() => registry.setRegistryLogic(registryLogic.address))
 
     .then(() => registryLogic.createAccount(adminAddress))
@@ -91,13 +74,9 @@ module.exports = function(deployer) {
     .then(() => tokenEscrowMarketplace.setMarketplaceAdmin(adminAddress))
     .then(() => tokenEscrowMarketplace.transferOwnership(adminAddress))
     
-    .then(() => attestationLogicUpgradeMode.transferOwnership(adminAddress))
-
     .then(() => attestationLogic.setTokenEscrowMarketplace(tokenEscrowMarketplace.address))
-    .then(() => attestationLogic.transferOwnership(adminAddress))
+    .then(() => attestationLogic.endInitialization())
 
-    .then(() => attestationRepo.setAttestationLogic(attestationLogic.address))
-    .then(() => attestationRepo.transferOwnership(adminAddress))
     ,{
       gas: 4712388,
       gasPrice: 2000000000

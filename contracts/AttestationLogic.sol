@@ -3,16 +3,15 @@ pragma solidity 0.4.24;
 import "./AccountRegistryInterface.sol";
 import "./SigningLogicInterface.sol";
 import "./TokenEscrowMarketplace.sol";
-import "./AttestationRepoInterface.sol";
+import "./Initializable.sol";
 
 /**
- * @title AttestationLogic manages the interactions with AttestationRepo
+ * @title AttestationLogic allows users to submit attestations given valid signatures
  * @notice Attestation Logic Logic provides a public interface for Bloom and
- *  users to submit attestations to the Attestation Repo.
+ *  users to submit attestations.
  */
-contract AttestationLogic {
+contract AttestationLogic is Initializable{
     AccountRegistryInterface public registry;
-    AttestationRepoInterface public attestationRepo;
     SigningLogicInterface public signingLogic;
     TokenEscrowMarketplace public tokenEscrowMarketplace;
 
@@ -20,20 +19,19 @@ contract AttestationLogic {
    * @notice AttestationLogic constructor sets the implementation address of all related contracts
    * @param _registry Address of deployed AccountRegistry implementation (upgradeable)
    * @param _signingLogic Address of deployed signing logic implementation (upgradeable)
-   * @param _attestationRepo Address of deployed attestation repo (upgradeable)
    * @param _tokenEscrowMarketplace Address of marketplace holding tokens which are
    *  released to attesters upon completion of a job
    */
   constructor(
+    address _initializer,
     AccountRegistryInterface _registry,
-    AttestationRepoInterface _attestationRepo,
     SigningLogicInterface _signingLogic,
     TokenEscrowMarketplace _tokenEscrowMarketplace
-    ) public {
-    attestationRepo = _attestationRepo;
+    ) Initializable(_initializer) public {
     registry = _registry;
     signingLogic = _signingLogic;
     tokenEscrowMarketplace = _tokenEscrowMarketplace;
+
   }
 
   event TraitAttested(
@@ -44,6 +42,7 @@ contract AttestationLogic {
     );
   event AttestationRejected(uint256 indexed attesterId, uint256 indexed requesterId);
   event AttestationRevoked(bytes32 link, uint256 indexed attesterId);
+  event TokenEscrowMarketplaceChanged(address oldTokenEscrowMarketplace, address newTokenEscrowMarketplace);
 
   /**
    * @dev Zero address not allowed
@@ -99,7 +98,7 @@ contract AttestationLogic {
   }
 
   /**
-   * @notice Submit attestation for a user by the owner of the AttestationRepo contract in order to pay the gas costs
+   * @notice Submit attestation for a user in order to pay the gas costs
    * @dev Recover signer of delegation message. If attester matches delegation signature, add the attestation
    * @param _subject user this attestation is about
    * @param _attester user completing the attestation
@@ -300,7 +299,7 @@ contract AttestationLogic {
   }
 
   /**
-   * @notice Submit attestation to attestation repo
+   * @notice Submit attestation 
    * @dev Separated into another funtion because otherwise call stack too deep
    * @dev Verify valid certainty level and user addresses
    * @param _subject user this attestation is about
@@ -370,6 +369,17 @@ contract AttestationLogic {
 
       uint256 _senderId = registry.accountIdForAddress(_sender);
       emit AttestationRevoked(_link, _senderId);
+  }
+
+    /**
+   * @notice Set the implementation of the TokenEscrowMarketplace contract by setting a new address
+   * @dev Restricted to initializer
+   * @param _newTokenEscrowMarketplace Address of new SigningLogic implementation
+   */
+  function setTokenEscrowMarketplace(TokenEscrowMarketplace _newTokenEscrowMarketplace) public nonZero(_newTokenEscrowMarketplace) onlyDuringInitialization {
+    address oldTokenEscrowMarketplace = tokenEscrowMarketplace;
+    tokenEscrowMarketplace = _newTokenEscrowMarketplace;
+    emit TokenEscrowMarketplaceChanged(oldTokenEscrowMarketplace, tokenEscrowMarketplace);
   }
 
 }

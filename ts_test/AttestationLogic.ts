@@ -10,7 +10,6 @@ import { EVMThrow } from "./helpers/EVMThrow";
 import { should } from "./test_setup";
 import {
   SigningLogicLegacyInstance,
-  AttestationRepoInstance,
   AttestationLogicInstance,
   TokenEscrowMarketplaceInstance,
   AccountRegistryInstance,
@@ -36,12 +35,11 @@ const AccountRegistry = artifacts.require("AccountRegistry");
 const MockBLT = artifacts.require("MockBLT");
 
 contract("AttestationLogic", function(
-  [alice, bob, carl, david, ellen, mockOwner, mockAdmin, differentMockAdmin]
+  [alice, bob, carl, david, ellen]
 ) {
   let token: MockBLTInstance;
   let registry: AccountRegistryInstance;
   let attestationLogic: AttestationLogicInstance;
-  let attestationRepo: AttestationRepoInstance;
   let signingLogic: SigningLogicLegacyInstance;
   let tokenEscrowMarketplace: TokenEscrowMarketplaceInstance;
 
@@ -72,7 +70,6 @@ contract("AttestationLogic", function(
   let aliceId: BigNumber.BigNumber;
   let bobId: BigNumber.BigNumber;
   let davidId: BigNumber.BigNumber;
-  let mockAdminId: BigNumber.BigNumber;
 
   // Sanity check
   if (alice != aliceWallet.getAddressString()) {
@@ -125,11 +122,9 @@ contract("AttestationLogic", function(
     registry = await AccountRegistry.new(alice)
     token = await MockBLT.new();
 
-    attestationRepo = await AttestationRepo.new(token.address, "0x0");
-
     attestationLogic = await AttestationLogic.new(
+      alice,
       registry.address,
-      attestationRepo.address,
       signingLogic.address,
       "0x0",
     );
@@ -141,10 +136,7 @@ contract("AttestationLogic", function(
       attestationLogic.address,
     );
 
-    await attestationRepo.setAttestationLogic(attestationLogic.address);
     await attestationLogic.setTokenEscrowMarketplace(tokenEscrowMarketplace.address);
-    await attestationLogic.transferOwnership(mockOwner)
-    await attestationLogic.setAdmin(mockAdmin, {from: mockOwner})
 
     await Promise.all([
       // token.gift(alice),
@@ -153,13 +145,11 @@ contract("AttestationLogic", function(
       registry.createNewAccount(alice),
       registry.createNewAccount(bob),
       registry.createNewAccount(david),
-      registry.createNewAccount(mockAdmin)
     ]);
-    [aliceId, bobId, davidId, mockAdminId] = await Promise.all([
+    [aliceId, bobId, davidId] = await Promise.all([
       registry.accountIdForAddress.call(alice),
       registry.accountIdForAddress.call(bob),
       registry.accountIdForAddress.call(david),
-      registry.accountIdForAddress.call(mockAdmin)
     ]);
 
     await token.approve(tokenEscrowMarketplace.address, new BigNumber("2e18"), {
@@ -175,9 +165,6 @@ contract("AttestationLogic", function(
   const subjectSig = ethSigUtil.signTypedDataLegacy(
     alicePrivkey,
     {data: getFormattedTypedDataAttestationRequest(
-      alice,
-      bob,
-      david,
       combinedDataHash,
       nonce,
     )}
@@ -196,9 +183,6 @@ contract("AttestationLogic", function(
   const unrelatedSignature = ethSigUtil.signTypedDataLegacy(
     ethereumjsWallet.generate().getPrivateKey(),
     {data: getFormattedTypedDataAttestationRequest(
-      alice,
-      bob,
-      david,
       combinedDataHash,
       nonce,
     )}
@@ -275,11 +259,11 @@ contract("AttestationLogic", function(
       );
     };
 
-    it("accepts a valid attestation", async () => {
+    it.only("accepts a valid attestation", async () => {
       await attest().should.be.fulfilled;
     });
 
-    it("accepts a valid attestation with 0 reward", async () => {
+    it.only("accepts a valid attestation with 0 reward", async () => {
       await attest({
         reward: new BigNumber(0),
         requesterSig: ethSigUtil.signTypedDataLegacy(
@@ -294,20 +278,17 @@ contract("AttestationLogic", function(
       }).should.be.fulfilled;
     });
 
-    it("Fails if sent by different attester", async () => {
+    it.only("Fails if sent by different attester", async () => {
       await attest({from: alice}).should.be.rejectedWith(EVMThrow);
     });
 
-    it("fails if no account for subject", async () => {
+    it.only("fails if no account for subject", async () => {
       const unrelatedWallet = ethereumjsWallet.generate()
       await attest({
         subject: carl,
         subjectSig: ethSigUtil.signTypedDataLegacy(
           unrelatedWallet.getPrivateKey(),
           {data: getFormattedTypedDataAttestationRequest(
-            unrelatedWallet.getAddressString(),
-              attestDefaults.attester,
-              attestDefaults.requester,
               attestDefaults.dataHash,
               attestDefaults.requestNonce,
           )}
@@ -317,16 +298,13 @@ contract("AttestationLogic", function(
     });
 
     interface WriteEventArgs {
-      attestationId: BigNumber.BigNumber;
       subjectId: BigNumber.BigNumber;
       attesterId: BigNumber.BigNumber;
       requesterId: BigNumber.BigNumber;
       dataHash: string;
-      stakeValue: BigNumber.BigNumber;
-      expiresAt: BigNumber.BigNumber;
     }
 
-    it("emits an event when attestation is written", async () => {
+    it.only("emits an event when attestation is written", async () => {
       const { logs } = ((await attest()
       ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
         WriteEventArgs
@@ -339,17 +317,14 @@ contract("AttestationLogic", function(
       should.exist(matchingLog);
       if (!matchingLog) return;
 
-      matchingLog.args.attestationId.should.be.bignumber.equal(0);
       matchingLog.args.subjectId.should.be.bignumber.equal(aliceId);
       matchingLog.args.attesterId.should.be.bignumber.equal(bobId);
       matchingLog.args.requesterId.should.be.bignumber.equal(davidId);
       matchingLog.args.dataHash.should.be.equal(attestDefaults.dataHash);
-      matchingLog.args.stakeValue.should.be.bignumber.equal(0);
-      matchingLog.args.expiresAt.should.be.bignumber.equal(0);
     });
 
 
-    it("accepts a valid second attestation with different nonce", async () => {
+    it.only("accepts a valid second attestation with different nonce", async () => {
       await attest().should.be.fulfilled;
       await attest({
           paymentNonce: differentNonce,
@@ -366,9 +341,6 @@ contract("AttestationLogic", function(
         subjectSig: ethSigUtil.signTypedDataLegacy(
             alicePrivkey,
             {data: getFormattedTypedDataAttestationRequest(
-              alice,
-              bob,
-              david,
               combinedDataHash,
               differentNonce,
             )}
@@ -377,7 +349,7 @@ contract("AttestationLogic", function(
     });
 
 
-    it("releases tokens from escrow to the verifier and leaves some leftover", async () => {
+    it.only("releases tokens from escrow to the verifier and leaves some leftover", async () => {
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
       requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18");
 
@@ -394,7 +366,7 @@ contract("AttestationLogic", function(
       );
     });
 
-    it("releases all tokens from escrow to the verifier", async () => {
+    it.only("releases all tokens from escrow to the verifier", async () => {
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
       requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18");
 
@@ -424,30 +396,7 @@ contract("AttestationLogic", function(
       );
     });
 
-    it("writes the attestation to the contract", async () => {
-      await attest();
-
-
-      const recoveredAttestation = await attestationRepo.readAttestation.call(
-        aliceId,
-        0
-      )
-
-      const [
-        attesterId,
-        completedAt,
-        stakeValue,
-        expiresAt
-      ] = recoveredAttestation;
-
-      attesterId.should.be.bignumber.equal(bobId);
-      completedAt.should.be.bignumber.equal(latestBlockTime());
-      stakeValue.should.be.bignumber.equal(0)
-      expiresAt.should.be.bignumber.equal(0)
-
-    });
-
-    it("writes a second attestation for same data with different nonce", async () => {
+    it.only("submits a second attestation for same data with different nonce", async () => {
       await attest();
       await attest({
           paymentNonce: differentNonce,
@@ -464,63 +413,42 @@ contract("AttestationLogic", function(
           subjectSig: ethSigUtil.signTypedDataLegacy(
               alicePrivkey,
               {data: getFormattedTypedDataAttestationRequest(
-                alice,
-                bob,
-                david,
                 attestDefaults.dataHash,
                 differentNonce,
               )}
           )
       }).should.be.fulfilled;
-
-      const recoveredAttestation = await attestationRepo.readAttestation.call(
-        aliceId,
-        1
-      )
-
-      const [
-        attesterId,
-        completedAt,
-        stakeValue,
-        expiresAt
-      ] = recoveredAttestation;
-
-      attesterId.should.be.bignumber.equal(bobId);
-      completedAt.should.be.bignumber.equal(latestBlockTime());
-      stakeValue.should.be.bignumber.equal(0)
-      expiresAt.should.be.bignumber.equal(0)
-
     });
 
-    it("rejects attestations that aren't sent from the attester specified in the request", async () => {
+    it.only("rejects attestations that aren't sent from the attester specified in the request", async () => {
       await attest({ from: carl }).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects attestations with for an invalid subject", async () => {
+    it.only("rejects attestations with for an invalid subject", async () => {
       await attest({ subject: carl }).should.be.rejectedWith(EVMThrow);
     });
     
-    it("rejects attestations with for an invalid requester", async () => {
+    it.only("rejects attestations with for an invalid requester", async () => {
       await attest({ requester: carl }).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects attestations with for an invalid reward", async () => {
+    it.only("rejects attestations with for an invalid reward", async () => {
       await attest({ reward: new BigNumber(web3.toWei(2, "ether")) }).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects attestations with for an invalid data hash", async () => {
+    it.only("rejects attestations with for an invalid data hash", async () => {
       await attest({ dataHash: emailDataHash}).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects attestations with for an invalid payment nonce", async () => {
+    it.only("rejects attestations with for an invalid payment nonce", async () => {
       await attest({ paymentNonce: differentNonce}).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects attestations with for an invalid request nonce", async () => {
+    it.only("rejects attestations with for an invalid request nonce", async () => {
       await attest({ requestNonce: differentNonce}).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects attestations if at attestation has already been submitted", async () => {
+    it.only("rejects attestations if at attestation has already been submitted", async () => {
       await attest().should.be.fulfilled;
       await attest().should.be.rejectedWith(EVMThrow);
     });
@@ -563,7 +491,7 @@ contract("AttestationLogic", function(
       );
     };
 
-    it("accepts a valid contestation", async () => {
+    it.only("accepts a valid contestation", async () => {
       await contest().should.be.fulfilled;
     });
 
@@ -572,7 +500,7 @@ contract("AttestationLogic", function(
       requesterId: BigNumber.BigNumber;
     }
 
-    it("emits an event when attestation is rejected", async () => {
+    it.only("emits an event when attestation is rejected", async () => {
       const { logs } = ((await contest()
       ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
         rejectEventArgs
@@ -589,7 +517,7 @@ contract("AttestationLogic", function(
       matchingLog.args.requesterId.should.be.bignumber.equal(davidId);
     });
 
-    it("releases tokens from escrow to the verifier and leaves some leftover", async () => {
+    it.only("releases tokens from escrow to the verifier and leaves some leftover", async () => {
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
       requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18");
 
@@ -606,7 +534,7 @@ contract("AttestationLogic", function(
       );
     });
 
-    it("releases all tokens from escrow to the verifier", async () => {
+    it.only("releases all tokens from escrow to the verifier", async () => {
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
       requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18");
 
@@ -636,7 +564,7 @@ contract("AttestationLogic", function(
       );
     });
 
-    it("Fails if attester does not match payment sig", async () => {
+    it.only("Fails if attester does not match payment sig", async () => {
       await contest({
         from: alice
       }).should.be.rejectedWith(EVMThrow);
@@ -652,7 +580,7 @@ contract("AttestationLogic", function(
       paymentNonce: nonce,
       requesterSig: tokenReleaseSig,
       delegationSig: contesterDelegationSig,
-      from: mockAdmin
+      from: carl
     };
 
     const contestFor = async (
@@ -684,19 +612,11 @@ contract("AttestationLogic", function(
       );
     };
 
-    it("accepts a valid delegated attestation rejection", async () => {
+    it.only("accepts a valid delegated attestation rejection", async () => {
       await contestFor().should.be.fulfilled
     });
 
-    it("rejects an attestation rejection if not sent from admin", async () => {
-      await contestFor(
-        {
-          from: ellen
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects an attestation rejection if the attester is wrong in the signature", async () => {
+    it.only("rejects an attestation rejection if the attester is wrong in the signature", async () => {
       await contestFor(
         {
           attester: ellen
@@ -704,7 +624,7 @@ contract("AttestationLogic", function(
       ).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects an attestation rejection if the requester is wrong in the signature", async () => {
+    it.only("rejects an attestation rejection if the requester is wrong in the signature", async () => {
       await contestFor(
         {
           requester: ellen
@@ -712,7 +632,7 @@ contract("AttestationLogic", function(
       ).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects an attestation rejection if the reward is wrong", async () => {
+    it.only("rejects an attestation rejection if the reward is wrong", async () => {
       await contestFor(
         {
           reward: new BigNumber(web3.toWei(2, "ether"))
@@ -720,7 +640,7 @@ contract("AttestationLogic", function(
       ).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects an attestation rejection if the payment nonce is wrong", async () => {
+    it.only("rejects an attestation rejection if the payment nonce is wrong", async () => {
       await contestFor(
         {
           paymentNonce: differentNonce
@@ -741,7 +661,7 @@ contract("AttestationLogic", function(
       requestNonce: nonce,
       subjectSig: subjectSig,
       delegationSig: attesterDelegationSig,
-      from: mockAdmin
+      from: carl
     };
 
     const attestFor = async (
@@ -781,19 +701,11 @@ contract("AttestationLogic", function(
       );
     };
 
-    it("accepts a valid delegated attestation", async () => {
+    it.only("accepts a valid delegated attestation", async () => {
       await attestFor().should.be.fulfilled
     });
 
-    it("rejects an attestation if not sent from admin", async () => {
-      await attestFor(
-        {
-          from: ellen
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects an attestation if the subject is wrong in the signature", async () => {
+    it.only("rejects an attestation if the subject is wrong in the signature", async () => {
       await attestFor(
         {
           subject: ellen
@@ -801,7 +713,7 @@ contract("AttestationLogic", function(
       ).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects an attestation if the attester is wrong in the signature", async () => {
+    it.only("rejects an attestation if the attester is wrong in the signature", async () => {
       await attestFor(
         {
           attester: ellen
@@ -809,7 +721,7 @@ contract("AttestationLogic", function(
       ).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects an attestation if the requester is wrong in the signature", async () => {
+    it.only("rejects an attestation if the requester is wrong in the signature", async () => {
       await attestFor(
         {
           requester: ellen
@@ -817,7 +729,7 @@ contract("AttestationLogic", function(
       ).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects an attestation if the reward is wrong", async () => {
+    it.only("rejects an attestation if the reward is wrong", async () => {
       await attestFor(
         {
           reward: new BigNumber(web3.toWei(2, "ether"))
@@ -825,7 +737,7 @@ contract("AttestationLogic", function(
       ).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects an attestation if the payment nonce is wrong", async () => {
+    it.only("rejects an attestation if the payment nonce is wrong", async () => {
       await attestFor(
         {
           paymentNonce: differentNonce
@@ -833,7 +745,7 @@ contract("AttestationLogic", function(
       ).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects an attestation if the data hash is wrong", async () => {
+    it.only("rejects an attestation if the data hash is wrong", async () => {
       await attestFor(
         {
           dataHash: emailDataHash
@@ -841,7 +753,7 @@ contract("AttestationLogic", function(
       ).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects an attestation if the request nonce is wrong", async () => {
+    it.only("rejects an attestation if the request nonce is wrong", async () => {
       await attestFor(
         {
           requestNonce: differentNonce
@@ -855,7 +767,7 @@ contract("AttestationLogic", function(
 
     const revokeLink = '0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
 
-    it("Allows attester to revoke an attestation", async () => {
+    it.only("Allows attester to revoke an attestation", async () => {
       await attestationLogic.revokeAttestation(
         revokeLink,
         {
@@ -864,7 +776,7 @@ contract("AttestationLogic", function(
       ).should.be.fulfilled;
     });
 
-    it("Does not allow someone without a BloomID to submit a revocation", async () => {
+    it.only("Does not allow someone without a BloomID to submit a revocation", async () => {
       await attestationLogic.revokeAttestation(
         revokeLink,
         {
@@ -878,12 +790,12 @@ contract("AttestationLogic", function(
       attesterId: BigNumber.BigNumber;
     }
 
-    it("emits an event when attestation is revoked", async () => {
+    it.only("emits an event when attestation is revoked", async () => {
       const { logs } = ((
         await attestationLogic.revokeAttestation(
           revokeLink,
           {
-            from: mockAdmin
+            from: bob
           })
       ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
         RevokeEventArgs
@@ -897,7 +809,7 @@ contract("AttestationLogic", function(
       if (!matchingLog) return;
 
       matchingLog.args.link.should.be.equal(revokeLink);
-      matchingLog.args.attesterId.should.be.bignumber.equal(mockAdminId);
+      matchingLog.args.attesterId.should.be.bignumber.equal(bobId);
     });
 
   });
@@ -921,35 +833,24 @@ contract("AttestationLogic", function(
     })
 
 
-    it("Allows admin to revoke an attestation on behalf of an attester", async () => {
+    it.only("Allows anyone to revoke an attestation on behalf of an attester with a valid sig", async () => {
       await attestationLogic.revokeAttestationFor(
         revokeLink,
         bob,
         revokeAttestationDelegationSig,
         {
-          from: mockAdmin
+          from: carl
         }
       ).should.be.fulfilled;
     });
 
-    it("does not allow anyone else to revoke an attestation on behalf of an attester", async () => {
-      await attestationLogic.revokeAttestationFor(
-        revokeLink,
-        bob,
-        revokeAttestationDelegationSig,
-        {
-          from: alice
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("Fails is link is wrong", async () => {
+    it.only("Fails is link is wrong", async () => {
       await attestationLogic.revokeAttestationFor(
         differentRevokeLink,
         bob,
         revokeAttestationDelegationSig,
         {
-          from: mockAdmin
+          from: carl
         }
       ).should.be.rejectedWith(EVMThrow);
     });
@@ -959,14 +860,14 @@ contract("AttestationLogic", function(
       attesterId: BigNumber.BigNumber;
     }
 
-    it("emits an event when attestation is revoked", async () => {
+    it.only("emits an event when attestation is revoked", async () => {
       const { logs } = ((
         await attestationLogic.revokeAttestationFor(
           revokeLink,
           bob,
           revokeAttestationDelegationSig,
           {
-            from: mockAdmin
+            from: carl
           })
       ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
         RevokeEventArgs
@@ -979,77 +880,12 @@ contract("AttestationLogic", function(
       should.exist(matchingLog);
       if (!matchingLog) return;
 
+      console.log(matchingLog.args)
+
       matchingLog.args.link.should.be.equal(revokeLink);
       matchingLog.args.attesterId.should.be.bignumber.equal(bobId);
     });
 
-  });
-
-  describe("configuring the account registry", async () => {
-    let differentAccountRegistry: AccountRegistryInstance;
-    let accountRegistryAddressBefore: string;
-
-    beforeEach(async () => {
-      differentAccountRegistry = await AccountRegistry.new(
-        "0x0"
-      );
-      accountRegistryAddressBefore = await attestationLogic.registry.call();
-    });
-
-    it("allows the owner to change the account registry", async () => {
-      await attestationLogic.setAccountRegistry(
-        differentAccountRegistry.address,
-        {from: mockOwner}
-      );
-      const accountRegistryAddressAfter = await attestationLogic.registry();
-
-      accountRegistryAddressBefore.should.be.equal(registry.address);
-      accountRegistryAddressAfter.should.be.equal(
-        differentAccountRegistry.address
-      );
-    });
-
-    it("doesn't allow anyone else to change the account registry", async () => {
-      await attestationLogic
-        .setAccountRegistry(differentAccountRegistry.address, {
-          from: bob
-        })
-        .should.be.rejectedWith(EVMThrow);
-      const accountRegistryAddressAfter = await attestationLogic.registry();
-
-      accountRegistryAddressBefore.should.be.equal(registry.address);
-      accountRegistryAddressAfter.should.be.equal(registry.address);
-    });
-  });
-
-  describe("configuring the signing logic", async () => {
-    let differentSigningLogic: SigningLogicLegacyInstance;
-    let signingLogicAddressBefore: string;
-
-    beforeEach(async () => {
-      differentSigningLogic = await SigningLogic.new();
-      signingLogicAddressBefore = await attestationLogic.signingLogic.call();
-    });
-
-    it("allows the owner to change the signing logic", async () => {
-      await attestationLogic.setSigningLogic(differentSigningLogic.address, {from: mockOwner});
-      const signingLogicAddressAfter = await attestationLogic.signingLogic();
-
-      signingLogicAddressBefore.should.be.equal(signingLogic.address);
-      signingLogicAddressAfter.should.be.equal(differentSigningLogic.address);
-    });
-
-    it("doesn't allow anyone else to change the signing logic", async () => {
-      await attestationLogic
-        .setSigningLogic(differentSigningLogic.address, {
-          from: bob
-        })
-        .should.be.rejectedWith(EVMThrow);
-      const signingLogicAddressAfter = await attestationLogic.signingLogic();
-
-      signingLogicAddressBefore.should.be.equal(signingLogic.address);
-      signingLogicAddressAfter.should.be.equal(signingLogic.address);
-    });
   });
 
   describe("configuring the Token Escrow Marketplace", async () => {
@@ -1066,15 +902,15 @@ contract("AttestationLogic", function(
       TokenEscrowMarketplaceAddressBefore = await attestationLogic.tokenEscrowMarketplace.call();
     });
 
-    it("allows the owner to change the marketplace", async () => {
-      await attestationLogic.setTokenEscrowMarketplace(differentTokenEscrowMarketplace.address, {from: mockOwner});
+    it.only("allows the initializer to change the marketplace during initialization", async () => {
+      await attestationLogic.setTokenEscrowMarketplace(differentTokenEscrowMarketplace.address, {from: alice});
       const TokenEscrowMarketplaceAddressAfter = await attestationLogic.tokenEscrowMarketplace();
 
       TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplace.address);
       TokenEscrowMarketplaceAddressAfter.should.be.equal(differentTokenEscrowMarketplace.address);
     });
 
-    it("doesn't allow anyone else to change the marketplace", async () => {
+    it.only("doesn't allow anyone else to change the marketplace", async () => {
       await attestationLogic
         .setTokenEscrowMarketplace(differentTokenEscrowMarketplace.address, {
           from: bob
@@ -1085,72 +921,18 @@ contract("AttestationLogic", function(
       TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplace.address);
       TokenEscrowMarketplaceAddressAfter.should.be.equal(tokenEscrowMarketplace.address);
     });
-  });
 
-  describe("configuring the Attestation Repo", async () => {
-    let differentAttestationRepo: AttestationRepoInstance;
-    let attestationRepoAddressBefore: string;
-
-    beforeEach(async () => {
-      differentAttestationRepo = await AttestationRepo.new(
-        token.address,
-        attestationLogic.address,
-      );
-      attestationRepoAddressBefore = await attestationLogic.attestationRepo.call();
-    });
-
-    it("allows the owner to change the Attestation Repo", async () => {
-      await attestationLogic.setAttestationRepo(
-        differentAttestationRepo.address, {
-          from: mockOwner
-        }
-      );
-      const attestationRepoAddressAfter = await attestationLogic.attestationRepo();
-
-      attestationRepoAddressBefore.should.be.equal(attestationRepo.address);
-      attestationRepoAddressAfter.should.be.equal(
-        differentAttestationRepo.address
-      );
-    });
-
-    it("doesn't allow anyone else to change the Attestation Repo", async () => {
+    it.only("doesn't initializer to change the marketplace after initialization ends", async () => {
+      await attestationLogic.endInitialization({from: alice}).should.be.fulfilled;
       await attestationLogic
-        .setAttestationRepo(differentAttestationRepo.address, {
-          from: bob
+        .setTokenEscrowMarketplace(differentTokenEscrowMarketplace.address, {
+          from: alice
         })
         .should.be.rejectedWith(EVMThrow);
-      const attestationRepoAddressAfter = await attestationLogic.attestationRepo();
+      const TokenEscrowMarketplaceAddressAfter = await attestationLogic.tokenEscrowMarketplace();
 
-      attestationRepoAddressBefore.should.be.equal(attestationRepo.address);
-      attestationRepoAddressAfter.should.be.equal(attestationRepo.address);
-    });
-  });
-
-  describe("Configuring the admin", async () => {
-    let adminBefore: string;
-
-    beforeEach(async () => {
-      adminBefore = await attestationLogic.admin.call();
-    });
-
-    it("allows the owner to change the admin", async () => {
-      await attestationLogic.setAdmin(differentMockAdmin, {from: mockOwner});
-      const adminAfter = await attestationLogic.admin();
-
-      adminBefore.should.be.equal(mockAdmin);
-      adminAfter.should.be.equal(differentMockAdmin);
-    });
-
-    it("doesn't allow anyone else to change the admin", async () => {
-      await attestationLogic
-        .setAdmin(differentMockAdmin, {
-          from: bob
-        })
-        .should.be.rejectedWith(EVMThrow);
-      const adminAfter = await attestationLogic.admin();
-
-      adminBefore.should.be.equal(mockAdmin);
-      adminAfter.should.be.equal(mockAdmin);
+      TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplace.address);
+      TokenEscrowMarketplaceAddressAfter.should.be.equal(tokenEscrowMarketplace.address);
     });
   });
 });

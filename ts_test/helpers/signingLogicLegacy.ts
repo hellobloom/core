@@ -9,16 +9,10 @@ interface ITypedDataParam {
 }
 
 export const getFormattedTypedDataAttestationRequest= (
-  subject: string,
-  attester: string,
-  requester: string,
   dataHash: string,
   requestNonce: string,
 ): ITypedDataParam[] => {
   return [
-      {type: 'address', name: 'subject', value: subject},
-      {type: 'address', name: 'attester', value: attester},
-      {type: 'address', name: 'requester', value: requester},
       {type: 'bytes32', name: 'dataHash', value: dataHash},
       {type: 'bytes32', name: 'nonce', value: requestNonce},
   ]

@@ -559,9 +559,9 @@ export interface ApproveAndCallFallBackContract {
 }
 
 export interface AttestationLogicInstance extends ContractInstance {
-  attestationRepo: {
+  initializing: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(options?: TransactionOptions): Promise<Address>
+    call(options?: TransactionOptions): Promise<boolean>
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
   }
@@ -583,6 +583,18 @@ export interface AttestationLogicInstance extends ContractInstance {
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
   }
+  initializer: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(options?: TransactionOptions): Promise<Address>
+    sendTransaction(options?: TransactionOptions): Promise<string>
+    estimateGas(options?: TransactionOptions): Promise<number>
+  }
+  endInitialization: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(options?: TransactionOptions): Promise<string>
+    estimateGas(options?: TransactionOptions): Promise<number>
+  }
   usedSignatures: {
     (unnamed4: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(unnamed4: string, options?: TransactionOptions): Promise<boolean>
@@ -595,6 +607,10 @@ export interface AttestationLogicInstance extends ContractInstance {
   AttestationRejected: Web3.EventFilterCreator<{ attesterId: UInt; requesterId: UInt }>
 
   AttestationRevoked: Web3.EventFilterCreator<{ link: string; attesterId: UInt }>
+
+  TokenEscrowMarketplaceChanged: Web3.EventFilterCreator<{ oldTokenEscrowMarketplace: Address; newTokenEscrowMarketplace: Address }>
+
+  InitializationEnded: Web3.EventFilterCreator<{}>
 
   attest: {
     (
@@ -758,12 +774,18 @@ export interface AttestationLogicInstance extends ContractInstance {
     sendTransaction(link: string, sender: Address, delegationSig: string, options?: TransactionOptions): Promise<string>
     estimateGas(link: string, sender: Address, delegationSig: string, options?: TransactionOptions): Promise<number>
   }
+  setTokenEscrowMarketplace: {
+    (newTokenEscrowMarketplace: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(newTokenEscrowMarketplace: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(newTokenEscrowMarketplace: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(newTokenEscrowMarketplace: Address, options?: TransactionOptions): Promise<number>
+  }
 }
 
 export interface AttestationLogicContract {
   new: (
+    initializer: Address,
     registry: Address,
-    attestationRepo: Address,
     signingLogic: Address,
     tokenEscrowMarketplace: Address,
     options?: TransactionOptions

@@ -584,7 +584,7 @@ export const ApproveAndCallFallBack: IContractMethodManifest = {
 
 export const AttestationLogic: IContractMethodManifest = {
   methods: {
-    attestationRepo: {
+    initializing: {
       args_arr: [],
       args: {}
     },
@@ -597,6 +597,14 @@ export const AttestationLogic: IContractMethodManifest = {
       args: {}
     },
     registry: {
+      args_arr: [],
+      args: {}
+    },
+    initializer: {
+      args_arr: [],
+      args: {}
+    },
+    endInitialization: {
       args_arr: [],
       args: {}
     },
@@ -797,6 +805,15 @@ export const AttestationLogic: IContractMethodManifest = {
         _delegationSig: {
           type: "bytes",
           index: 2
+        }
+      }
+    },
+    setTokenEscrowMarketplace: {
+      args_arr: ["_newTokenEscrowMarketplace"],
+      args: {
+        _newTokenEscrowMarketplace: {
+          type: "address",
+          index: 0
         }
       }
     }
