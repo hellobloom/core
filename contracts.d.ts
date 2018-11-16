@@ -2361,13 +2361,6 @@ export interface SigningLogicInterfaceContract {
 }
 
 export interface SigningLogicLegacyInstance extends ContractInstance {
-  generateRemoveAddressSchemaHash: {
-    (addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
-    sendTransaction(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
-    estimateGas(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<number>
-  }
-
   generateRequestAttestationSchemaHash: {
     (dataHash: string, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
@@ -2375,10 +2368,16 @@ export interface SigningLogicLegacyInstance extends ContractInstance {
     estimateGas(dataHash: string, nonce: string, options?: TransactionOptions): Promise<number>
   }
   generateAddAddressSchemaHash: {
-    (senderAddress: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(senderAddress: Address, nonce: string, options?: TransactionOptions): Promise<string>
-    sendTransaction(senderAddress: Address, nonce: string, options?: TransactionOptions): Promise<string>
-    estimateGas(senderAddress: Address, nonce: string, options?: TransactionOptions): Promise<number>
+    (addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateRemoveAddressSchemaHash: {
+    (addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<number>
   }
   generateReleaseTokensSchemaHash: {
     (sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>

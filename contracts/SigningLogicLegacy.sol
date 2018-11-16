@@ -357,12 +357,23 @@ contract SigningLogicLegacy is SigningLogicInterface{
   }
 
   function generateAddAddressSchemaHash(
-    address _senderAddress,
+    address _addressToAdd,
     bytes32 _nonce
   ) external view returns (bytes32) {
     return hash(
       AddAddress(
-        _senderAddress,
+        _addressToAdd,
+        _nonce
+      )
+    );
+  }
+  function generateRemoveAddressSchemaHash(
+    address _addressToRemove,
+    bytes32 _nonce
+  ) external view returns (bytes32) {
+    return hash(
+      RemoveAddress(
+        _addressToRemove,
         _nonce
       )
     );

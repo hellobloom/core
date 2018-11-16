@@ -2677,20 +2677,6 @@ export const SigningLogicInterface: IContractMethodManifest = {
 
 export const SigningLogicLegacy: IContractMethodManifest = {
   methods: {
-    generateRemoveAddressSchemaHash: {
-      args_arr: ["_addressToRemove", "_nonce"],
-      args: {
-        _addressToRemove: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-
     generateRequestAttestationSchemaHash: {
       args_arr: ["_dataHash", "_nonce"],
       args: {
@@ -2705,9 +2691,22 @@ export const SigningLogicLegacy: IContractMethodManifest = {
       }
     },
     generateAddAddressSchemaHash: {
-      args_arr: ["_senderAddress", "_nonce"],
+      args_arr: ["_addressToAdd", "_nonce"],
       args: {
-        _senderAddress: {
+        _addressToAdd: {
+          type: "address",
+          index: 0
+        },
+        _nonce: {
+          type: "bytes32",
+          index: 1
+        }
+      }
+    },
+    generateRemoveAddressSchemaHash: {
+      args_arr: ["_addressToRemove", "_nonce"],
+      args: {
+        _addressToRemove: {
           type: "address",
           index: 0
         },

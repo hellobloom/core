@@ -139,7 +139,7 @@ contract("AccountRegistryLogic", function ([owner, alice, bob, unclaimed, unclai
     });
 
     it.only("Does not allow address to be added if does not match the newAddress sig", async () => {
-      await registryLogic.addAddressToAccount(
+      await registryLogic.linkAddresses(
         alice,
         currentAddressLinkSig,
         unclaimed,
@@ -155,7 +155,7 @@ contract("AccountRegistryLogic", function ([owner, alice, bob, unclaimed, unclai
     });
 
     it.only("Fails if sig does not match newAddress", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimedB, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
+      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimedB, newAddressLinkSig, nonceHash, { from: alice }).should.be.rejectedWith(EVMThrow)
     })
 
     interface AdditionEventArgs {
@@ -170,15 +170,20 @@ contract("AccountRegistryLogic", function ([owner, alice, bob, unclaimed, unclai
       ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
         AdditionEventArgs
       >;
+      console.log(logs)
 
       const matchingLog = logs.find(
-        log => log.event === "AddressAdded"
+        log => log.event === "AddressLinked"
       );
 
       should.exist(matchingLog);
       if (!matchingLog) return;
 
-      console.log(matchingLog)
+      matchingLog.args.currentAddress.should.equal(alice)
+      matchingLog.args.newAddress.should.equal(unclaimed)
+      matchingLog.args.linkId.should.bignumber.equal(1)
+
+      console.log(matchingLog.args.linkId.toString(10))
     });
 
     it.only("Does not allow sigs to be replayed", async () => {
