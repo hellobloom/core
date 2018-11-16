@@ -16,8 +16,6 @@ interface IContractMethodManifest {
 export type TContractNames = keyof typeof EContractNames
 
 export enum EContractNames {
-  "AccountRegistry" = "AccountRegistry",
-  "AccountRegistryBatchAdmin" = "AccountRegistryBatchAdmin",
   "AccountRegistryInterface" = "AccountRegistryInterface",
   "AccountRegistryLogic" = "AccountRegistryLogic",
   "AccreditationRepo" = "AccreditationRepo",
@@ -56,145 +54,6 @@ export enum EContractNames {
   "TokenController" = "TokenController",
   "TokenEscrowMarketplace" = "TokenEscrowMarketplace",
   "VotingCenter" = "VotingCenter"
-}
-
-export const AccountRegistry: IContractMethodManifest = {
-  methods: {
-    accountRegistryLogic: {
-      args_arr: [],
-      args: {}
-    },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    accountByAddress: {
-      args_arr: ["anonymous_0"],
-      args: {
-        anonymous_0: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-
-    setRegistryLogic: {
-      args_arr: ["_newRegistryLogic"],
-      args: {
-        _newRegistryLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    accountIdForAddress: {
-      args_arr: ["_address"],
-      args: {
-        _address: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    addressBelongsToAccount: {
-      args_arr: ["_address"],
-      args: {
-        _address: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    createNewAccount: {
-      args_arr: ["_newUser"],
-      args: {
-        _newUser: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    addAddressToAccount: {
-      args_arr: ["_newAddress", "_sender"],
-      args: {
-        _newAddress: {
-          type: "address",
-          index: 0
-        },
-        _sender: {
-          type: "address",
-          index: 1
-        }
-      }
-    },
-    removeAddressFromAccount: {
-      args_arr: ["_addressToRemove"],
-      args: {
-        _addressToRemove: {
-          type: "address",
-          index: 0
-        }
-      }
-    }
-  }
-}
-
-export const AccountRegistryBatchAdmin: IContractMethodManifest = {
-  methods: {
-    registryAdmin: {
-      args_arr: [],
-      args: {}
-    },
-    registry: {
-      args_arr: [],
-      args: {}
-    },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    logic: {
-      args_arr: [],
-      args: {}
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-
-    setRegistryAdmin: {
-      args_arr: ["_newRegistryAdmin"],
-      args: {
-        _newRegistryAdmin: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    batchCreateAccount: {
-      args_arr: ["_newUsers"],
-      args: {
-        _newUsers: {
-          type: "address[]",
-          index: 0
-        }
-      }
-    }
-  }
 }
 
 export const AccountRegistryInterface: IContractMethodManifest = {
@@ -253,35 +112,14 @@ export const AccountRegistryInterface: IContractMethodManifest = {
 
 export const AccountRegistryLogic: IContractMethodManifest = {
   methods: {
-    pendingInvites: {
-      args_arr: ["anonymous_0"],
-      args: {
-        anonymous_0: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
     signingLogic: {
       args_arr: [],
       args: {}
     },
-    registryAdmin: {
-      args_arr: [],
-      args: {}
-    },
-    registry: {
-      args_arr: [],
-      args: {}
-    },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
+    linkIds: {
+      args_arr: ["anonymous_0"],
       args: {
-        newOwner: {
+        anonymous_0: {
           type: "address",
           index: 0
         }
@@ -297,77 +135,23 @@ export const AccountRegistryLogic: IContractMethodManifest = {
       }
     },
 
-    setSigningLogic: {
-      args_arr: ["_newSigningLogic"],
+    linkAddresses: {
+      args_arr: ["_currentAddress", "_currentAddressSig", "_newAddress", "_newAddressSig", "_nonce"],
       args: {
-        _newSigningLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setRegistryAdmin: {
-      args_arr: ["_newRegistryAdmin"],
-      args: {
-        _newRegistryAdmin: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setAccountRegistry: {
-      args_arr: ["_newRegistry"],
-      args: {
-        _newRegistry: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    createInvite: {
-      args_arr: ["_sig"],
-      args: {
-        _sig: {
-          type: "bytes",
-          index: 0
-        }
-      }
-    },
-    acceptInvite: {
-      args_arr: ["_sig"],
-      args: {
-        _sig: {
-          type: "bytes",
-          index: 0
-        }
-      }
-    },
-    createAccount: {
-      args_arr: ["_newUser"],
-      args: {
-        _newUser: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    addAddressToAccountFor: {
-      args_arr: ["_newAddress", "_newAddressSig", "_senderSig", "_sender", "_nonce"],
-      args: {
-        _newAddress: {
+        _currentAddress: {
           type: "address",
           index: 0
         },
-        _newAddressSig: {
+        _currentAddressSig: {
           type: "bytes",
           index: 1
         },
-        _senderSig: {
-          type: "bytes",
+        _newAddress: {
+          type: "address",
           index: 2
         },
-        _sender: {
-          type: "address",
+        _newAddressSig: {
+          type: "bytes",
           index: 3
         },
         _nonce: {
@@ -376,33 +160,66 @@ export const AccountRegistryLogic: IContractMethodManifest = {
         }
       }
     },
-    addAddressToAccount: {
-      args_arr: ["_newAddress", "_newAddressSig", "_senderSig", "_nonce"],
+    unlinkAddress: {
+      args_arr: ["_senderAddress", "_addressToRemove", "_nonce", "_unlinkSignature"],
       args: {
-        _newAddress: {
+        _senderAddress: {
           type: "address",
           index: 0
         },
-        _newAddressSig: {
-          type: "bytes",
+        _addressToRemove: {
+          type: "address",
           index: 1
-        },
-        _senderSig: {
-          type: "bytes",
-          index: 2
         },
         _nonce: {
           type: "bytes32",
+          index: 2
+        },
+        _unlinkSignature: {
+          type: "bytes",
           index: 3
         }
       }
     },
-    removeAddressFromAccountFor: {
-      args_arr: ["_addressToRemove"],
+    validateLinkSignature: {
+      args_arr: ["_addressA", "_addressB", "_nonce", "_linkSignature"],
       args: {
-        _addressToRemove: {
+        _addressA: {
           type: "address",
           index: 0
+        },
+        _addressB: {
+          type: "address",
+          index: 1
+        },
+        _nonce: {
+          type: "bytes32",
+          index: 2
+        },
+        _linkSignature: {
+          type: "bytes",
+          index: 3
+        }
+      }
+    },
+    validateUnlinkSignature: {
+      args_arr: ["_senderAddress", "_addressToRemove", "_nonce", "_unlinkSignature"],
+      args: {
+        _senderAddress: {
+          type: "address",
+          index: 0
+        },
+        _addressToRemove: {
+          type: "address",
+          index: 1
+        },
+        _nonce: {
+          type: "bytes32",
+          index: 2
+        },
+        _unlinkSignature: {
+          type: "bytes",
+          index: 3
         }
       }
     }
@@ -2752,9 +2569,22 @@ export const SigningLogic: IContractMethodManifest = {
       }
     },
     generateAddAddressSchemaHash: {
-      args_arr: ["_senderAddress", "_nonce"],
+      args_arr: ["_addressToAdd", "_nonce"],
       args: {
-        _senderAddress: {
+        _addressToAdd: {
+          type: "address",
+          index: 0
+        },
+        _nonce: {
+          type: "bytes32",
+          index: 1
+        }
+      }
+    },
+    generateRemoveAddressSchemaHash: {
+      args_arr: ["_addressToRemove", "_nonce"],
+      args: {
+        _addressToRemove: {
           type: "address",
           index: 0
         },
@@ -3062,9 +2892,22 @@ export const SigningLogicInterface: IContractMethodManifest = {
       }
     },
     generateAddAddressSchemaHash: {
-      args_arr: ["_senderAddress", "_nonce"],
+      args_arr: ["_addressToAdd", "_nonce"],
       args: {
-        _senderAddress: {
+        _addressToAdd: {
+          type: "address",
+          index: 0
+        },
+        _nonce: {
+          type: "bytes32",
+          index: 1
+        }
+      }
+    },
+    generateRemoveAddressSchemaHash: {
+      args_arr: ["_addressToRemove", "_nonce"],
+      args: {
+        _addressToRemove: {
           type: "address",
           index: 0
         },
@@ -3138,6 +2981,19 @@ export const SigningLogicInterface: IContractMethodManifest = {
 
 export const SigningLogicLegacy: IContractMethodManifest = {
   methods: {
+    generateRemoveAddressSchemaHash: {
+      args_arr: ["_addressToRemove", "_nonce"],
+      args: {
+        _addressToRemove: {
+          type: "address",
+          index: 0
+        },
+        _nonce: {
+          type: "bytes32",
+          index: 1
+        }
+      }
+    },
     generateRequestAttestationSchemaHash: {
       args_arr: ["_dataHash", "_nonce"],
       args: {

@@ -21,7 +21,16 @@ contract SigningLogicLegacy is SigningLogicInterface{
 
   bytes32 constant ADD_ADDRESS_TYPEHASH = keccak256(
       abi.encodePacked(
-        "address sender",
+        "string action",
+        "address addressToAdd",
+        "bytes32 nonce"
+      )
+  );
+
+  bytes32 constant REMOVE_ADDRESS_TYPEHASH = keccak256(
+      abi.encodePacked(
+        "string action",
+        "address addressToRemove",
         "bytes32 nonce"
       )
   );
@@ -121,7 +130,7 @@ contract SigningLogicLegacy is SigningLogicInterface{
   }
 
   struct AddAddress {
-      address sender;
+      address addressToAdd;
       bytes32 nonce;
   }
 
@@ -131,7 +140,27 @@ contract SigningLogicLegacy is SigningLogicInterface{
         ADD_ADDRESS_TYPEHASH,
         keccak256(
           abi.encodePacked(
-            request.sender,
+            "addAddress",
+            request.addressToAdd,
+            request.nonce
+          )
+        )
+    ));
+  }
+
+  struct RemoveAddress {
+      address addressToRemove;
+      bytes32 nonce;
+  }
+
+  function hash(RemoveAddress request) internal pure returns (bytes32) {
+    return keccak256(
+      abi.encodePacked(
+        REMOVE_ADDRESS_TYPEHASH,
+        keccak256(
+          abi.encodePacked(
+            "removeAddress",
+            request.addressToRemove,
             request.nonce
           )
         )

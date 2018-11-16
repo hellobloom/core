@@ -35,7 +35,11 @@ contract SigningLogicInterface {
     bytes32 _link
     ) external view returns (bytes32);
   function generateAddAddressSchemaHash(
-    address _senderAddress,
+    address _addressToAdd,
+    bytes32 _nonce
+    ) external view returns (bytes32);
+  function generateRemoveAddressSchemaHash(
+    address _addressToRemove,
     bytes32 _nonce
     ) external view returns (bytes32);
   function generateVoteForDelegationSchemaHash(

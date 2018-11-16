@@ -21,7 +21,11 @@ contract SigningLogic is SigningLogicInterface{
   );
 
   bytes32 constant ADD_ADDRESS_TYPEHASH = keccak256(
-    "AddAddress(address sender,bytes32 nonce)"
+    "AddAddress(address addressToAdd,bytes32 nonce)"
+  );
+
+  bytes32 constant REMOVE_ADDRESS_TYPEHASH = keccak256(
+    "RemoveAddress(address addressToRemove,bytes32 nonce)"
   );
 
   bytes32 constant RELEASE_TOKENS_TYPEHASH = keccak256(
@@ -92,14 +96,27 @@ contract SigningLogic is SigningLogicInterface{
   }
 
   struct AddAddress {
-      address sender;
+      address addressToAdd;
       bytes32 nonce;
   }
 
   function hash(AddAddress request) internal pure returns (bytes32) {
     return keccak256(abi.encode(
       ADD_ADDRESS_TYPEHASH,
-      request.sender,
+      request.addressToAdd,
+      request.nonce
+    ));
+  }
+
+  struct RemoveAddress {
+      address addressToRemove;
+      bytes32 nonce;
+  }
+
+  function hash(RemoveAddress request) internal pure returns (bytes32) {
+    return keccak256(abi.encode(
+      REMOVE_ADDRESS_TYPEHASH,
+      request.addressToRemove,
       request.nonce
     ));
   }
@@ -251,7 +268,7 @@ contract SigningLogic is SigningLogicInterface{
   }
 
   function generateAddAddressSchemaHash(
-    address _senderAddress,
+    address _addressToAdd,
     bytes32 _nonce
   ) external view returns (bytes32) {
     return keccak256(
@@ -259,7 +276,23 @@ contract SigningLogic is SigningLogicInterface{
         "\x19\x01",
         DOMAIN_SEPARATOR,
         hash(AddAddress(
-          _senderAddress,
+          _addressToAdd,
+          _nonce
+        ))
+      )
+      );
+  }
+
+  function generateRemoveAddressSchemaHash(
+    address _addressToRemove,
+    bytes32 _nonce
+  ) external view returns (bytes32) {
+    return keccak256(
+      abi.encodePacked(
+        "\x19\x01",
+        DOMAIN_SEPARATOR,
+        hash(RemoveAddress(
+          _addressToRemove,
           _nonce
         ))
       )

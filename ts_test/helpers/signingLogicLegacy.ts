@@ -19,11 +19,23 @@ export const getFormattedTypedDataAttestationRequest= (
 }
 
 export const getFormattedTypedDataAddAddress = (
-  sender: string,
+  addressToAdd: string,
   nonce: string,
 ): ITypedDataParam[] => {
   return [
-      {type: 'address', name: 'sender', value: sender},
+      {type: 'string', name: 'action', value: 'addAddress'},
+      {type: 'address', name: 'addressToAdd', value: addressToAdd},
+      {type: 'bytes32', name: 'nonce', value: nonce},
+  ]
+}
+
+export const getFormattedTypedDataRemoveAddress = (
+  addressToRemove: string,
+  nonce: string,
+): ITypedDataParam[] => {
+  return [
+      {type: 'string', name: 'action', value: 'removeAddress'},
+      {type: 'address', name: 'addressToRemove', value: addressToRemove},
       {type: 'bytes32', name: 'nonce', value: nonce},
   ]
 }
