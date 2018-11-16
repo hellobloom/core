@@ -21,7 +21,7 @@ contract AccountRegistryLogic {
     signingLogic = _signingLogic;
   }
 
-  event AddressLinked(address indexed addressA, address indexed addressB, uint256 indexed linkId);
+  event AddressLinked(address indexed currentAddress, address indexed newAddress, uint256 indexed linkId);
   event AddressUnlinked(address indexed senderAddress, address indexed addressToRemove);
 
   // Signatures contain a nonce to make them unique. usedSignatures tracks which signatures

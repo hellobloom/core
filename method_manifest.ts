@@ -2690,6 +2690,7 @@ export const SigningLogicLegacy: IContractMethodManifest = {
         }
       }
     },
+
     generateRequestAttestationSchemaHash: {
       args_arr: ["_dataHash", "_nonce"],
       args: {

@@ -7,7 +7,7 @@ import { increaseTime } from "./helpers/increaseTime";
 import { should } from "./test_setup";
 import { advanceBlock } from "./helpers/advanceBlock";
 import * as ipfs from "./../src/ipfs";
-import { SigningLogicLegacyInstance, AccountRegistryInstance } from "../contracts";
+import { SigningLogicLegacyInstance} from "../contracts";
 const ethSigUtil = require("eth-sig-util");
 import * as ethereumjsWallet from "ethereumjs-wallet";
 const uuid = require('uuidv4')
@@ -17,12 +17,10 @@ import { hashData } from "./../src/signData";
 import { getFormattedTypedDataVoteFor } from "./helpers/signingLogicLegacy";
 
 const Poll = artifacts.require("Poll");
-const AccountRegistry = artifacts.require("AccountRegistry");
 const SigningLogic = artifacts.require("SigningLogicLegacy");
 
 contract("Poll", function([alice, bob, carl]) {
   let poll: PollInstance;
-  let registry: AccountRegistryInstance;
   let signingLogic: SigningLogicLegacyInstance;
 
   const aliceWallet = ethereumjsWallet.fromPrivateKey(

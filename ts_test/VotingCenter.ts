@@ -2,11 +2,10 @@ import "./test_setup";
 import { latestBlockTime } from "./helpers/blockInfo";
 import { should } from "./test_setup";
 import * as ipfs from "../src/ipfs";
-import { VotingCenterInstance, SigningLogicLegacyInstance, AccountRegistryInstance } from "../contracts";
+import { VotingCenterInstance, SigningLogicLegacyInstance} from "../contracts";
 
 const VotingCenter = artifacts.require("VotingCenter");
 const Poll = artifacts.require("Poll");
-const AccountRegistry = artifacts.require("AccountRegistry");
 const SigningLogic = artifacts.require("SigningLogicLegacy");
 
 contract("VotingCenter", function([alice, bob, carl]) {
@@ -15,12 +14,10 @@ contract("VotingCenter", function([alice, bob, carl]) {
   let pollAddress: string;
   let startTime: number;
   let endTime: number;
-  let registry: AccountRegistryInstance;
   let signingLogic: SigningLogicLegacyInstance;
 
   beforeEach(async () => {
     signingLogic = await SigningLogic.new();
-    registry = await AccountRegistry.new(alice);
     votingCenter = await VotingCenter.new();
     ipfsHash = ipfs.toHex("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe");
     startTime = latestBlockTime() + 10;

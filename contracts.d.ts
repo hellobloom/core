@@ -129,7 +129,7 @@ export interface AccountRegistryLogicInstance extends ContractInstance {
     estimateGas(unnamed1: string, options?: TransactionOptions): Promise<number>
   }
 
-  AddressLinked: Web3.EventFilterCreator<{ addressA: Address; addressB: Address; linkId: UInt }>
+  AddressLinked: Web3.EventFilterCreator<{ currentAddress: Address; newAddress: Address; linkId: UInt }>
 
   AddressUnlinked: Web3.EventFilterCreator<{ senderAddress: Address; addressToRemove: Address }>
 
@@ -2367,6 +2367,7 @@ export interface SigningLogicLegacyInstance extends ContractInstance {
     sendTransaction(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
     estimateGas(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<number>
   }
+
   generateRequestAttestationSchemaHash: {
     (dataHash: string, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>

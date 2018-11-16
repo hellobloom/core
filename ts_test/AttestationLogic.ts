@@ -23,15 +23,12 @@ import {
 import { generateSigNonce } from "../src/signData"
 
 const SigningLogic = artifacts.require("SigningLogicLegacy")
-const AttestationRepo = artifacts.require("AttestationRepo")
 const TokenEscrowMarketplace = artifacts.require("TokenEscrowMarketplace")
 const AttestationLogic = artifacts.require("AttestationLogic")
-const AccountRegistry = artifacts.require("AccountRegistry")
 const MockBLT = artifacts.require("MockBLT")
 
 contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializer]) {
   let token: MockBLTInstance
-  let registry: AccountRegistryInstance
   let attestationLogic: AttestationLogicInstance
   let signingLogic: SigningLogicLegacyInstance
   let tokenEscrowMarketplace: TokenEscrowMarketplaceInstance
@@ -97,7 +94,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
 
   beforeEach(async () => {
     signingLogic = await SigningLogic.new()
-    registry = await AccountRegistry.new(alice)
     token = await MockBLT.new()
 
     attestationLogic = await AttestationLogic.new(initializer, registry.address, signingLogic.address, "0x0")

@@ -1,6 +1,5 @@
 import * as BigNumber from "bignumber.js";
 import {
-  AccountRegistryInstance,
   TokenEscrowMarketplaceInstance,
   SigningLogicLegacyInstance,
   MockBLTInstance
@@ -19,7 +18,6 @@ import { hashData } from "./../src/signData";
 import { getFormattedTypedDataReleaseTokens, getFormattedTypedDataLockupTokensFor } from "./helpers/signingLogicLegacy";
 
 const TokenEscrowMarketplace = artifacts.require("TokenEscrowMarketplace");
-const AccountRegistry= artifacts.require("AccountRegistry");
 const MockBLT = artifacts.require("MockBLT");
 const SigningLogic = artifacts.require("SigningLogicLegacy");
 
@@ -33,7 +31,6 @@ contract("TokenEscrowMarketplace", function(
   ]) {
   let marketplace: TokenEscrowMarketplaceInstance;
   let token: MockBLTInstance;
-  let registry: AccountRegistryInstance;
   let signingLogic: SigningLogicLegacyInstance;
   let aliceId: BigNumber.BigNumber;
   let bobId: BigNumber.BigNumber;

@@ -20,7 +20,6 @@ import * as ipfs from "./../src/ipfs";
 import { should } from "./test_setup";
 import { getFormattedTypedDataAddAddress } from "./helpers/signingLogicLegacy";
 
-const AccountRegistry = artifacts.require("AccountRegistry");
 const SigningLogic = artifacts.require("SigningLogicLegacy");
 const AccountRegistryLogic = artifacts.require("AccountRegistryLogic");
 
@@ -98,7 +97,7 @@ contract("AccountRegistryLogic", function ([owner, alice, bob, unclaimed, unclai
   const nonceHash = bufferToHex(hashData(nonce))
   const differentNonceHash = bufferToHex(hashData(differentNonce))
 
-    const newAddressSig = ethSigUtil.signTypedDataLegacy(
+    const newAddressLinkSig = ethSigUtil.signTypedDataLegacy(
       unclaimedPrivkey,
       {data: getFormattedTypedDataAddAddress(
         alice,
@@ -106,7 +105,7 @@ contract("AccountRegistryLogic", function ([owner, alice, bob, unclaimed, unclai
       )}
     )
 
-    const senderSig = ethSigUtil.signTypedDataLegacy(
+    const currentAddressLinkSig = ethSigUtil.signTypedDataLegacy(
       alicePrivkey,
       {data: getFormattedTypedDataAddAddress(
         unclaimed,
@@ -115,39 +114,17 @@ contract("AccountRegistryLogic", function ([owner, alice, bob, unclaimed, unclai
     )
 
   describe("Linking Accounts", async () => {
-    beforeEach(async () => {
-    });
-    it("Allows a user to add an unclaimed address to their account", async () => {
-      await registryLogic.linkAddresses(unclaimed, newAddressSig, senderSig, nonceHash, { from: alice }).should.be.fulfilled
-    })
-    it("Adds new address to same accountId", async () => {
-      await registryLogic.addAddressToAccount(unclaimed, newAddressSig, senderSig, nonceHash, { from: alice }).should.be.fulfilled
-      const newId = await registry.accountIdForAddress.call(unclaimed)
-      newId.should.bignumber.equal(aliceId)
-    })
-    it("Allows second address to add another address", async () => {
-      await registryLogic.addAddressToAccount(unclaimed, newAddressSig, senderSig, nonceHash, { from: alice }).should.be.fulfilled
-      await registryLogic.addAddressToAccount(unclaimedB, 
-      ethSigUtil.signTypedDataLegacy(
-        unclaimedPrivkeyB,
-        {data: getFormattedTypedDataAddAddress(
-          unclaimed,
-          differentNonceHash
-        )}
-      ),
-      ethSigUtil.signTypedDataLegacy(
-       unclaimedPrivkey,
-        {data: getFormattedTypedDataAddAddress(
-          unclaimedB,
-          differentNonceHash
-        )}
-      ), differentNonceHash, { from: unclaimed }).should.be.fulfilled
+    it.only("Allows a user to add an unclaimed address to their account", async () => {
+      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
     })
 
-    it("Does not allow address to be added if does not match the sender sig", async () => {
-      await registryLogic.addAddressToAccount(
-        unclaimed,
-        newAddressSig,
+    it.only("Allows anyone to submit the link tx", async () => {
+      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: bob }).should.be.fulfilled
+    })
+
+    it.only("Does not allow address to be added if does not match the current address sig", async () => {
+      await registryLogic.linkAddresses(
+        alice,
         ethSigUtil.signTypedDataLegacy(
           alicePrivkey,
           {data: getFormattedTypedDataAddAddress(
@@ -155,12 +132,16 @@ contract("AccountRegistryLogic", function ([owner, alice, bob, unclaimed, unclai
             nonceHash
           )}
         ),
+        unclaimed,
+        newAddressLinkSig,
         nonceHash
       ).should.rejectedWith(EVMThrow)
     });
 
-    it("Does not allow address to be added if does not match the newAddress sig", async () => {
+    it.only("Does not allow address to be added if does not match the newAddress sig", async () => {
       await registryLogic.addAddressToAccount(
+        alice,
+        currentAddressLinkSig,
         unclaimed,
         ethSigUtil.signTypedDataLegacy(
           unclaimedPrivkey,
@@ -169,27 +150,27 @@ contract("AccountRegistryLogic", function ([owner, alice, bob, unclaimed, unclai
             nonceHash
           )}
         ),
-        senderSig,
         nonceHash
       ).should.rejectedWith(EVMThrow)
     });
 
-    it("Fails if sig does not match newAddress", async () => {
-      await registryLogic.addAddressToAccount(unclaimedB, newAddressSig, senderSig, nonceHash, { from: alice }).should.be.rejectedWith(EVMThrow)
+    it.only("Fails if sig does not match newAddress", async () => {
+      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimedB, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
     })
 
     interface AdditionEventArgs {
-      accountId: BigNumber.BigNumber;
-      newAddress: string;
+      currentAddress: string,
+      newAddress: string,
+      linkId: BigNumber.BigNumber;
     }
 
-    it("Emits an event when an address is added", async () => {
-      const { logs } = ((await registryLogic.addAddressToAccount(unclaimed, newAddressSig, senderSig, nonceHash, {from: alice}).should.be.fulfilled
+    it.only("Emits an event when an address is added", async () => {
+      const { logs } = ((
+      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice })
       ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
         AdditionEventArgs
       >;
 
-      const aliceId = await registry.accountIdForAddress.call(alice)
       const matchingLog = logs.find(
         log => log.event === "AddressAdded"
       );
@@ -197,110 +178,90 @@ contract("AccountRegistryLogic", function ([owner, alice, bob, unclaimed, unclai
       should.exist(matchingLog);
       if (!matchingLog) return;
 
-      matchingLog.args.accountId.should.bignumber.equal(aliceId);
-      matchingLog.args.newAddress.should.equal(unclaimed);
+      console.log(matchingLog)
     });
 
-    it("Does not allow sigs to be replayed", async () => {
-      await registryLogic.addAddressToAccount(unclaimed, newAddressSig, senderSig, nonceHash, {from: alice}).should.be.fulfilled
-      await registryLogic.removeAddressFromAccountFor(unclaimed).should.be.fulfilled
-      await registryLogic.addAddressToAccount(unclaimed, newAddressSig, senderSig, nonceHash, {from: alice}).should.be.rejectedWith(EVMThrow)
-      await registry.accountIdForAddress(unclaimed).should.be.rejectedWith(EVMThrow)
-      const unclaimedExists = await registry.addressBelongsToAccount(unclaimed)
-      unclaimedExists.should.equal(false)
+    it.only("Does not allow sigs to be replayed", async () => {
+      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
+      // await registryLogic.removeAddressFromAccountFor(unclaimed).should.be.fulfilled
+      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.rejectedWith(EVMThrow)
+      // await registry.accountIdForAddress(unclaimed).should.be.rejectedWith(EVMThrow)
+      // const unclaimedExists = await registry.addressBelongsToAccount(unclaimed)
+      // unclaimedExists.should.equal(false)
     });
 
-    it("Allows address to be re-added with different nonce", async () => {
-      await registryLogic.addAddressToAccount(unclaimed, newAddressSig, senderSig, nonceHash, {from: alice}).should.be.fulfilled
-      await registryLogic.removeAddressFromAccountFor(unclaimed).should.be.fulfilled
-      await registryLogic.addAddressToAccount(
-        unclaimed,
-        ethSigUtil.signTypedDataLegacy(
-          unclaimedPrivkey,
-          {data: getFormattedTypedDataAddAddress(
-            alice,
-            differentNonceHash
-          )}
-        ),
-        ethSigUtil.signTypedDataLegacy(
-          alicePrivkey,
-          {data: getFormattedTypedDataAddAddress(
-            unclaimed,
-            differentNonceHash
-          )}
-        ),
-        differentNonceHash,
-        {from: alice}
-      ).should.be.fulfilled
-      const newId = await registry.accountIdForAddress.call(unclaimed)
-      const aliceId = await registry.accountIdForAddress.call(alice)
-      newId.should.bignumber.equal(aliceId)
-      const unclaimedExists = await registry.addressBelongsToAccount(unclaimed)
-      unclaimedExists.should.equal(true)
-    });
+    // it.only("Allows address to be re-added with different nonce", async () => {
+    //   await registryLogic.addAddressToAccount(unclaimed, newAddressLinkSig, currentAddressLinkSig, nonceHash, {from: alice}).should.be.fulfilled
+    //   await registryLogic.removeAddressFromAccountFor(unclaimed).should.be.fulfilled
+    //   await registryLogic.addAddressToAccount(
+    //     unclaimed,
+    //     ethSigUtil.signTypedDataLegacy(
+    //       unclaimedPrivkey,
+    //       {data: getFormattedTypedDataAddAddress(
+    //         alice,
+    //         differentNonceHash
+    //       )}
+    //     ),
+    //     ethSigUtil.signTypedDataLegacy(
+    //       alicePrivkey,
+    //       {data: getFormattedTypedDataAddAddress(
+    //         unclaimed,
+    //         differentNonceHash
+    //       )}
+    //     ),
+    //     differentNonceHash,
+    //     {from: alice}
+    //   ).should.be.fulfilled
+    //   const newId = await registry.accountIdForAddress.call(unclaimed)
+    //   const aliceId = await registry.accountIdForAddress.call(alice)
+    //   newId.should.bignumber.equal(aliceId)
+    //   const unclaimedExists = await registry.addressBelongsToAccount(unclaimed)
+    //   unclaimedExists.should.equal(true)
+    // });
   })
 
-  describe("Delegating multiple accounts addition", async () => {
-    beforeEach(async () => {
-      await Promise.all([
-        registryLogic.createAccount(alice),
-        registryLogic.createAccount(bob),
-      ]);
-      [aliceId, bobId] = await Promise.all([
-        registry.accountIdForAddress.call(alice),
-        registry.accountIdForAddress.call(bob),
-      ]);
-    });
-    it("Allows a bloom to add multiple addresses to an account if both sigs are submitted", async () => {
-      await registryLogic.addAddressToAccountFor(unclaimed, newAddressSig, senderSig, alice, nonceHash, { from: owner }).should.be.fulfilled
-    })
-    it("Does not allow anyone else to add multiple addresss on behalf of another user", async () => {
-      await registryLogic.addAddressToAccountFor(unclaimed, newAddressSig, senderSig, alice, nonceHash, { from: alice }).should.be.rejectedWith(EVMThrow)
-    })
-  })
+  // describe("Removing addresses from accounts", async () => {
+  //   beforeEach(async () => {
+  //     await Promise.all([
+  //       registryLogic.createAccount(alice),
+  //       registryLogic.createAccount(bob),
+  //     ]);
+  //     [aliceId, bobId] = await Promise.all([
+  //       registry.accountIdForAddress.call(alice),
+  //       registry.accountIdForAddress.call(bob),
+  //     ]);
+  //   });
+  //   it.only("Allows registry logic to remove a new address from an account", async () => {
+  //     await registryLogic.addAddressToAccount(unclaimed, newAddressLinkSig, currentAddressLinkSig, nonceHash, {from: alice}).should.be.fulfilled
+  //     await registryLogic.removeAddressFromAccountFor(unclaimed).should.be.fulfilled
+  //     await registry.accountIdForAddress(unclaimed).should.be.rejectedWith(EVMThrow)
+  //     const unclaimedExists = await registry.addressBelongsToAccount(unclaimed)
+  //     unclaimedExists.should.equal(false)
+  //   });
 
-  describe("Removing addresses from accounts", async () => {
-    beforeEach(async () => {
-      await Promise.all([
-        registryLogic.createAccount(alice),
-        registryLogic.createAccount(bob),
-      ]);
-      [aliceId, bobId] = await Promise.all([
-        registry.accountIdForAddress.call(alice),
-        registry.accountIdForAddress.call(bob),
-      ]);
-    });
-    it("Allows registry logic to remove a new address from an account", async () => {
-      await registryLogic.addAddressToAccount(unclaimed, newAddressSig, senderSig, nonceHash, {from: alice}).should.be.fulfilled
-      await registryLogic.removeAddressFromAccountFor(unclaimed).should.be.fulfilled
-      await registry.accountIdForAddress(unclaimed).should.be.rejectedWith(EVMThrow)
-      const unclaimedExists = await registry.addressBelongsToAccount(unclaimed)
-      unclaimedExists.should.equal(false)
-    });
+  //   interface RemovalEventArgs {
+  //     accountId: BigNumber.BigNumber;
+  //     oldAddress: string;
+  //   }
+  //   it.only("Emits an event when an address is removed", async () => {
+  //     await registryLogic.addAddressToAccount(unclaimed, newAddressLinkSig, currentAddressLinkSig, nonceHash, {from: alice}).should.be.fulfilled
+  //     const { logs } = ((await registryLogic.removeAddressFromAccountFor(unclaimed)
+  //     ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
+  //       RemovalEventArgs
+  //     >;
 
-    interface RemovalEventArgs {
-      accountId: BigNumber.BigNumber;
-      oldAddress: string;
-    }
-    it("Emits an event when an address is removed", async () => {
-      await registryLogic.addAddressToAccount(unclaimed, newAddressSig, senderSig, nonceHash, {from: alice}).should.be.fulfilled
-      const { logs } = ((await registryLogic.removeAddressFromAccountFor(unclaimed)
-      ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
-        RemovalEventArgs
-      >;
+  //     const aliceId = await registry.accountIdForAddress.call(alice)
+  //     const matchingLog = logs.find(
+  //       log => log.event === "AddressRemoved"
+  //     );
 
-      const aliceId = await registry.accountIdForAddress.call(alice)
-      const matchingLog = logs.find(
-        log => log.event === "AddressRemoved"
-      );
+  //     should.exist(matchingLog);
+  //     if (!matchingLog) return;
 
-      should.exist(matchingLog);
-      if (!matchingLog) return;
+  //     matchingLog.args.accountId.should.bignumber.equal(aliceId);
+  //     matchingLog.args.oldAddress.should.equal(unclaimed);
 
-      matchingLog.args.accountId.should.bignumber.equal(aliceId);
-      matchingLog.args.oldAddress.should.equal(unclaimed);
-
-    });
-  })
+  //   });
+  // })
 
 });
