@@ -18,7 +18,7 @@ import { latestBlockTime } from "./helpers/blockInfo";
 import { hashData } from "./../src/signData";
 import { soliditySign } from "./../src/signatures";
 import * as ipfs from "./../src/ipfs";
-import { HashingLogic } from "attestations-lib";
+import { HashingLogic } from "@bloomprotocol/attestations-lib";
 
 const AttestationRepo = artifacts.require("AttestationRepo");
 const AttestationLogicUpgradeMode = artifacts.require("AttestationLogicUpgradeMode");
@@ -92,7 +92,6 @@ contract("AttestationLogicUpgradeMode", function(
 
   const merkleTree = HashingLogic.getMerkleTree([phoneData, emailData])
   const dataHash = bufferToHex(merkleTree.getRoot())
-  const typeIds = [0, 1];
 
   beforeEach(async () => {
     registry = await AccountRegistry.new(alice);
@@ -125,7 +124,6 @@ contract("AttestationLogicUpgradeMode", function(
         bob,
         david,
         dataHash,
-        typeIds,
         1526241724,
       ).should.be.fulfilled;
     });
@@ -136,7 +134,6 @@ contract("AttestationLogicUpgradeMode", function(
       attesterId: BigNumber.BigNumber;
       requesterId: BigNumber.BigNumber;
       dataHash: string;
-      typeIds: BigNumber.BigNumber[];
       stakeValue: BigNumber.BigNumber;
       expiresAt: BigNumber.BigNumber;
     }
@@ -148,7 +145,6 @@ contract("AttestationLogicUpgradeMode", function(
           bob,
           david,
           dataHash,
-          typeIds,
           1526241724,
         )
     ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
@@ -167,8 +163,6 @@ contract("AttestationLogicUpgradeMode", function(
       matchingLog.args.attesterId.should.be.bignumber.equal(bobId);
       matchingLog.args.requesterId.should.be.bignumber.equal(davidId);
       matchingLog.args.dataHash.should.be.equal(dataHash);
-      new BigNumber(matchingLog.args.typeIds[0]).toNumber().should.be.equal(typeIds[0])
-      new BigNumber(matchingLog.args.typeIds[1]).toNumber().should.be.equal(typeIds[1])
       matchingLog.args.stakeValue.should.be.bignumber.equal(0);
       matchingLog.args.expiresAt.should.be.bignumber.equal(0);
     });
@@ -180,7 +174,6 @@ contract("AttestationLogicUpgradeMode", function(
         bob,
         david,
         dataHash,
-        typeIds,
         1526241724,
       ).should.be.rejectedWith(EVMThrow);
     });
@@ -190,7 +183,6 @@ contract("AttestationLogicUpgradeMode", function(
         bob,
         david,
         dataHash,
-        typeIds,
         1526241724,
         {from: carl},
       ).should.be.rejectedWith(EVMThrow);

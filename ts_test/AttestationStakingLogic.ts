@@ -141,7 +141,6 @@ contract("AttestationLogic", function(
     await attestationLogic.setAdmin(mockAdmin)
 
     await Promise.all([
-      attestationLogic.createType("creditworthy", {from: mockAdmin}),
       // token.gift(alice),
       token.gift(david, new BigNumber("2e18")),
       registry.createNewAccount(alice),
@@ -179,7 +178,6 @@ contract("AttestationLogic", function(
         new BigNumber(web3.toWei(1, "ether")).toString(10),
         nonceHash,
         combinedDataHash,
-        [0],
         nonceHash,
         oneYear - oneDay,
       )}
@@ -203,7 +201,6 @@ contract("AttestationLogic", function(
       david,
       alice,
       combinedDataHash,
-      [0],
       nonceHash,
     )}
   );
@@ -215,7 +212,6 @@ contract("AttestationLogic", function(
       david,
       alice,
       combinedDataHash,
-      [0],
       nonceHash,
     )}
   );
@@ -231,7 +227,6 @@ contract("AttestationLogic", function(
     paymentNonce: nonceHash,
     paymentSig: "",
     dataHash: combinedDataHash,
-    typeIds: [0],
     requestNonce: nonceHash,
     subjectSig: subjectSig,
     stakeDuration: oneYear - oneDay,
@@ -248,7 +243,6 @@ contract("AttestationLogic", function(
       paymentNonce,
       paymentSig,
       dataHash,
-      typeIds,
       requestNonce,
       subjectSig,
       stakeDuration,
@@ -264,7 +258,6 @@ contract("AttestationLogic", function(
       paymentNonce,
       paymentSig,
       dataHash,
-      typeIds,
       requestNonce,
       subjectSig,
       stakeDuration,
@@ -330,7 +323,6 @@ contract("AttestationLogic", function(
       attesterId: BigNumber.BigNumber;
       requesterId: BigNumber.BigNumber;
       dataHash: string;
-      typeIds: BigNumber.BigNumber[];
       stakeValue: BigNumber.BigNumber;
       expiresAt: BigNumber.BigNumber;
     }
@@ -353,7 +345,6 @@ contract("AttestationLogic", function(
       matchingLog.args.attesterId.should.be.bignumber.equal(davidId);
       matchingLog.args.requesterId.should.be.bignumber.equal(aliceId);
       matchingLog.args.dataHash.should.be.equal(stakeDefaults.dataHash);
-      new BigNumber(matchingLog.args.typeIds[0]).toNumber().should.be.equal(stakeDefaults.typeIds[0])
       matchingLog.args.stakeValue.should.be.bignumber.equal(stakeDefaults.value);
       matchingLog.args.expiresAt.should.be.bignumber.equal(new BigNumber(latestBlockTime() + oneYear - oneDay));
     });
@@ -372,26 +363,6 @@ contract("AttestationLogic", function(
         {
           paymentSig: tokenReleaseSig,
           stakeDuration: oneYear + oneDay,
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("Fails if invalid trait type", async () => {
-      await stake(
-        {
-          paymentSig: tokenReleaseSig,
-          typeIds: [1],
-          subjectSig: ethSigUtil.signTypedDataLegacy(
-            alicePrivkey,
-            {data: getFormattedTypedDataAttestationRequest(
-              alice,
-              david,
-              alice,
-              combinedDataHash,
-              [1],
-              nonceHash,
-            )}
-          )
         }
       ).should.be.rejectedWith(EVMThrow);
     });
@@ -422,33 +393,6 @@ contract("AttestationLogic", function(
       expiresAt.should.be.bignumber.equal(new BigNumber(latestBlockTime() + oneYear - oneDay));
     });
 
-    it("Fails to revoke an attestation if it has an active stake", async () => {
-      await stake({paymentSig: tokenReleaseSig}).should.be.fulfilled;
-      await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
-        {
-          from: david
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("Allows an attestation to be revoked if stake revoked first", async () => {
-      await stake({paymentSig: tokenReleaseSig}).should.be.fulfilled;
-      await attestationLogic.revokeStake(
-        aliceId,
-        0,
-        {from: david}
-      ).should.be.fulfilled
-      await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
-        {
-          from: david
-        }
-      ).should.be.fulfilled
-    });
-
   });
 
   context("delegating staking", () => {
@@ -460,7 +404,6 @@ contract("AttestationLogic", function(
       paymentNonce: nonceHash,
       paymentSig: "",
       dataHash: combinedDataHash,
-      typeIds: [0],
       requestNonce: nonceHash,
       subjectSig: subjectSig,
       stakeDuration: oneYear - oneDay,
@@ -478,7 +421,6 @@ contract("AttestationLogic", function(
         paymentNonce,
         paymentSig,
         dataHash,
-        typeIds,
         requestNonce,
         subjectSig,
         stakeDuration,
@@ -496,7 +438,6 @@ contract("AttestationLogic", function(
         paymentNonce,
         paymentSig,
         dataHash,
-        typeIds,
         requestNonce,
         subjectSig,
         stakeDuration,
@@ -572,16 +513,6 @@ contract("AttestationLogic", function(
           paymentSig: tokenReleaseSig,
           delegationSig: stakerDelegationSig,
           dataHash: 'invalidHash'
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects a stake if the type hash is wrong", async () => {
-      await stakeFor(
-        {
-          paymentSig: tokenReleaseSig,
-          delegationSig: stakerDelegationSig,
-          typeIds: [1]
         }
       ).should.be.rejectedWith(EVMThrow);
     });
@@ -766,7 +697,7 @@ contract("AttestationLogic", function(
       value: BigNumber.BigNumber;
     }
 
-    it("Emits an event when stake revoked", async () => {
+    it("Emits a token release event when stake revoked", async () => {
       await stake({paymentSig: tokenReleaseSig}).should.be.fulfilled;
       await increaseTime(oneDay)
       const {logs} = ((await attestationLogic.revokeStake(aliceId, 0, {from: david}).should.be.fulfilled
@@ -783,6 +714,32 @@ contract("AttestationLogic", function(
 
       matchingLog.args.stakerId.should.be.bignumber.equal(davidId);
       matchingLog.args.value.should.be.bignumber.equal(new BigNumber("1e18"));
+    });
+
+    interface RevokeEventArgs {
+      subjectId: BigNumber.BigNumber;
+      attestationId: BigNumber.BigNumber;
+      stakerId: BigNumber.BigNumber;
+    }
+
+    it("Emits an event when stake revoked", async () => {
+      await stake({paymentSig: tokenReleaseSig}).should.be.fulfilled;
+      await increaseTime(oneDay)
+      const {logs} = ((await attestationLogic.revokeStake(aliceId, 0, {from: david}).should.be.fulfilled
+      ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
+        RevokeEventArgs
+      >;
+
+      const matchingLog = logs.find(
+        log => log.event === "StakeRevoked"
+      );
+
+      should.exist(matchingLog);
+      if (!matchingLog) return;
+
+      matchingLog.args.subjectId.should.be.bignumber.equal(aliceId);
+      matchingLog.args.attestationId.should.be.bignumber.equal(0);
+      matchingLog.args.stakerId.should.be.bignumber.equal(davidId);
     });
 
     it("Zeroes the value of the stake", async () => {

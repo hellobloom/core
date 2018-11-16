@@ -38,6 +38,9 @@ Bloom’s protocol heavily relies on community voting to make important protocol
 4. Compile contract typings `./bin/compile-typings`
 5. Run tests with `./bin/test`
 
+If you plan to use a truffleLedgerProvider, also do `yarn add @ledgerhq/hw-transport-node-hid@4.2.0`
+It was removed from package.json due to an issue with CI's test machines
+
 ## Making Changes
 
 The tests are written in Typescript. If you make changes to the contracts which impact the ABI, update the typings with:
@@ -267,8 +270,6 @@ const getFormattedTypedDataAddAddress = (
       EIP712Domain: [
           { name: 'name', type: 'string' },
           { name: 'version', type: 'string' },
-          { name: 'chainId', type: 'uint256' },
-          { name: 'verifyingContract', type: 'address' },
       ],
       AddAddress: [
         { name: 'sender', type: 'address'},
@@ -279,10 +280,6 @@ const getFormattedTypedDataAddAddress = (
     domain: {
       name: 'Bloom',
       version: '1',
-      // Rinkeby
-      chainId: 4,
-      // Dummy contract address for testing
-      verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
     },
     message: {
       sender: sender,
@@ -411,21 +408,17 @@ Recover Signer returns the address of the user who signed a message.
 Each signature contains a domain specification so the user understands how their signature will be used. The domain specifies the dApp name, version, chain Id and the contract intended to use the signatures.
 ```
   bytes32 constant EIP712DOMAIN_TYPEHASH = keccak256(
-    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+    "EIP712Domain(string name,string version)"
   );
 
   bytes32 DOMAIN_SEPARATOR = hash(EIP712Domain({
       name: "Bloom",
       version: '1',
-      chainId: 4, // Rinkeby
-      verifyingContract: this
     }));
 
   struct EIP712Domain {
       string  name;
       string  version;
-      uint256 chainId;
-      address verifyingContract;
   }
 
   function hash(EIP712Domain eip712Domain) internal pure returns (bytes32) {
@@ -433,8 +426,6 @@ Each signature contains a domain specification so the user understands how their
       EIP712DOMAIN_TYPEHASH,
       keccak256(bytes(eip712Domain.name)),
       keccak256(bytes(eip712Domain.version)),
-      eip712Domain.chainId,
-      eip712Domain.verifyingContract
     ));
   }
 ```
@@ -489,8 +480,6 @@ export const getFormattedTypedDataAddAddress = (
       EIP712Domain: [
           { name: 'name', type: 'string' },
           { name: 'version', type: 'string' },
-          { name: 'chainId', type: 'uint256' },
-          { name: 'verifyingContract', type: 'address' },
       ],
       AddAddress: [
         { name: 'sender', type: 'address'},
@@ -501,10 +490,6 @@ export const getFormattedTypedDataAddAddress = (
     domain: {
       name: 'Bloom',
       version: '1',
-      // Rinkeby
-      chainId: 4,
-      // Dummy contract address for testing
-      verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
     },
     message: {
       sender: sender,
@@ -645,7 +630,7 @@ During an active stake, *AttestationRepo* is the token holder of the collaterali
 ```
 # Attestation Logic
 ## Event Based Storage For Attestations
-Event based storage is preferable to EVM state storage for variables not critical to the contract logic in order to save a significant amount of gas. Events are just as permanent as contract storage, they just cannot be referenced from within a transaction. Attestation data such as dataHash, typeIds and requesterId are not critical to the logic of the contract. However they are critical to the Bloom Protocol. They are stored by emitting an event at the time of an attestation.
+Event based storage is preferable to EVM state storage for variables not critical to the contract logic in order to save a significant amount of gas. Events are just as permanent as contract storage, they just cannot be referenced from within a transaction. Attestation data such as dataHash and requesterId are not critical to the logic of the contract. However they are critical to the Bloom Protocol. They are stored by emitting an event at the time of an attestation.
 ```
   event TraitAttested(
     uint256 attestationId,
@@ -653,7 +638,6 @@ Event based storage is preferable to EVM state storage for variables not critica
     uint256 attesterId,
     uint256 requesterId,
     bytes32 dataHash,
-    uint256[] typeIds,
     uint256 stakeValue,
     uint256 expiresAt
     );
@@ -671,29 +655,18 @@ Attestations may reference a single type of identity data or a group of data. Th
   type: 'ssn',
   data: '012-34-5678',
   nonce: '328493defaf6-576a-f9b4-169e-f5cc6b75'
+ },
+ {
+  type: 'attestation-types',
+  data: 'phone, ssn',
+  nonce: '328493defaf6-576a-f9b4-169e-f5cc6b75'
  }
 ]
 ```
-Each component of the data is hashed individually, then the resulting array is hashed into the dataHash.
-```
-// Step 1
-componentHashes = [hash1, hash2, ...]
-// Step 2
-dataHash = hash(componentHashes)
-```
-If a 3rd party requests a Bloom user to reveal the data that was submitted as part of an attestation, the user can choose to reveal none, some or all of the data by sending the 3rd party the hashed or plaintext data.
+Each component of the data is used to build a merkle tree. The root hash of the tree is the dataHash
 
-### TypeIds
-Attestations reference an array of typeIds. typeIds refers to the index of an enabled attestation type in the *Attestation Logic*. Bloom adds attestation types to this array as they are enabled in the protocol. The current identity types that can be attested are:
-0 => ‘phone’ => Associate a phone number with a BloomId
-1 => ‘email’ => Associate an email address with a BloomId
-```
-string[] public permittedTypesList;
-```
-The typeIds need to be included in the signatures for the attestation process. When being signed, the typeIds are hashed into a typeHash.
-```
-typeHash = soliditySha3({ type: "uint256[]", value: typeIds }) }
-```
+If a 3rd party requests a Bloom user to reveal the data that was submitted as part of an attestation, the user can choose to reveal none, some or all of the data by sending the 3rd party the merkle proof and selected plaintext data.
+
 ### RequesterId, AttesterId & SubjectId
 The entity requesting the attestation may be different from the user who is the subject of the attestation. Some 3rd party may be interested in a user having their name, phone number and address verified prior to offering them some service.
 
@@ -722,7 +695,6 @@ A simplified view of the attestation process is:
    * @param _paymentNonce Nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
    * @param _requesterSig Signature authorizing payment from requester to attester
    * @param _dataHash Hash of data being attested and nonce
-   * @param _typeIds Array of trait type ids to validate
    * @param _requestNonce Nonce in sig signed by subject so it can't be replayed
    * @param _subjectSig Signed authorization from subject with attestation agreement
    */
@@ -733,7 +705,6 @@ A simplified view of the attestation process is:
     bytes32 _paymentNonce,
     bytes _requesterSig,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     bytes _subjectSig,
   ) public
@@ -747,7 +718,6 @@ A simplified view of the attestation process is:
     attesterAddress,
     requesterAddress,
     combinedDataHash,
-    [0, 1], // type Ids corresponding to phone and email
     requestNonce,
     subjectPrivKey
   )
@@ -766,7 +736,6 @@ A simplified view of the attestation process is:
     paymentNonce,
     tokenReleaseSig,
     combinedDataHash,
-    [0, 1],
     requestNonce,
     signedAttestationAgreement,
     {from: attesterAddress}
@@ -829,7 +798,6 @@ The attester calls contest to redeem payment for a failed attestation without le
     attesterAddress,
     requesterAddress,
     combinedDataHash,
-    [0, 1], // type Ids corresponding to phone and email
     requestNonce,
     subjectPrivKey
   )
@@ -862,7 +830,6 @@ A user can submit a staked attestation in which they lock up BLT for a specified
    * @param _paymentNonce Nonce in PaymentSig to add randomness to payment authorization
    * @param _paymentSig Signature from staker authorizing tokens to be released to collateral contract
    * @param _dataHash Hash of data being attested and nonce
-   * @param _typeIds Array of trait type ids being attested
    * param _requestNonce Nonce in sig signed by subject so it can't be replayed
    * @param _subjectSig Signed authorization from subject with attestation agreement
    * @param _stakeDuration Time until stake will be complete, max 1 year
@@ -873,7 +840,6 @@ A user can submit a staked attestation in which they lock up BLT for a specified
     bytes32 _paymentNonce,
     bytes _paymentSig,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     bytes _subjectSig,
     uint256 _stakeDuration
@@ -888,7 +854,6 @@ A user can submit a staked attestation in which they lock up BLT for a specified
     stakerAddress,
     stakerAddress,
     combinedDataHash,
-    [3], // type Id corresponding to 'creditworthy'
     requestNonce,
     subjectPrivKey
   )
@@ -909,7 +874,6 @@ A user can submit a staked attestation in which they lock up BLT for a specified
     paymentNonce,
     tokenReleaseSig,
     combinedDataHash,
-    [3],
     requestNonce,
     signedAttestationAgreement,
     stakeDuration,
@@ -940,7 +904,6 @@ After a staking period has ended, a user can reclaim their tokens by calling rec
     stakerAddress,
     stakerAddress,
     combinedDataHash,
-    [3], // type Id corresponding to 'creditworthy'
     requestNonce,
     subjectPrivKey
   )
@@ -961,7 +924,6 @@ After a staking period has ended, a user can reclaim their tokens by calling rec
     paymentNonce,
     tokenReleaseSig,
     combinedDataHash,
-    [3],
     requestNonce,
     signedAttestationAgreement,
     stakeDuration,
@@ -996,7 +958,6 @@ During a staking period, a staker can revoke their stake and reclaim all of thei
     stakerAddress,
     stakerAddress,
     combinedDataHash,
-    [3], // type Id corresponding to 'creditworthy'
     requestNonce,
     subjectPrivKey
   )
@@ -1031,20 +992,6 @@ During a staking period, a staker can revoke their stake and reclaim all of thei
 
 ## Attestation Logic Admin Functions
 Bloom has administrative privileges to submit delegated transactions for user and configure the external contracts. 
-### createType
-Bloom maintains a list of permitted data types that can be associated with a user's BloomID.
-#### Interface
-```
-  function createType(string _traitType) public onlyOwner;
-```
-#### Data Structure
-```
-// Public list so others can check which types are supported
-  string[] public permittedTypesList;
-// mapping for checking if a type is valid
-// private because can't have getter for dynamically sized key
-  mapping(string => bool) private permittedTypesMapping;
-```
 
 ### attestFor
 Users can delegate certain protocol actions to the Bloom admin in order to have Bloom pays the transaction costs, as described in *Signing Logic*. An attester can collect all the signatures and data necessary for an attestation, sign them, then send the transaction information to Bloom to submit to the contract.
@@ -1061,7 +1008,6 @@ The nonces are included in the signature to make these signatures single-use. Th
     bytes32 _paymentNonce,
     bytes _requesterSig,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     bytes _subjectSig,
     bytes _delegationSig
@@ -1070,7 +1016,7 @@ The nonces are included in the signature to make these signatures single-use. Th
 #### Signing Logic
 ```
   bytes32 constant ATTEST_FOR_TYPEHASH = keccak256(
-    "AttestFor(address subject,address requester,uint256 reward,bytes32 paymentNonce,bytes32 dataHash,bytes32 typeHash,bytes32 requestNonce)"
+    "AttestFor(address subject,address requester,uint256 reward,bytes32 paymentNonce,bytes32 dataHash,bytes32 requestNonce)"
   );
   struct AttestFor {
       address subject;
@@ -1078,7 +1024,6 @@ The nonces are included in the signature to make these signatures single-use. Th
       uint256 reward;
       bytes32 paymentNonce;
       bytes32 dataHash;
-      bytes32 typeHash;
       bytes32 requestNonce;
   }
 
@@ -1090,7 +1035,6 @@ The nonces are included in the signature to make these signatures single-use. Th
       request.reward,
       request.paymentNonce,
       request.dataHash,
-      request.typeHash,
       request.requestNonce
     ));
   }
@@ -1100,7 +1044,6 @@ The nonces are included in the signature to make these signatures single-use. Th
     uint256 _reward,
     bytes32 _paymentNonce,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce
   ) external view returns (bytes32) {
     return keccak256(
@@ -1113,7 +1056,6 @@ The nonces are included in the signature to make these signatures single-use. Th
           _reward,
           _paymentNonce,
           _dataHash,
-          keccak256(abi.encodePacked(_typeIds)),
           _requestNonce
         ))
       )
@@ -1181,7 +1123,6 @@ The nonces are included in the signature to make these signatures single-use. Th
     bytes32 _paymentNonce,
     bytes _paymentSig,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     bytes _subjectSig,
     uint256 _stakeDuration,
@@ -1191,14 +1132,13 @@ The nonces are included in the signature to make these signatures single-use. Th
 #### Signing Logic
 ```
   bytes32 constant STAKE_FOR_TYPEHASH = keccak256(
-    "StakeFor(address subject,uint256 value,bytes32 paymentNonce,bytes32 dataHash,bytes32 typeHash,bytes32 requestNonce,uint256 stakeDuration)"
+    "StakeFor(address subject,uint256 value,bytes32 paymentNonce,bytes32 dataHash,bytes32 requestNonce,uint256 stakeDuration)"
   );
   struct StakeFor {
       address subject;
       uint256 value;
       bytes32 paymentNonce;
       bytes32 dataHash;
-      bytes32 typeHash;
       bytes32 requestNonce;
       uint256 stakeDuration;
   }
@@ -1210,7 +1150,6 @@ The nonces are included in the signature to make these signatures single-use. Th
       request.value,
       request.paymentNonce,
       request.dataHash,
-      request.typeHash,
       request.requestNonce,
       request.stakeDuration
     ));
@@ -1220,7 +1159,6 @@ The nonces are included in the signature to make these signatures single-use. Th
     uint256 _value,
     bytes32 _paymentNonce,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     bytes32 _requestNonce,
     uint256 _stakeDuration
   ) external view returns (bytes32) {
@@ -1233,7 +1171,6 @@ The nonces are included in the signature to make these signatures single-use. Th
           _value,
           _paymentNonce,
           _dataHash,
-          keccak256(abi.encodePacked(_typeIds)),
           _requestNonce,
           _stakeDuration
         ))
@@ -1301,13 +1238,11 @@ Bloom can configure the external contracts associated with *Attestation Logic* i
     uint256 attesterId,
     uint256 requesterId,
     bytes32 dataHash,
-    uint256[] typeIds,
     uint256 stakeValue,
     uint256 expiresAt
     );
   event AttestationRejected(uint256 indexed attesterId, uint256 indexed requesterId);
   event AttestationRevoked(uint256 indexed subjectId, uint256 attestationId, uint256 indexed revokerId);
-  event TypeCreated(string traitType);
   event StakeSubmitted(uint256 indexed subjectId, uint256 indexed stakerId, uint256 attestationId, uint256 expiresAt);
   event StakedTokensReclaimed(uint256 indexed stakerId, uint256 value);
   event AccountRegistryChanged(address oldRegistry, address newRegistry);

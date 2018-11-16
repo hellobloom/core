@@ -39,7 +39,6 @@ contract AttestationLogicUpgradeMode is Ownable{
     uint256 attesterId,
     uint256 requesterId,
     bytes32 dataHash,
-    uint256[] typeIds,
     uint256 stakeValue,
     uint256 expiresAt
     );
@@ -51,7 +50,6 @@ contract AttestationLogicUpgradeMode is Ownable{
    * @param _attester User who is confirming subject's data
    * @param _requester User who is requesting the attestation be completed
    * @param _dataHash Hash of data and nonce for this attestation
-   * @param _typeIds array of trait type ids to validate
    * @param _timestamp Timestamp when this attestation was completed
    */
   function proxyWriteAttestation(
@@ -59,7 +57,6 @@ contract AttestationLogicUpgradeMode is Ownable{
     address _attester,
     address _requester,
     bytes32 _dataHash,
-    uint256[] _typeIds,
     uint256 _timestamp
   ) public onlyOwner {
     uint256 _requesterId = registry.accountIdForAddress(_requester);
@@ -80,7 +77,6 @@ contract AttestationLogicUpgradeMode is Ownable{
       _attesterId,
       _requesterId,
       _dataHash,
-      _typeIds,
       0,
       0
     );

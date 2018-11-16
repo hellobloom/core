@@ -4,7 +4,7 @@ import * as ethereumjsWallet from "ethereumjs-wallet";
 const ethSigUtil = require("eth-sig-util");
 import { bufferToHex } from "ethereumjs-util";
 const uuid = require('uuidv4')
-import {AttestationTypeID, HashingLogic} from 'attestations-lib'
+import {AttestationTypeID, HashingLogic} from '@bloomprotocol/attestations-lib'
 
 import { EVMThrow } from "./helpers/EVMThrow";
 import { should } from "./test_setup";
@@ -23,7 +23,8 @@ import {
   getFormattedTypedDataAttestationRequest, 
   getFormattedTypedDataReleaseTokens, 
   getFormattedTypedDataAttestFor, 
-  getFormattedTypedDataContestFor 
+  getFormattedTypedDataContestFor, 
+  getFormattedTypedDataRevokeAttestationFor
 } from "./helpers/signingLogicLegacy";
 import { generateSigNonce } from "../src/signData";
 
@@ -146,8 +147,6 @@ contract("AttestationLogic", function(
     await attestationLogic.setAdmin(mockAdmin, {from: mockOwner})
 
     await Promise.all([
-      attestationLogic.createType("phone", {from: mockAdmin}),
-      attestationLogic.createType("email", {from: mockAdmin}),
       // token.gift(alice),
       token.gift(david, new BigNumber("1e18")),
       token.gift(david, new BigNumber("1e18")),
@@ -180,7 +179,6 @@ contract("AttestationLogic", function(
       bob,
       david,
       combinedDataHash,
-      [0, 1],
       nonce,
     )}
   );
@@ -202,7 +200,6 @@ contract("AttestationLogic", function(
       bob,
       david,
       combinedDataHash,
-      [0, 1],
       nonce,
     )}
   );
@@ -215,7 +212,6 @@ contract("AttestationLogic", function(
       new BigNumber(web3.toWei(1, "ether")).toString(10),
       nonce,
       combinedDataHash,
-      [0, 1],
       nonce,
     )}
   );
@@ -240,7 +236,6 @@ contract("AttestationLogic", function(
       paymentNonce: nonce,
       requesterSig: tokenReleaseSig,
       dataHash: combinedDataHash,
-      typeIds: [0, 1],
       requestNonce: nonce,
       subjectSig: subjectSig,
       from: bob
@@ -257,7 +252,6 @@ contract("AttestationLogic", function(
         paymentNonce,
         requesterSig,
         dataHash,
-        typeIds,
         requestNonce,
         subjectSig,
         from
@@ -273,7 +267,6 @@ contract("AttestationLogic", function(
         paymentNonce,
         requesterSig,
         dataHash,
-        typeIds,
         requestNonce,
         subjectSig,
         {
@@ -305,10 +298,6 @@ contract("AttestationLogic", function(
       await attest({from: alice}).should.be.rejectedWith(EVMThrow);
     });
 
-    it("fails if invalid type", async () => {
-      await attest({typeIds: [1, 2]}).should.be.rejectedWith(EVMThrow);
-    });
-
     it("fails if no account for subject", async () => {
       const unrelatedWallet = ethereumjsWallet.generate()
       await attest({
@@ -320,7 +309,6 @@ contract("AttestationLogic", function(
               attestDefaults.attester,
               attestDefaults.requester,
               attestDefaults.dataHash,
-              attestDefaults.typeIds,
               attestDefaults.requestNonce,
           )}
         )
@@ -334,7 +322,6 @@ contract("AttestationLogic", function(
       attesterId: BigNumber.BigNumber;
       requesterId: BigNumber.BigNumber;
       dataHash: string;
-      typeIds: BigNumber.BigNumber[];
       stakeValue: BigNumber.BigNumber;
       expiresAt: BigNumber.BigNumber;
     }
@@ -357,8 +344,6 @@ contract("AttestationLogic", function(
       matchingLog.args.attesterId.should.be.bignumber.equal(bobId);
       matchingLog.args.requesterId.should.be.bignumber.equal(davidId);
       matchingLog.args.dataHash.should.be.equal(attestDefaults.dataHash);
-      new BigNumber(matchingLog.args.typeIds[0]).toNumber().should.be.equal(attestDefaults.typeIds[0])
-      new BigNumber(matchingLog.args.typeIds[1]).toNumber().should.be.equal(attestDefaults.typeIds[1])
       matchingLog.args.stakeValue.should.be.bignumber.equal(0);
       matchingLog.args.expiresAt.should.be.bignumber.equal(0);
     });
@@ -385,75 +370,10 @@ contract("AttestationLogic", function(
               bob,
               david,
               combinedDataHash,
-              [0, 1],
               differentNonce,
             )}
         )
       }).should.be.fulfilled;
-    });
-
-    it("accepts a valid attestation for 9 traits", async () => {
-      let tempTypes = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-      for (let i in tempTypes) {
-        await attestationLogic.createType(tempTypes[i], {from: mockAdmin})
-      }
-      await attest({
-          paymentNonce: differentNonce,
-          requesterSig: ethSigUtil.signTypedDataLegacy(
-            davidPrivkey,
-            {data: getFormattedTypedDataReleaseTokens(
-              david,
-              bob,
-              new BigNumber(web3.toWei(1, "ether")).toString(10),
-              differentNonce,
-            )}
-          ),
-          typeIds: [0, 1, 2, 3, 5, 6, 7, 8, 9],
-          requestNonce: differentNonce,
-          subjectSig: ethSigUtil.signTypedDataLegacy(
-              alicePrivkey,
-              {data: getFormattedTypedDataAttestationRequest(
-                alice,
-                bob,
-                david,
-                combinedDataHash,
-                [0, 1, 2, 3, 5, 6, 7, 8, 9],
-                differentNonce,
-              )}
-          )
-      }).should.be.fulfilled;
-    });
-
-    it("rejects a valid second attestation for 9 traits if one not valid", async () => {
-      let tempTypes = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
-      for (let i in tempTypes) {
-        await attestationLogic.createType(tempTypes[i], {from: mockAdmin})
-      }
-      await attest({
-          paymentNonce: differentNonce,
-          requesterSig: ethSigUtil.signTypedDataLegacy(
-            davidPrivkey,
-            {data: getFormattedTypedDataReleaseTokens(
-              david,
-              bob,
-              new BigNumber(web3.toWei(1, "ether")).toString(10),
-              differentNonce,
-            )}
-          ),
-          typeIds: [0, 1, 2, 3, 5, 6, 7, 8, 9],
-          requestNonce: differentNonce,
-          subjectSig: ethSigUtil.signTypedDataLegacy(
-              alicePrivkey,
-              {data: getFormattedTypedDataAttestationRequest(
-                alice,
-                bob,
-                david,
-                combinedDataHash,
-                [0, 1, 2, 3, 5, 6, 7, 8, 9],
-                differentNonce,
-              )}
-          )
-      }).should.be.rejectedWith(EVMThrow);
     });
 
 
@@ -548,7 +468,6 @@ contract("AttestationLogic", function(
                 bob,
                 david,
                 attestDefaults.dataHash,
-                attestDefaults.typeIds,
                 differentNonce,
               )}
           )
@@ -591,10 +510,6 @@ contract("AttestationLogic", function(
 
     it("rejects attestations with for an invalid data hash", async () => {
       await attest({ dataHash: emailDataHash}).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects attestations with for an invalid type ids", async () => {
-      await attest({ typeIds: [1]}).should.be.rejectedWith(EVMThrow);
     });
 
     it("rejects attestations with for an invalid payment nonce", async () => {
@@ -823,7 +738,6 @@ contract("AttestationLogic", function(
       paymentNonce: nonce,
       requesterSig: tokenReleaseSig,
       dataHash: combinedDataHash,
-      typeIds: [0, 1],
       requestNonce: nonce,
       subjectSig: subjectSig,
       delegationSig: attesterDelegationSig,
@@ -841,7 +755,6 @@ contract("AttestationLogic", function(
         paymentNonce,
         requesterSig,
         dataHash,
-        typeIds,
         requestNonce,
         subjectSig,
         delegationSig,
@@ -859,7 +772,6 @@ contract("AttestationLogic", function(
         paymentNonce,
         requesterSig,
         dataHash,
-        typeIds,
         requestNonce,
         subjectSig,
         delegationSig,
@@ -929,14 +841,6 @@ contract("AttestationLogic", function(
       ).should.be.rejectedWith(EVMThrow);
     });
 
-    it("rejects an attestation if the type hash is wrong", async () => {
-      await attestFor(
-        {
-          typeIds: [1]
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
     it("rejects an attestation if the request nonce is wrong", async () => {
       await attestFor(
         {
@@ -949,130 +853,35 @@ contract("AttestationLogic", function(
 
   context("revoking attestations", () => {
 
-    const attestDefaults = {
-      subject: alice,
-      attester: bob,
-      requester: david,
-      reward: new BigNumber(web3.toWei(1, "ether")),
-      paymentNonce: nonce,
-      requesterSig: tokenReleaseSig,
-      dataHash: combinedDataHash,
-      typeIds: [0, 1],
-      requestNonce: nonce,
-      subjectSig: subjectSig,
-      from: bob
-    };
-
-    const attest = async (
-      props: Partial<typeof attestDefaults> = attestDefaults
-    ) => {
-      let {
-        subject,
-        attester,
-        requester,
-        reward,
-        paymentNonce,
-        requesterSig,
-        dataHash,
-        typeIds,
-        requestNonce,
-        subjectSig,
-        from
-      } = {
-        ...attestDefaults,
-        ...props
-      };
-
-      return attestationLogic.attest(
-        subject,
-        requester,
-        reward,
-        paymentNonce,
-        requesterSig,
-        dataHash,
-        typeIds,
-        requestNonce,
-        subjectSig,
-        {
-          from
-        }
-      );
-    };
-
-    it("Allows admin to revoke an attestation", async () => {
-      await attest().should.be.fulfilled;
-      await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
-        {
-          from: mockAdmin
-        }
-      ).should.be.fulfilled;
-    });
-
-    it("Allows subject to revoke an attestation", async () => {
-      await attest().should.be.fulfilled;
-      await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
-        {
-          from: alice
-        }
-      ).should.be.fulfilled;
-    });
+    const revokeLink = '0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
 
     it("Allows attester to revoke an attestation", async () => {
-      await attest().should.be.fulfilled;
       await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
+        revokeLink,
         {
           from: bob
         }
       ).should.be.fulfilled;
     });
 
-    it("Does not allow anyone else to revoke an attestation", async () => {
-      await attest().should.be.fulfilled;
+    it("Does not allow someone without a BloomID to submit a revocation", async () => {
       await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
+        revokeLink,
         {
-          from: david
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("Does not allow an attestation to be revoked twice", async () => {
-      await attest().should.be.fulfilled;
-      await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
-        {
-          from: mockAdmin
-        }
-      ).should.be.fulfilled;
-      await attestationLogic.revokeAttestation(
-        aliceId,
-        0,
-        {
-          from: mockAdmin
+          from: carl
         }
       ).should.be.rejectedWith(EVMThrow);
     });
 
     interface RevokeEventArgs {
-      subjectId: BigNumber.BigNumber;
-      attestationId: BigNumber.BigNumber;
-      revokerId: BigNumber.BigNumber;
+      link: string;
+      attesterId: BigNumber.BigNumber;
     }
 
     it("emits an event when attestation is revoked", async () => {
-      await attest().should.be.fulfilled;
       const { logs } = ((
         await attestationLogic.revokeAttestation(
-          aliceId,
-          0,
+          revokeLink,
           {
             from: mockAdmin
           })
@@ -1087,9 +896,91 @@ contract("AttestationLogic", function(
       should.exist(matchingLog);
       if (!matchingLog) return;
 
-      matchingLog.args.subjectId.should.be.bignumber.equal(aliceId);
-      matchingLog.args.revokerId.should.be.bignumber.equal(mockAdminId);
-      matchingLog.args.attestationId.should.be.bignumber.equal(0);
+      matchingLog.args.link.should.be.equal(revokeLink);
+      matchingLog.args.attesterId.should.be.bignumber.equal(mockAdminId);
+    });
+
+  });
+
+  context("delegated revoking attestations", () => {
+
+    const revokeLink = '0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
+    const differentRevokeLink = '0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
+    const revokeAttestationDelegationSig = ethSigUtil.signTypedDataLegacy(
+      bobPrivkey,
+      {data: getFormattedTypedDataRevokeAttestationFor(
+        revokeLink,
+      )}
+    )
+
+    const recoveredETHAddress: string = ethSigUtil.recoverTypedSignatureLegacy({
+      data: getFormattedTypedDataRevokeAttestationFor(
+        revokeLink,
+      ),
+      sig: revokeAttestationDelegationSig,
+    })
+
+
+    it("Allows admin to revoke an attestation on behalf of an attester", async () => {
+      await attestationLogic.revokeAttestationFor(
+        revokeLink,
+        bob,
+        revokeAttestationDelegationSig,
+        {
+          from: mockAdmin
+        }
+      ).should.be.fulfilled;
+    });
+
+    it("does not allow anyone else to revoke an attestation on behalf of an attester", async () => {
+      await attestationLogic.revokeAttestationFor(
+        revokeLink,
+        bob,
+        revokeAttestationDelegationSig,
+        {
+          from: alice
+        }
+      ).should.be.rejectedWith(EVMThrow);
+    });
+
+    it("Fails is link is wrong", async () => {
+      await attestationLogic.revokeAttestationFor(
+        differentRevokeLink,
+        bob,
+        revokeAttestationDelegationSig,
+        {
+          from: mockAdmin
+        }
+      ).should.be.rejectedWith(EVMThrow);
+    });
+
+    interface RevokeEventArgs {
+      link: string;
+      attesterId: BigNumber.BigNumber;
+    }
+
+    it("emits an event when attestation is revoked", async () => {
+      const { logs } = ((
+        await attestationLogic.revokeAttestationFor(
+          revokeLink,
+          bob,
+          revokeAttestationDelegationSig,
+          {
+            from: mockAdmin
+          })
+      ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
+        RevokeEventArgs
+      >;
+
+      const matchingLog = logs.find(
+        log => log.event === "AttestationRevoked"
+      );
+
+      should.exist(matchingLog);
+      if (!matchingLog) return;
+
+      matchingLog.args.link.should.be.equal(revokeLink);
+      matchingLog.args.attesterId.should.be.bignumber.equal(bobId);
     });
 
   });
