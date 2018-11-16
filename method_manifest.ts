@@ -22,9 +22,6 @@ export enum EContractNames {
   "AirdropProxy" = "AirdropProxy",
   "ApproveAndCallFallBack" = "ApproveAndCallFallBack",
   "AttestationLogic" = "AttestationLogic",
-  "AttestationLogicUpgradeMode" = "AttestationLogicUpgradeMode",
-  "AttestationRepo" = "AttestationRepo",
-  "AttestationRepoInterface" = "AttestationRepoInterface",
   "BasicToken" = "BasicToken",
   "BLT" = "BLT",
   "Controlled" = "Controlled",
@@ -413,10 +410,6 @@ export const AttestationLogic: IContractMethodManifest = {
       args_arr: [],
       args: {}
     },
-    registry: {
-      args_arr: [],
-      args: {}
-    },
     initializer: {
       args_arr: [],
       args: {}
@@ -600,18 +593,18 @@ export const AttestationLogic: IContractMethodManifest = {
       }
     },
     migrateAttestation: {
-      args_arr: ["_requesterId", "_attesterId", "_subjectId", "_dataHash"],
+      args_arr: ["_requester", "_attester", "_subject", "_dataHash"],
       args: {
-        _requesterId: {
-          type: "uint256",
+        _requester: {
+          type: "address",
           index: 0
         },
-        _attesterId: {
-          type: "uint256",
+        _attester: {
+          type: "address",
           index: 1
         },
-        _subjectId: {
-          type: "uint256",
+        _subject: {
+          type: "address",
           index: 2
         },
         _dataHash: {
@@ -652,303 +645,6 @@ export const AttestationLogic: IContractMethodManifest = {
         _newTokenEscrowMarketplace: {
           type: "address",
           index: 0
-        }
-      }
-    }
-  }
-}
-
-export const AttestationLogicUpgradeMode: IContractMethodManifest = {
-  methods: {
-    attestationRepo: {
-      args_arr: [],
-      args: {}
-    },
-    registry: {
-      args_arr: [],
-      args: {}
-    },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-
-    proxyWriteAttestation: {
-      args_arr: ["_subject", "_attester", "_requester", "_dataHash", "_timestamp"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _attester: {
-          type: "address",
-          index: 1
-        },
-        _requester: {
-          type: "address",
-          index: 2
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 3
-        },
-        _timestamp: {
-          type: "uint256",
-          index: 4
-        }
-      }
-    }
-  }
-}
-
-export const AttestationRepo: IContractMethodManifest = {
-  methods: {
-    attestationLogic: {
-      args_arr: [],
-      args: {}
-    },
-    unpause: {
-      args_arr: [],
-      args: {}
-    },
-    paused: {
-      args_arr: [],
-      args: {}
-    },
-    pause: {
-      args_arr: [],
-      args: {}
-    },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    attestations: {
-      args_arr: ["anonymous_0", "anonymous_1"],
-      args: {
-        anonymous_0: {
-          type: "uint256",
-          index: 0
-        },
-        anonymous_1: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    token: {
-      args_arr: [],
-      args: {}
-    },
-
-    setAttestationLogic: {
-      args_arr: ["_newAttestationLogic"],
-      args: {
-        _newAttestationLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    writeAttestation: {
-      args_arr: ["_subjectId", "_attesterId", "_timestamp", "_stakeValue", "_expiresAt"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attesterId: {
-          type: "uint256",
-          index: 1
-        },
-        _timestamp: {
-          type: "uint256",
-          index: 2
-        },
-        _stakeValue: {
-          type: "uint256",
-          index: 3
-        },
-        _expiresAt: {
-          type: "uint256",
-          index: 4
-        }
-      }
-    },
-    readAttestation: {
-      args_arr: ["_subjectId", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    revokeAttestation: {
-      args_arr: ["_subjectId", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    writeStake: {
-      args_arr: ["_subjectId", "_attestationId", "_stakeValue", "_expiresAt"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        },
-        _stakeValue: {
-          type: "uint256",
-          index: 2
-        },
-        _expiresAt: {
-          type: "uint256",
-          index: 3
-        }
-      }
-    },
-    transferTokensToStaker: {
-      args_arr: ["_staker", "_value"],
-      args: {
-        _staker: {
-          type: "address",
-          index: 0
-        },
-        _value: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    }
-  }
-}
-
-export const AttestationRepoInterface: IContractMethodManifest = {
-  methods: {
-    writeAttestation: {
-      args_arr: ["_subjectId", "_attesterId", "_timestamp", "_stakeValue", "_expiresAt"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attesterId: {
-          type: "uint256",
-          index: 1
-        },
-        _timestamp: {
-          type: "uint256",
-          index: 2
-        },
-        _stakeValue: {
-          type: "uint256",
-          index: 3
-        },
-        _expiresAt: {
-          type: "uint256",
-          index: 4
-        }
-      }
-    },
-    setAttestationLogic: {
-      args_arr: ["_newAttestationLogic"],
-      args: {
-        _newAttestationLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    readAttestation: {
-      args_arr: ["_subjectId", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    revokeAttestation: {
-      args_arr: ["_subjectId", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    writeStake: {
-      args_arr: ["_subjectId", "_attestationId", "_stakeValue", "_expiresAt"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        },
-        _stakeValue: {
-          type: "uint256",
-          index: 2
-        },
-        _expiresAt: {
-          type: "uint256",
-          index: 3
-        }
-      }
-    },
-    transferTokensToStaker: {
-      args_arr: ["_staker", "_value"],
-      args: {
-        _staker: {
-          type: "address",
-          index: 0
-        },
-        _value: {
-          type: "uint256",
-          index: 1
         }
       }
     }
@@ -3355,11 +3051,16 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
       args_arr: [],
       args: {}
     },
-    paused: {
-      args_arr: [],
-      args: {}
+    tokenEscrow: {
+      args_arr: ["anonymous_0"],
+      args: {
+        anonymous_0: {
+          type: "address",
+          index: 0
+        }
+      }
     },
-    registry: {
+    paused: {
       args_arr: [],
       args: {}
     },
@@ -3380,15 +3081,6 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
       args: {
         newOwner: {
           type: "address",
-          index: 0
-        }
-      }
-    },
-    tokenEscrow: {
-      args_arr: ["anonymous_0"],
-      args: {
-        anonymous_0: {
-          type: "uint256",
           index: 0
         }
       }
@@ -3429,15 +3121,6 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
       args_arr: ["_newAttestationLogic"],
       args: {
         _newAttestationLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setAccountRegistry: {
-      args_arr: ["_newRegistry"],
-      args: {
-        _newRegistry: {
           type: "address",
           index: 0
         }

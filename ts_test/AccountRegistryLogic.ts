@@ -118,7 +118,7 @@ contract("AccountRegistryLogic", function ([owner, alice, bob, unclaimed, unclai
     beforeEach(async () => {
     });
     it("Allows a user to add an unclaimed address to their account", async () => {
-      await registryLogic.addAddressToAccount(unclaimed, newAddressSig, senderSig, nonceHash, { from: alice }).should.be.fulfilled
+      await registryLogic.linkAddresses(unclaimed, newAddressSig, senderSig, nonceHash, { from: alice }).should.be.fulfilled
     })
     it("Adds new address to same accountId", async () => {
       await registryLogic.addAddressToAccount(unclaimed, newAddressSig, senderSig, nonceHash, { from: alice }).should.be.fulfilled
