@@ -782,6 +782,27 @@ export const AttestationLogic: IContractMethodManifest = {
         }
       }
     },
+    migrateAttestation: {
+      args_arr: ["_requesterId", "_attesterId", "_subjectId", "_dataHash"],
+      args: {
+        _requesterId: {
+          type: "uint256",
+          index: 0
+        },
+        _attesterId: {
+          type: "uint256",
+          index: 1
+        },
+        _subjectId: {
+          type: "uint256",
+          index: 2
+        },
+        _dataHash: {
+          type: "bytes32",
+          index: 3
+        }
+      }
+    },
     revokeAttestation: {
       args_arr: ["_link"],
       args: {

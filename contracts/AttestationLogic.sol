@@ -31,7 +31,6 @@ contract AttestationLogic is Initializable{
     registry = _registry;
     signingLogic = _signingLogic;
     tokenEscrowMarketplace = _tokenEscrowMarketplace;
-
   }
 
   event TraitAttested(
@@ -326,6 +325,28 @@ contract AttestationLogic is Initializable{
       _dataHash
     );
 
+  }
+
+  /**
+   * @notice Submit attestation completed prior to deployment of this contract
+   * @dev Gives initializer privileges to write migrate attestations during the initialization period without signatures
+   * @param _requesterId user requesting this attestation be completed 
+   * @param _attesterId user completing the attestation
+   * @param _subjectId user this attestation is about
+   * @param _dataHash hash of data being attested
+   */
+  function migrateAttestation(
+    uint256 _requesterId,
+    uint256 _attesterId,
+    uint256 _subjectId,
+    bytes32 _dataHash
+  ) public onlyDuringInitialization {
+    emit TraitAttested(
+      _subjectId,
+      _attesterId,
+      _requesterId,
+      _dataHash
+    );
   }
 
   /**
