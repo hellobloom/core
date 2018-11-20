@@ -103,6 +103,36 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
     from: string
   }
 
+  let attest = async (props: Partial<typeof attestDefaults> = attestDefaults) => {
+    let { subject, attester, requester, reward, paymentNonce, requesterSig, dataHash, requestNonce, subjectSig, from } = {
+      ...attestDefaults,
+      ...props
+    }
+
+    return attestationLogic.attest(subject, requester, reward, paymentNonce, requesterSig, dataHash, requestNonce, subjectSig, {
+      from
+    })
+  }
+  let contestDefaults: {
+    attester: string
+    requester: string
+    reward: BigNumber.BigNumber
+    paymentNonce: string
+    requesterSig: string
+    from: string
+  }
+
+  let contest = async (props: Partial<typeof contestDefaults> = contestDefaults) => {
+    let { attester, requester, reward, paymentNonce, requesterSig, from } = {
+      ...contestDefaults,
+      ...props
+    }
+
+    return attestationLogic.contest(requester, reward, paymentNonce, requesterSig, {
+      from
+    })
+  }
+
   // Send more test eth to alice so it doesn't run out during test
   web3.eth.sendTransaction({ to: alice, from: bob, value: web3.toWei(50, "ether") })
 
@@ -180,11 +210,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       subjectSig: subjectSig,
       from: bob
     }
-  })
-
-  // await increaseTime(60 * 60 * 24 * 364);
-  context("submitting attestations", () => {
-    const attest = async (props: Partial<typeof attestDefaults> = attestDefaults) => {
+    attest = async (props: Partial<typeof attestDefaults> = attestDefaults) => {
       let { subject, attester, requester, reward, paymentNonce, requesterSig, dataHash, requestNonce, subjectSig, from } = {
         ...attestDefaults,
         ...props
@@ -194,31 +220,38 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
         from
       })
     }
+    contestDefaults = {
+      attester: bob,
+      requester: david,
+      reward: new BigNumber(web3.toWei(1, "ether")),
+      paymentNonce: nonce,
+      requesterSig: tokenReleaseSig,
+      from: bob
+    }
 
-    it.only("accepts a valid attestation", async () => {
-      const recoveredETHAddress: string = ethSigUtil.recoverTypedSignature({
-        data: getFormattedTypedDataReleaseTokens(
-          tokenEscrowMarketplaceAddress,
-          1,
-          david,
-          bob,
-          new BigNumber(web3.toWei(1, "ether")).toString(10),
-          nonce
-        ),
-        sig: attestDefaults.requesterSig
+    contest = async (props: Partial<typeof contestDefaults> = contestDefaults) => {
+      let { attester, requester, reward, paymentNonce, requesterSig, from } = {
+        ...contestDefaults,
+        ...props
+      }
+
+      return attestationLogic.contest(requester, reward, paymentNonce, requesterSig, {
+        from
       })
-      console.log(`david ${david}`)
-      console.log(`recovered ${recoveredETHAddress}`)
-      await attestationLogic.attest(
-        attestDefaults.subject,
-        attestDefaults.requester,
-        attestDefaults.reward,
-        attestDefaults.paymentNonce,
-        attestDefaults.requesterSig,
-        attestDefaults.dataHash,
-        attestDefaults.requestNonce,
-        attestDefaults.subjectSig
-      ).should.be.fulfilled
+    }
+  })
+
+  // await increaseTime(60 * 60 * 24 * 364);
+  context("submitting attestations", () => {
+    interface WriteEventArgs {
+      subject: string
+      attester: string
+      requester: string
+      dataHash: string
+    }
+
+    it("accepts a valid attestation", async () => {
+      await attest().should.be.fulfilled
     })
 
     it("accepts a valid attestation with 0 reward", async () => {
@@ -233,23 +266,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
     it("Fails if sent by different attester", async () => {
       await attest({ from: alice }).should.be.rejectedWith(EVMThrow)
     })
-
-    it("fails if no account for subject", async () => {
-      const unrelatedWallet = ethereumjsWallet.generate()
-      await attest({
-        subject: carl,
-        subjectSig: ethSigUtil.signTypedData(unrelatedWallet.getPrivateKey(), {
-          data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, attestDefaults.dataHash, attestDefaults.requestNonce)
-        })
-      }).should.be.rejectedWith(EVMThrow)
-    })
-
-    interface WriteEventArgs {
-      subject: string
-      attester: string
-      requester: string
-      dataHash: string
-    }
 
     it("emits an event when attestation is written", async () => {
       const { logs } = ((await attest()) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<WriteEventArgs>
@@ -378,26 +394,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
   })
 
   context("Rejecting attestation", () => {
-    const contestDefaults = {
-      attester: bob,
-      requester: david,
-      reward: new BigNumber(web3.toWei(1, "ether")),
-      paymentNonce: nonce,
-      requesterSig: tokenReleaseSig,
-      from: bob
-    }
-
-    const contest = async (props: Partial<typeof contestDefaults> = contestDefaults) => {
-      let { attester, requester, reward, paymentNonce, requesterSig, from } = {
-        ...contestDefaults,
-        ...props
-      }
-
-      return attestationLogic.contest(requester, reward, paymentNonce, requesterSig, {
-        from
-      })
-    }
-
     it("accepts a valid contestation", async () => {
       await contest().should.be.fulfilled
     })
@@ -463,17 +459,17 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
   })
 
   context("delegating rejecting attestations", () => {
-    const contestForDefaults = {
-      attester: bob,
-      requester: david,
-      reward: new BigNumber(web3.toWei(1, "ether")),
-      paymentNonce: nonce,
-      requesterSig: tokenReleaseSig,
-      delegationSig: contesterDelegationSig,
-      from: carl
+    let contestForDefaults: {
+      attester: string
+      requester: string
+      reward: BigNumber.BigNumber
+      paymentNonce: string
+      requesterSig: string
+      delegationSig: string
+      from: string
     }
 
-    const contestFor = async (props: Partial<typeof contestForDefaults> = contestForDefaults) => {
+    let contestFor = async (props: Partial<typeof contestForDefaults> = contestForDefaults) => {
       let { attester, requester, reward, paymentNonce, requesterSig, delegationSig, from } = {
         ...contestForDefaults,
         ...props
@@ -483,6 +479,28 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
         from
       })
     }
+    beforeEach(async () => {
+      contestForDefaults = {
+        attester: bob,
+        requester: david,
+        reward: new BigNumber(web3.toWei(1, "ether")),
+        paymentNonce: nonce,
+        requesterSig: tokenReleaseSig,
+        delegationSig: contesterDelegationSig,
+        from: carl
+      }
+
+      contestFor = async (props: Partial<typeof contestForDefaults> = contestForDefaults) => {
+        let { attester, requester, reward, paymentNonce, requesterSig, delegationSig, from } = {
+          ...contestForDefaults,
+          ...props
+        }
+
+        return attestationLogic.contestFor(attester, requester, reward, paymentNonce, requesterSig, delegationSig, {
+          from
+        })
+      }
+    })
 
     it("accepts a valid delegated attestation rejection", async () => {
       await contestFor().should.be.fulfilled
@@ -514,21 +532,21 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
   })
 
   context("delegating attestations", () => {
-    const attestForDefaults = {
-      subject: alice,
-      attester: bob,
-      requester: david,
-      reward: new BigNumber(web3.toWei(1, "ether")),
-      paymentNonce: nonce,
-      requesterSig: tokenReleaseSig,
-      dataHash: combinedDataHash,
-      requestNonce: nonce,
-      subjectSig: subjectSig,
-      delegationSig: attesterDelegationSig,
-      from: carl
+    let attestForDefaults: {
+      subject: string
+      attester: string
+      requester: string
+      reward: BigNumber.BigNumber
+      paymentNonce: string
+      requesterSig: string
+      dataHash: string
+      requestNonce: string
+      subjectSig: string
+      delegationSig: string
+      from: string
     }
 
-    const attestFor = async (props: Partial<typeof attestForDefaults> = attestForDefaults) => {
+    let attestFor = async (props: Partial<typeof attestForDefaults> = attestForDefaults) => {
       let { subject, attester, requester, reward, paymentNonce, requesterSig, dataHash, requestNonce, subjectSig, delegationSig, from } = {
         ...attestForDefaults,
         ...props
@@ -550,6 +568,45 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
         }
       )
     }
+
+    beforeEach(async () => {
+      attestForDefaults = {
+        subject: alice,
+        attester: bob,
+        requester: david,
+        reward: new BigNumber(web3.toWei(1, "ether")),
+        paymentNonce: nonce,
+        requesterSig: tokenReleaseSig,
+        dataHash: combinedDataHash,
+        requestNonce: nonce,
+        subjectSig: subjectSig,
+        delegationSig: attesterDelegationSig,
+        from: carl
+      }
+
+      attestFor = async (props: Partial<typeof attestForDefaults> = attestForDefaults) => {
+        let { subject, attester, requester, reward, paymentNonce, requesterSig, dataHash, requestNonce, subjectSig, delegationSig, from } = {
+          ...attestForDefaults,
+          ...props
+        }
+
+        return attestationLogic.attestFor(
+          subject,
+          attester,
+          requester,
+          reward,
+          paymentNonce,
+          requesterSig,
+          dataHash,
+          requestNonce,
+          subjectSig,
+          delegationSig,
+          {
+            from
+          }
+        )
+      }
+    })
 
     it("accepts a valid delegated attestation", async () => {
       await attestFor().should.be.fulfilled
@@ -609,7 +666,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
 
     interface RevokeEventArgs {
       link: string
-      attesterId: BigNumber.BigNumber
+      attester: string
     }
 
     it("emits an event when attestation is revoked", async () => {
@@ -623,29 +680,28 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       if (!matchingLog) return
 
       matchingLog.args.link.should.be.equal(revokeLink)
-      matchingLog.args.attesterId.should.be.bignumber.equal(bob)
+      matchingLog.args.attester.should.be.equal(bob)
     })
   })
 
   context("delegated revoking attestations", () => {
     const revokeLink = "0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
     const differentRevokeLink = "0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
-    const revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
-      data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
-    })
-
-    const recoveredETHAddress: string = ethSigUtil.recoverTypedSignature({
-      data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink),
-      sig: revokeAttestationDelegationSig
-    })
+    let revokeAttestationDelegationSig: string
 
     it("Allows anyone to revoke an attestation on behalf of an attester with a valid sig", async () => {
+      revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
+      })
       await attestationLogic.revokeAttestationFor(revokeLink, bob, revokeAttestationDelegationSig, {
         from: carl
       }).should.be.fulfilled
     })
 
     it("Fails is link is wrong", async () => {
+      revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
+      })
       await attestationLogic
         .revokeAttestationFor(differentRevokeLink, bob, revokeAttestationDelegationSig, {
           from: carl
@@ -655,10 +711,13 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
 
     interface RevokeEventArgs {
       link: string
-      attesterId: BigNumber.BigNumber
+      attester: string
     }
 
-    it("emits an event when attestation is revoked", async () => {
+    it("emits an event when attestation is revoked via delegated sig", async () => {
+      revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
+      })
       const { logs } = ((await attestationLogic.revokeAttestationFor(revokeLink, bob, revokeAttestationDelegationSig, {
         from: carl
       })) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<RevokeEventArgs>
@@ -671,7 +730,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       console.log(matchingLog.args)
 
       matchingLog.args.link.should.be.equal(revokeLink)
-      matchingLog.args.attesterId.should.be.bignumber.equal(bob)
+      matchingLog.args.attester.should.be.equal(bob)
     })
   })
 
