@@ -14,34 +14,32 @@ contract("VotingCenter", function([alice, bob, carl]) {
   let pollAddress: string;
   let startTime: number;
   let endTime: number;
+  let pollName = 'Bloom Poll'
 
   beforeEach(async () => {
-    signingLogic = await SigningLogic.new();
     votingCenter = await VotingCenter.new();
     ipfsHash = ipfs.toHex("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe");
     startTime = latestBlockTime() + 10;
     endTime = startTime + 100;
 
     pollAddress = await votingCenter.createPoll.call(
+      pollName,
+      1,
       ipfsHash,
       10,
       startTime,
-      endTime,
-      registry.address,
-      signingLogic.address,
-      bob
+      endTime
     );
   });
 
   it("lets anyone create a poll", async () => {
     await votingCenter.createPoll(
+      pollName,
+      1,
       ipfsHash,
       10,
       startTime,
-      endTime,
-      registry.address,
-      signingLogic.address,
-      bob
+      endTime
     );
 
     const poll = Poll.at(pollAddress);
@@ -52,13 +50,12 @@ contract("VotingCenter", function([alice, bob, carl]) {
 
   it("emits an event when a poll is created", async () => {
     const { logs } = await votingCenter.createPoll(
+      pollName,
+      1,
       ipfsHash,
       10,
       startTime,
-      endTime,
-      registry.address,
-      signingLogic.address,
-      bob
+      endTime
     );
 
     const matchingLog = logs.find(
@@ -73,13 +70,12 @@ contract("VotingCenter", function([alice, bob, carl]) {
 
   it("sets the author on the Poll", async () => {
     await votingCenter.createPoll(
+      pollName,
+      1,
       ipfsHash,
       10,
       startTime,
-      endTime,
-      registry.address,
-      signingLogic.address,
-      bob
+      endTime
     );
 
     const poll = Poll.at(pollAddress);

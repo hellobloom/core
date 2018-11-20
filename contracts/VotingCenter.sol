@@ -1,7 +1,6 @@
 pragma solidity 0.4.24;
 
 import "./Poll.sol";
-import "./SigningLogic.sol";
 
 /*
  * @title Bloom voting center

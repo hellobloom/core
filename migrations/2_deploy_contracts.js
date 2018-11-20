@@ -6,6 +6,7 @@ var AttestationLogic = artifacts.require("AttestationLogic")
 var TokenEscrowMarketplace = artifacts.require("TokenEscrowMarketplace")
 var AirdropProxy = artifacts.require("AirdropProxy")
 var Poll = artifacts.require("Poll")
+var VotingCenter = artifacts.require("VotingCenter")
 
 const adminAddress = '0x627306090abaB3A6e1400e9345bC60c78a8BEf57'
 
@@ -17,6 +18,7 @@ module.exports = function(deployer) {
     .then(() => deployer.link(ECRecovery, AccountRegistryLogic))
     .then(() => deployer.link(ECRecovery, AttestationLogic))
     .then(() => deployer.link(ECRecovery, TokenEscrowMarketplace))
+    .then(() => deployer.link(ECRecovery, VotingCenter))
     .then(() => deployer.deploy(BLT))
     .then(() => BLT.deployed())
     .then(blt => (token = blt))
