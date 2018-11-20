@@ -20,7 +20,7 @@ import { getFormattedTypedDataAddAddress, getFormattedTypedDataRemoveAddress } f
 const SigningLogic = artifacts.require("SigningLogic")
 const AccountRegistryLogic = artifacts.require("AccountRegistryLogic")
 
-contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaimedB]) {
+contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaimedB, initializer]) {
   let registryLogic: AccountRegistryLogicInstance
   let registryLogicAddress: string
 
@@ -67,7 +67,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
   let differentNonceHash: string
 
   beforeEach(async () => {
-    registryLogic = await AccountRegistryLogic.new();
+    registryLogic = await AccountRegistryLogic.new(initializer);
     registryLogicAddress = registryLogic.address
     const nonce = uuid();
     const differentNonce = uuid();
@@ -312,6 +312,46 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         differentNonceHash,
         { from: alice }
       ).should.be.fulfilled
+    })
+  })
+  describe("Migrating links during initialization", async () => {
+    it("allows the initializer to write links without validation during initialization", async () => {
+      await registryLogic.migrateLink(alice, unclaimed,{ from: initializer }).should.be.fulfilled
+    })
+    it("does not allow anyone else to write links during initialization", async () => {
+      await registryLogic.migrateLink(alice, unclaimed,{ from: bob }).should.be.rejectedWith(EVMThrow)
+    })
+    it("does not allow claimed account to be linked during migration", async () => {
+      await registryLogic.migrateLink(alice, unclaimed,{ from: initializer }).should.be.fulfilled
+      await registryLogic.migrateLink(bob, unclaimed,{ from: initializer }).should.be.rejectedWith(EVMThrow)
+    })
+    it("does not allow initializer to migrate links after initialization", async () => {
+      await registryLogic.endInitialization({ from: initializer }).should.be.fulfilled
+      await registryLogic.migrateLink(alice, unclaimed,{ from: initializer }).should.be.rejectedWith(EVMThrow)
+    })
+    it("does not allow anyone else to write links after initialization", async () => {
+      await registryLogic.endInitialization({ from: initializer }).should.be.fulfilled
+      await registryLogic.migrateLink(alice, unclaimed,{ from: bob }).should.be.rejectedWith(EVMThrow)
+    })
+    interface AdditionEventArgs {
+      currentAddress: string
+      newAddress: string
+      linkId: BigNumber.BigNumber
+    }
+
+    it("emits an event when link is migrated", async () => {
+      const { logs } = ((await registryLogic.migrateLink(alice, unclaimed, {
+        from: initializer
+      })) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<AdditionEventArgs>
+
+      const matchingLog = logs.find(log => log.event === "AddressLinked")
+
+      should.exist(matchingLog)
+      if (!matchingLog) return
+
+      matchingLog.args.currentAddress.should.be.equal(alice)
+      matchingLog.args.newAddress.should.be.equal(unclaimed)
+      matchingLog.args.linkId.should.bignumber.equal(1)
     })
   })
 

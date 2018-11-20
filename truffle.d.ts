@@ -73,11 +73,29 @@ interface Artifacts {
 }
 
 export interface AccountRegistryLogicInstance extends ContractInstance {
+  initializing: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(options?: TransactionOptions): Promise<boolean>
+    sendTransaction(options?: TransactionOptions): Promise<string>
+    estimateGas(options?: TransactionOptions): Promise<number>
+  }
+  initializer: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(options?: TransactionOptions): Promise<Address>
+    sendTransaction(options?: TransactionOptions): Promise<string>
+    estimateGas(options?: TransactionOptions): Promise<number>
+  }
   linkIds: {
     (unnamed0: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(unnamed0: Address, options?: TransactionOptions): Promise<BigNumber.BigNumber>
     sendTransaction(unnamed0: Address, options?: TransactionOptions): Promise<string>
     estimateGas(unnamed0: Address, options?: TransactionOptions): Promise<number>
+  }
+  endInitialization: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(options?: TransactionOptions): Promise<string>
+    estimateGas(options?: TransactionOptions): Promise<number>
   }
   usedSignatures: {
     (unnamed1: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -89,6 +107,8 @@ export interface AccountRegistryLogicInstance extends ContractInstance {
   AddressLinked: Web3.EventFilterCreator<{ currentAddress: Address; newAddress: Address; linkId: UInt }>
 
   AddressUnlinked: Web3.EventFilterCreator<{ senderAddress: Address; addressToRemove: Address }>
+
+  InitializationEnded: Web3.EventFilterCreator<{}>
 
   linkAddresses: {
     (
@@ -182,10 +202,16 @@ export interface AccountRegistryLogicInstance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<number>
   }
+  migrateLink: {
+    (currentAddress: Address, newAddress: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(currentAddress: Address, newAddress: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(currentAddress: Address, newAddress: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(currentAddress: Address, newAddress: Address, options?: TransactionOptions): Promise<number>
+  }
 }
 
 export interface AccountRegistryLogicContract {
-  new: (options?: TransactionOptions) => Promise<AccountRegistryLogicInstance>
+  new: (initializer: Address, options?: TransactionOptions) => Promise<AccountRegistryLogicInstance>
   deployed(): Promise<AccountRegistryLogicInstance>
   at(address: string): AccountRegistryLogicInstance
 }

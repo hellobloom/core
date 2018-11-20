@@ -53,6 +53,14 @@ export type TContractNames = keyof typeof EContractNames
 
 export const AccountRegistryLogic: IContractMethodManifest = {
   methods: {
+    initializing: {
+      args_arr: [],
+      args: {}
+    },
+    initializer: {
+      args_arr: [],
+      args: {}
+    },
     linkIds: {
       args_arr: ["anonymous_0"],
       args: {
@@ -61,6 +69,10 @@ export const AccountRegistryLogic: IContractMethodManifest = {
           index: 0
         }
       }
+    },
+    endInitialization: {
+      args_arr: [],
+      args: {}
     },
     usedSignatures: {
       args_arr: ["anonymous_0"],
@@ -157,6 +169,19 @@ export const AccountRegistryLogic: IContractMethodManifest = {
         _unlinkSignature: {
           type: "bytes",
           index: 3
+        }
+      }
+    },
+    migrateLink: {
+      args_arr: ["_currentAddress", "_newAddress"],
+      args: {
+        _currentAddress: {
+          type: "address",
+          index: 0
+        },
+        _newAddress: {
+          type: "address",
+          index: 1
         }
       }
     }

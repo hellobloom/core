@@ -20,7 +20,7 @@ module.exports = function(deployer) {
     .then(() => deployer.deploy(BLT))
     .then(() => BLT.deployed())
     .then(blt => (token = blt))
-    .then(() => deployer.deploy(AccountRegistryLogic))
+    .then(() => deployer.deploy(AccountRegistryLogic, adminAddress))
     .then(() => AccountRegistryLogic.deployed())
     .then(rl => (registryLogic = rl))
 

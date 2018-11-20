@@ -1,17 +1,20 @@
 pragma solidity 0.4.24;
 
 import "./SigningLogic.sol";
+import "./Initializable.sol";
 
 /**
  * @title Bloom account registry
  * @notice Account Registry Logic allows users to link multiple addresses to the same owner
  *
  */
-contract AccountRegistryLogic is SigningLogic {
+contract AccountRegistryLogic is Initializable, SigningLogic {
   /**
    * @notice The AccountRegistry constructor configures the signing logic implementation
    */
-  constructor() public SigningLogic("Bloom Account Registry", "2", 1) {}
+  constructor(
+    address _initializer
+  ) public Initializable(_initializer) SigningLogic("Bloom Account Registry", "2", 1) {}
 
   event AddressLinked(address indexed currentAddress, address indexed newAddress, uint256 indexed linkId);
   event AddressUnlinked(address indexed senderAddress, address indexed addressToRemove);
@@ -118,6 +121,28 @@ contract AccountRegistryLogic is SigningLogic {
       _addressToRemove,
       _nonce
     ), _unlinkSignature));
+  }
+
+  /**
+   * @notice Submit link completed prior to deployment of this contract
+   * @dev Gives initializer privileges to write links during the initialization period without signatures
+   * @param _currentAddress Address to which user wants to link another address. May currently be linked to another address
+   * @param _newAddress Address to add to account. Cannot currently be linked to another address
+   */
+  function migrateLink(
+    address _currentAddress,
+    address _newAddress
+  ) public onlyDuringInitialization {
+    // Confirm newAddress is not linked to another account
+    require(linkIds[_newAddress] == 0);
+
+    // Get linkId of current address if exists. Otherwise use incremented linkCounter
+    if (linkIds[_currentAddress] == 0) {
+      linkIds[_currentAddress] = ++linkCounter;
+    }
+    linkIds[_newAddress] = linkIds[_currentAddress];
+
+    emit AddressLinked(_currentAddress, _newAddress, linkIds[_currentAddress]);
   }
 
 }

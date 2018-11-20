@@ -272,7 +272,7 @@ contract AttestationLogic is Initializable, SigningLogic{
 
   /**
    * @notice Submit attestation completed prior to deployment of this contract
-   * @dev Gives initializer privileges to write migrate attestations during the initialization period without signatures
+   * @dev Gives initializer privileges to write attestations during the initialization period without signatures
    * @param _requester user requesting this attestation be completed 
    * @param _attester user completing the attestation
    * @param _subject user this attestation is about
