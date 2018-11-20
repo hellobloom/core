@@ -25,9 +25,6 @@ interface ITypedDataParam {
 export const getFormattedTypedDataAttestationRequest= (
   contractAddress: string,
   chainId: number,
-  subject: string,
-  attester: string,
-  requester: string,
   dataHash: string,
   requestNonce: string,
 ): IFormattedTypedData => {
@@ -40,24 +37,18 @@ export const getFormattedTypedDataAttestationRequest= (
           { name: 'verifyingContract', type: 'address' },
       ],
       AttestationRequest: [
-        { name: 'subject', type: 'address'},
-        { name: 'attester', type: 'address'},
-        { name: 'requester', type: 'address'},
         { name: 'dataHash', type: 'bytes32'},
         { name: 'nonce', type: 'bytes32'}
       ]
     },
     primaryType: 'AttestationRequest',
     domain: {
-      name: 'Bloom',
-      version: '1',
-      chainId: 1,
+      name: 'Bloom Attestation Logic',
+      version: '2',
+      chainId: chainId,
       verifyingContract: contractAddress,
     },
     message: {
-      subject: subject,
-      attester: attester,
-      requester: requester,
       dataHash: dataHash,
       nonce: requestNonce
     }
@@ -87,7 +78,7 @@ export const getFormattedTypedDataAddAddress = (
     domain: {
       name: 'Bloom Account Registry',
       version: '2',
-      chainId: 1,
+      chainId: chainId,
       verifyingContract: contractAddress,
     },
     message: {
@@ -155,8 +146,8 @@ export const getFormattedTypedDataReleaseTokens = (
     },
     primaryType: 'ReleaseTokens',
     domain: {
-      name: 'Bloom',
-      version: '1',
+      name: 'Bloom Token Escrow Marketplace',
+      version: '2',
       chainId: chainId,
       verifyingContract: contractAddress,
     },
@@ -198,8 +189,8 @@ export const getFormattedTypedDataAttestFor = (
     },
     primaryType: 'AttestFor',
     domain: {
-      name: 'Bloom',
-      version: '1',
+      name: 'Bloom Attestation Logic',
+      version: '2',
       chainId: chainId,
       verifyingContract: contractAddress,
     },
@@ -237,8 +228,8 @@ export const getFormattedTypedDataContestFor = (
     },
     primaryType: 'ContestFor',
     domain: {
-      name: 'Bloom',
-      version: '1',
+      name: 'Bloom Attestation Logic',
+      version: '2',
       chainId: chainId,
       verifyingContract: contractAddress,
     },
@@ -251,6 +242,7 @@ export const getFormattedTypedDataContestFor = (
 }
 
 export const getFormattedTypedDataVoteFor = (
+  pollName: string,
   contractAddress: string,
   chainId: number,
   choice: number,
@@ -275,8 +267,8 @@ export const getFormattedTypedDataVoteFor = (
     },
     primaryType: 'VoteFor',
     domain: {
-      name: 'Bloom',
-      version: '1',
+      name: pollName,
+      version: '2',
       chainId: chainId,
       verifyingContract: contractAddress,
     },
@@ -312,8 +304,8 @@ export const getFormattedTypedDataLockupTokensFor = (
     },
     primaryType: 'LockupTokensFor',
     domain: {
-      name: 'Bloom',
-      version: '1',
+      name: 'Bloom Token Escrow Marketplace',
+      version: '2',
       chainId: chainId,
       verifyingContract: contractAddress,
     },
@@ -321,6 +313,36 @@ export const getFormattedTypedDataLockupTokensFor = (
       sender: sender,
       amount: amount,
       nonce: nonce
+    }
+  }
+}
+
+export const getFormattedTypedDataRevokeAttestationFor = (
+  contractAddress: string,
+  chainId: number,
+  link: string,
+): IFormattedTypedData => {
+  return {
+    types: {
+      EIP712Domain: [
+          { name: 'name', type: 'string' },
+          { name: 'version', type: 'string' },
+          { name: 'chainId', type: 'uint256' },
+          { name: 'verifyingContract', type: 'address' },
+      ],
+      RevokeAttestationFor: [
+        { name: 'link', type: 'bytes32'},
+      ]
+    },
+    primaryType: 'RevokeAttestationFor',
+    domain: {
+      name: 'Bloom Attestation Logic',
+      version: '2',
+      chainId: chainId,
+      verifyingContract: contractAddress,
+    },
+    message: {
+      link: link,
     }
   }
 }

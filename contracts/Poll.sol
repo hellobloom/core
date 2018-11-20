@@ -51,13 +51,13 @@ contract Poll is DependentOnIPFS, SigningLogic {
   function voteFor(uint16 _choice, address _voter, bytes32 _nonce, bytes _delegationSig) external {
     require(!usedSignatures[keccak256(abi.encodePacked(_delegationSig))], "Signature not unique");
     usedSignatures[keccak256(abi.encodePacked(_delegationSig))] = true;
-    bytes32 _delegationDigest = SigningLogic.generateVoteForDelegationSchemaHash(
+    bytes32 _delegationDigest = generateVoteForDelegationSchemaHash(
       _choice,
       _voter,
       _nonce,
       this
     );
-    require(_voter == SigningLogic.recoverSigner(_delegationDigest, _delegationSig));
+    require(_voter == recoverSigner(_delegationDigest, _delegationSig));
     voteForUser(_choice, _voter);
   }
 

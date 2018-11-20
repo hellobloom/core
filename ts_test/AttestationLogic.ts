@@ -8,9 +8,8 @@ import { AttestationTypeID, HashingLogic } from "@bloomprotocol/attestations-lib
 
 import { EVMThrow } from "./helpers/EVMThrow"
 import { should } from "./test_setup"
-import { SigningLogicLegacyInstance, AttestationLogicInstance, TokenEscrowMarketplaceInstance, AccountRegistryInstance } from "../contracts"
+import { AttestationLogicInstance, TokenEscrowMarketplaceInstance, MockBLTInstance } from "../truffle"
 
-import { MockBLTInstance } from "./../contracts"
 import { latestBlockTime } from "./helpers/blockInfo"
 import * as ipfs from "./../src/ipfs"
 import {
@@ -19,10 +18,9 @@ import {
   getFormattedTypedDataAttestFor,
   getFormattedTypedDataContestFor,
   getFormattedTypedDataRevokeAttestationFor
-} from "./helpers/signingLogicLegacy"
+} from "./helpers/signingLogic"
 import { generateSigNonce } from "../src/signData"
 
-const SigningLogic = artifacts.require("SigningLogicLegacy")
 const TokenEscrowMarketplace = artifacts.require("TokenEscrowMarketplace")
 const AttestationLogic = artifacts.require("AttestationLogic")
 const MockBLT = artifacts.require("MockBLT")
@@ -30,8 +28,9 @@ const MockBLT = artifacts.require("MockBLT")
 contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializer]) {
   let token: MockBLTInstance
   let attestationLogic: AttestationLogicInstance
-  let signingLogic: SigningLogicLegacyInstance
+  let attestationLogicAddress: string
   let tokenEscrowMarketplace: TokenEscrowMarketplaceInstance
+  let tokenEscrowMarketplaceAddress: string
 
   const aliceWallet = ethereumjsWallet.fromPrivateKey(new Buffer("c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3", "hex"))
   const alicePrivkey = aliceWallet.getPrivateKey()
@@ -41,10 +40,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
 
   const davidWallet = ethereumjsWallet.fromPrivateKey(new Buffer("c88b703fb08cbea894b6aeff5a544fb92e78a18e19814cd85da83b71f772aa6c", "hex"))
   const davidPrivkey = davidWallet.getPrivateKey()
-
-  let aliceId: BigNumber.BigNumber
-  let bobId: BigNumber.BigNumber
-  let davidId: BigNumber.BigNumber
 
   // Sanity check
   if (alice != aliceWallet.getAddressString()) {
@@ -86,66 +81,94 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
   const merkleTree = HashingLogic.getMerkleTree([phoneData, emailData])
   const combinedDataHash = bufferToHex(merkleTree.getRoot())
 
-  const nonce = generateSigNonce()
-  const differentNonce = generateSigNonce()
+  let nonce: string
+  let differentNonce: string
+
+  let subjectSig: string
+  let tokenReleaseSig: string
+  let unrelatedSignature: string
+  let attesterDelegationSig: string
+  let contesterDelegationSig: string
+
+  let attestDefaults: {
+    subject: string
+    attester: string
+    requester: string
+    reward: BigNumber.BigNumber
+    paymentNonce: string
+    requesterSig: string
+    dataHash: string
+    requestNonce: string
+    subjectSig: string
+    from: string
+  }
 
   // Send more test eth to alice so it doesn't run out during test
   web3.eth.sendTransaction({ to: alice, from: bob, value: web3.toWei(50, "ether") })
 
   beforeEach(async () => {
-    signingLogic = await SigningLogic.new()
     token = await MockBLT.new()
 
-    attestationLogic = await AttestationLogic.new(initializer, registry.address, signingLogic.address, "0x0")
+    attestationLogic = await AttestationLogic.new(initializer, "0x0")
+    attestationLogicAddress = attestationLogic.address
 
-    tokenEscrowMarketplace = await TokenEscrowMarketplace.new(token.address, registry.address, signingLogic.address, attestationLogic.address)
+    tokenEscrowMarketplace = await TokenEscrowMarketplace.new(token.address, attestationLogic.address)
+    tokenEscrowMarketplaceAddress = tokenEscrowMarketplace.address
 
-    await attestationLogic.setTokenEscrowMarketplace(tokenEscrowMarketplace.address, {from: initializer})
+    await attestationLogic.setTokenEscrowMarketplace(tokenEscrowMarketplaceAddress, { from: initializer })
 
     await Promise.all([
       // token.gift(alice),
       token.gift(david, new BigNumber("1e18")),
-      token.gift(david, new BigNumber("1e18")),
-      registry.createNewAccount(alice),
-      registry.createNewAccount(bob),
-      registry.createNewAccount(david)
-    ])
-    ;[aliceId, bobId, davidId] = await Promise.all([
-      registry.accountIdForAddress.call(alice),
-      registry.accountIdForAddress.call(bob),
-      registry.accountIdForAddress.call(david)
+      token.gift(david, new BigNumber("1e18"))
     ])
 
-    await token.approve(tokenEscrowMarketplace.address, new BigNumber("2e18"), {
+    await token.approve(tokenEscrowMarketplaceAddress, new BigNumber("2e18"), {
       from: david
     })
 
     await tokenEscrowMarketplace.moveTokensToEscrowLockup(new BigNumber("2e18"), { from: david })
-  })
 
-  const subjectSig = ethSigUtil.signTypedDataLegacy(alicePrivkey, {
-    data: getFormattedTypedDataAttestationRequest(combinedDataHash, nonce)
-  })
+    nonce = generateSigNonce()
+    differentNonce = generateSigNonce()
 
-  const tokenReleaseSig = ethSigUtil.signTypedDataLegacy(davidPrivkey, {
-    data: getFormattedTypedDataReleaseTokens(david, bob, new BigNumber(web3.toWei(1, "ether")).toString(10), nonce)
-  })
+    subjectSig = ethSigUtil.signTypedData(alicePrivkey, {
+      data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, combinedDataHash, nonce)
+    })
 
-  const unrelatedSignature = ethSigUtil.signTypedDataLegacy(ethereumjsWallet.generate().getPrivateKey(), {
-    data: getFormattedTypedDataAttestationRequest(combinedDataHash, nonce)
-  })
+    tokenReleaseSig = ethSigUtil.signTypedData(davidPrivkey, {
+      data: getFormattedTypedDataReleaseTokens(
+        tokenEscrowMarketplaceAddress,
+        1,
+        david,
+        bob,
+        new BigNumber(web3.toWei(1, "ether")).toString(10),
+        nonce
+      )
+    })
 
-  const attesterDelegationSig = ethSigUtil.signTypedDataLegacy(bobPrivkey, {
-    data: getFormattedTypedDataAttestFor(alice, david, new BigNumber(web3.toWei(1, "ether")).toString(10), nonce, combinedDataHash, nonce)
-  })
+    unrelatedSignature = ethSigUtil.signTypedData(ethereumjsWallet.generate().getPrivateKey(), {
+      data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, combinedDataHash, nonce)
+    })
 
-  const contesterDelegationSig = ethSigUtil.signTypedDataLegacy(bobPrivkey, {
-    data: getFormattedTypedDataContestFor(david, new BigNumber(web3.toWei(1, "ether")).toString(10), nonce)
-  })
+    attesterDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+      data: getFormattedTypedDataAttestFor(
+        attestationLogicAddress,
+        1,
+        alice,
+        david,
+        new BigNumber(web3.toWei(1, "ether")).toString(10),
+        nonce,
+        combinedDataHash,
+        nonce
+      )
+    })
 
-  // await increaseTime(60 * 60 * 24 * 364);
-  context("submitting attestations", () => {
-    const attestDefaults = {
+    contesterDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+      data: getFormattedTypedDataContestFor(attestationLogicAddress, 1, david, new BigNumber(web3.toWei(1, "ether")).toString(10), nonce)
+    })
+
+    attestDefaults = {
       subject: alice,
       attester: bob,
       requester: david,
@@ -157,7 +180,10 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       subjectSig: subjectSig,
       from: bob
     }
+  })
 
+  // await increaseTime(60 * 60 * 24 * 364);
+  context("submitting attestations", () => {
     const attest = async (props: Partial<typeof attestDefaults> = attestDefaults) => {
       let { subject, attester, requester, reward, paymentNonce, requesterSig, dataHash, requestNonce, subjectSig, from } = {
         ...attestDefaults,
@@ -169,15 +195,37 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       })
     }
 
-    it("accepts a valid attestation", async () => {
-      await attest().should.be.fulfilled
+    it.only("accepts a valid attestation", async () => {
+      const recoveredETHAddress: string = ethSigUtil.recoverTypedSignature({
+        data: getFormattedTypedDataReleaseTokens(
+          tokenEscrowMarketplaceAddress,
+          1,
+          david,
+          bob,
+          new BigNumber(web3.toWei(1, "ether")).toString(10),
+          nonce
+        ),
+        sig: attestDefaults.requesterSig
+      })
+      console.log(`david ${david}`)
+      console.log(`recovered ${recoveredETHAddress}`)
+      await attestationLogic.attest(
+        attestDefaults.subject,
+        attestDefaults.requester,
+        attestDefaults.reward,
+        attestDefaults.paymentNonce,
+        attestDefaults.requesterSig,
+        attestDefaults.dataHash,
+        attestDefaults.requestNonce,
+        attestDefaults.subjectSig
+      ).should.be.fulfilled
     })
 
     it("accepts a valid attestation with 0 reward", async () => {
       await attest({
         reward: new BigNumber(0),
-        requesterSig: ethSigUtil.signTypedDataLegacy(davidPrivkey, {
-          data: getFormattedTypedDataReleaseTokens(david, bob, new BigNumber(0).toString(10), nonce)
+        requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
+          data: getFormattedTypedDataReleaseTokens(tokenEscrowMarketplaceAddress, 1, david, bob, new BigNumber(0).toString(10), nonce)
         })
       }).should.be.fulfilled
     })
@@ -190,16 +238,16 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       const unrelatedWallet = ethereumjsWallet.generate()
       await attest({
         subject: carl,
-        subjectSig: ethSigUtil.signTypedDataLegacy(unrelatedWallet.getPrivateKey(), {
-          data: getFormattedTypedDataAttestationRequest(attestDefaults.dataHash, attestDefaults.requestNonce)
+        subjectSig: ethSigUtil.signTypedData(unrelatedWallet.getPrivateKey(), {
+          data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, attestDefaults.dataHash, attestDefaults.requestNonce)
         })
       }).should.be.rejectedWith(EVMThrow)
     })
 
     interface WriteEventArgs {
-      subjectId: BigNumber.BigNumber
-      attesterId: BigNumber.BigNumber
-      requesterId: BigNumber.BigNumber
+      subject: string
+      attester: string
+      requester: string
       dataHash: string
     }
 
@@ -211,9 +259,9 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       should.exist(matchingLog)
       if (!matchingLog) return
 
-      matchingLog.args.subjectId.should.be.bignumber.equal(aliceId)
-      matchingLog.args.attesterId.should.be.bignumber.equal(bobId)
-      matchingLog.args.requesterId.should.be.bignumber.equal(davidId)
+      matchingLog.args.subject.should.be.equal(alice)
+      matchingLog.args.attester.should.be.equal(bob)
+      matchingLog.args.requester.should.be.equal(david)
       matchingLog.args.dataHash.should.be.equal(attestDefaults.dataHash)
     })
 
@@ -221,43 +269,55 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       await attest().should.be.fulfilled
       await attest({
         paymentNonce: differentNonce,
-        requesterSig: ethSigUtil.signTypedDataLegacy(davidPrivkey, {
-          data: getFormattedTypedDataReleaseTokens(david, bob, new BigNumber(web3.toWei(1, "ether")).toString(10), differentNonce)
+        requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
+          data: getFormattedTypedDataReleaseTokens(
+            tokenEscrowMarketplaceAddress,
+            1,
+            david,
+            bob,
+            new BigNumber(web3.toWei(1, "ether")).toString(10),
+            differentNonce
+          )
         }),
         requestNonce: differentNonce,
-        subjectSig: ethSigUtil.signTypedDataLegacy(alicePrivkey, {
-          data: getFormattedTypedDataAttestationRequest(combinedDataHash, differentNonce)
+        subjectSig: ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, combinedDataHash, differentNonce)
         })
       }).should.be.fulfilled
     })
 
     it("releases tokens from escrow to the verifier and leaves some leftover", async () => {
-      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
+      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(david)
       requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18")
-
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("0")
 
       await attest()
 
-      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
+      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(david)
       requesterEscrowBalanceAfter.should.be.bignumber.equal("1e18")
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("1e18")
     })
 
     it("releases all tokens from escrow to the verifier", async () => {
-      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
+      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(david)
       requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18")
-
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("0")
 
       await attest({
         reward: new BigNumber(web3.toWei(2, "ether")),
-        requesterSig: ethSigUtil.signTypedDataLegacy(davidPrivkey, {
-          data: getFormattedTypedDataReleaseTokens(david, bob, new BigNumber(web3.toWei(2, "ether")).toString(10), nonce)
+        requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
+          data: getFormattedTypedDataReleaseTokens(
+            tokenEscrowMarketplaceAddress,
+            1,
+            david,
+            bob,
+            new BigNumber(web3.toWei(2, "ether")).toString(10),
+            nonce
+          )
         })
       })
 
-      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
+      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(david)
       requesterEscrowBalanceAfter.should.be.bignumber.equal("0")
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("2e18")
     })
@@ -266,12 +326,19 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       await attest()
       await attest({
         paymentNonce: differentNonce,
-        requesterSig: ethSigUtil.signTypedDataLegacy(davidPrivkey, {
-          data: getFormattedTypedDataReleaseTokens(david, bob, new BigNumber(web3.toWei(1, "ether")).toString(10), differentNonce)
+        requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
+          data: getFormattedTypedDataReleaseTokens(
+            tokenEscrowMarketplaceAddress,
+            1,
+            david,
+            bob,
+            new BigNumber(web3.toWei(1, "ether")).toString(10),
+            differentNonce
+          )
         }),
         requestNonce: differentNonce,
-        subjectSig: ethSigUtil.signTypedDataLegacy(alicePrivkey, {
-          data: getFormattedTypedDataAttestationRequest(attestDefaults.dataHash, differentNonce)
+        subjectSig: ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, attestDefaults.dataHash, differentNonce)
         })
       }).should.be.fulfilled
     })
@@ -336,8 +403,8 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
     })
 
     interface rejectEventArgs {
-      attesterId: BigNumber.BigNumber
-      requesterId: BigNumber.BigNumber
+      attester: string
+      requester: string
     }
 
     it("emits an event when attestation is rejected", async () => {
@@ -348,37 +415,42 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       should.exist(matchingLog)
       if (!matchingLog) return
 
-      matchingLog.args.attesterId.should.be.bignumber.equal(bobId)
-      matchingLog.args.requesterId.should.be.bignumber.equal(davidId)
+      matchingLog.args.attester.should.be.equal(bob)
+      matchingLog.args.requester.should.be.equal(david)
     })
 
     it("releases tokens from escrow to the verifier and leaves some leftover", async () => {
-      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
+      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(david)
       requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18")
-
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("0")
 
       await contest()
 
-      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
+      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(david)
       requesterEscrowBalanceAfter.should.be.bignumber.equal("1e18")
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("1e18")
     })
 
     it("releases all tokens from escrow to the verifier", async () => {
-      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
+      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(david)
       requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18")
-
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("0")
 
       await contest({
         reward: new BigNumber(web3.toWei(2, "ether")),
-        requesterSig: ethSigUtil.signTypedDataLegacy(davidPrivkey, {
-          data: getFormattedTypedDataReleaseTokens(david, bob, new BigNumber(web3.toWei(2, "ether")).toString(10), nonce)
+        requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
+          data: getFormattedTypedDataReleaseTokens(
+            tokenEscrowMarketplaceAddress,
+            1,
+            david,
+            bob,
+            new BigNumber(web3.toWei(2, "ether")).toString(10),
+            nonce
+          )
         })
       })
 
-      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
+      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(david)
       requesterEscrowBalanceAfter.should.be.bignumber.equal("0")
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("2e18")
     })
@@ -535,14 +607,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       }).should.be.fulfilled
     })
 
-    it("Does not allow someone without a BloomID to submit a revocation", async () => {
-      await attestationLogic
-        .revokeAttestation(revokeLink, {
-          from: carl
-        })
-        .should.be.rejectedWith(EVMThrow)
-    })
-
     interface RevokeEventArgs {
       link: string
       attesterId: BigNumber.BigNumber
@@ -559,19 +623,19 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       if (!matchingLog) return
 
       matchingLog.args.link.should.be.equal(revokeLink)
-      matchingLog.args.attesterId.should.be.bignumber.equal(bobId)
+      matchingLog.args.attesterId.should.be.bignumber.equal(bob)
     })
   })
 
   context("delegated revoking attestations", () => {
     const revokeLink = "0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
     const differentRevokeLink = "0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
-    const revokeAttestationDelegationSig = ethSigUtil.signTypedDataLegacy(bobPrivkey, {
-      data: getFormattedTypedDataRevokeAttestationFor(revokeLink)
+    const revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+      data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
     })
 
-    const recoveredETHAddress: string = ethSigUtil.recoverTypedSignatureLegacy({
-      data: getFormattedTypedDataRevokeAttestationFor(revokeLink),
+    const recoveredETHAddress: string = ethSigUtil.recoverTypedSignature({
+      data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink),
       sig: revokeAttestationDelegationSig
     })
 
@@ -607,7 +671,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       console.log(matchingLog.args)
 
       matchingLog.args.link.should.be.equal(revokeLink)
-      matchingLog.args.attesterId.should.be.bignumber.equal(bobId)
+      matchingLog.args.attesterId.should.be.bignumber.equal(bob)
     })
   })
 
@@ -616,12 +680,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
     let TokenEscrowMarketplaceAddressBefore: string
 
     beforeEach(async () => {
-      differentTokenEscrowMarketplace = await TokenEscrowMarketplace.new(
-        token.address,
-        registry.address,
-        signingLogic.address,
-        attestationLogic.address
-      )
+      differentTokenEscrowMarketplace = await TokenEscrowMarketplace.new(token.address, attestationLogic.address)
       TokenEscrowMarketplaceAddressBefore = await attestationLogic.tokenEscrowMarketplace.call()
     })
 
@@ -629,7 +688,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       await attestationLogic.setTokenEscrowMarketplace(differentTokenEscrowMarketplace.address, { from: initializer })
       const TokenEscrowMarketplaceAddressAfter = await attestationLogic.tokenEscrowMarketplace()
 
-      TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplace.address)
+      TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplaceAddress)
       TokenEscrowMarketplaceAddressAfter.should.be.equal(differentTokenEscrowMarketplace.address)
     })
 
@@ -641,8 +700,8 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
         .should.be.rejectedWith(EVMThrow)
       const TokenEscrowMarketplaceAddressAfter = await attestationLogic.tokenEscrowMarketplace()
 
-      TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplace.address)
-      TokenEscrowMarketplaceAddressAfter.should.be.equal(tokenEscrowMarketplace.address)
+      TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplaceAddress)
+      TokenEscrowMarketplaceAddressAfter.should.be.equal(tokenEscrowMarketplaceAddress)
     })
 
     it("doesn't initializer to change the marketplace after initialization ends", async () => {
@@ -654,25 +713,25 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
         .should.be.rejectedWith(EVMThrow)
       const TokenEscrowMarketplaceAddressAfter = await attestationLogic.tokenEscrowMarketplace()
 
-      TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplace.address)
-      TokenEscrowMarketplaceAddressAfter.should.be.equal(tokenEscrowMarketplace.address)
+      TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplaceAddress)
+      TokenEscrowMarketplaceAddressAfter.should.be.equal(tokenEscrowMarketplaceAddress)
     })
   })
 
   describe("Migrating attestations during initialization", async () => {
     it("allows the initializer to write attestations without validation during initialization", async () => {
-      await attestationLogic.migrateAttestation(bobId, davidId, aliceId, combinedDataHash, { from: initializer }).should.be.fulfilled
+      await attestationLogic.migrateAttestation(bob, david, alice, combinedDataHash, { from: initializer }).should.be.fulfilled
     })
     it("does not allow anyone else to write attestations during initialization", async () => {
-      await attestationLogic.migrateAttestation(bobId, davidId, aliceId, combinedDataHash, { from: bob }).should.be.rejectedWith(EVMThrow)
+      await attestationLogic.migrateAttestation(bob, david, alice, combinedDataHash, { from: bob }).should.be.rejectedWith(EVMThrow)
     })
     it("does not allow initializer to migrate attestations after initialization", async () => {
       await attestationLogic.endInitialization({ from: initializer }).should.be.fulfilled
-      await attestationLogic.migrateAttestation(bobId, davidId, aliceId, combinedDataHash, { from: initializer }).should.be.rejectedWith(EVMThrow)
+      await attestationLogic.migrateAttestation(bob, david, alice, combinedDataHash, { from: initializer }).should.be.rejectedWith(EVMThrow)
     })
     it("does not allow anyone else to write attestations after initialization", async () => {
       await attestationLogic.endInitialization({ from: initializer }).should.be.fulfilled
-      await attestationLogic.migrateAttestation(bobId, davidId, aliceId, combinedDataHash, { from: bob }).should.be.rejectedWith(EVMThrow)
+      await attestationLogic.migrateAttestation(bob, david, alice, combinedDataHash, { from: bob }).should.be.rejectedWith(EVMThrow)
     })
     interface WriteEventArgs {
       subjectId: BigNumber.BigNumber
@@ -682,16 +741,18 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
     }
 
     it("emits an event when attestation is migrated", async () => {
-      const { logs } = ((await attestationLogic.migrateAttestation(davidId, bobId, aliceId, combinedDataHash, {from: initializer})) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<WriteEventArgs>
+      const { logs } = ((await attestationLogic.migrateAttestation(david, bob, alice, combinedDataHash, {
+        from: initializer
+      })) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<WriteEventArgs>
 
       const matchingLog = logs.find(log => log.event === "TraitAttested")
 
       should.exist(matchingLog)
       if (!matchingLog) return
 
-      matchingLog.args.subjectId.should.be.bignumber.equal(aliceId)
-      matchingLog.args.attesterId.should.be.bignumber.equal(bobId)
-      matchingLog.args.requesterId.should.be.bignumber.equal(davidId)
+      matchingLog.args.subjectId.should.be.bignumber.equal(alice)
+      matchingLog.args.attesterId.should.be.bignumber.equal(bob)
+      matchingLog.args.requesterId.should.be.bignumber.equal(david)
       matchingLog.args.dataHash.should.be.equal(combinedDataHash)
     })
   })

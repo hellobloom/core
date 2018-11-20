@@ -99,7 +99,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes _delegationSig
   ) public {
     // Reconstruct attestation delegation message
-    bytes32 _delegationDigest = SigningLogic.generateAttestForDelegationSchemaHash(
+    bytes32 _delegationDigest = generateAttestForDelegationSchemaHash(
       _subject,
       _requester,
       _reward,
@@ -108,7 +108,7 @@ contract AttestationLogic is Initializable, SigningLogic{
       _requestNonce
     );
     // Confirm attester address matches recovered address from signature
-    require(_attester == SigningLogic.recoverSigner(_delegationDigest, _delegationSig));
+    require(_attester == recoverSigner(_delegationDigest, _delegationSig));
     attestForUser(
       _subject,
       _attester,
@@ -208,12 +208,12 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes _delegationSig
   ) public {
     // Reconstruct attestation delegation message
-    bytes32 _delegationDigest = SigningLogic.generateContestForDelegationSchemaHash(
+    bytes32 _delegationDigest = generateContestForDelegationSchemaHash(
       _requester,
       _reward,
       _paymentNonce
     );
-    require(_attester == SigningLogic.recoverSigner(_delegationDigest, _delegationSig));
+    require(_attester == recoverSigner(_delegationDigest, _delegationSig));
     contestForUser(
       _attester,
       _requester,
@@ -263,8 +263,8 @@ contract AttestationLogic is Initializable, SigningLogic{
     require(!usedSignatures[keccak256(abi.encodePacked(_subjectSig))], "Signature not unique");
     usedSignatures[keccak256(abi.encodePacked(_subjectSig))] = true;
 
-    require(_subject == SigningLogic.recoverSigner(
-      SigningLogic.generateRequestAttestationSchemaHash(
+    require(_subject == recoverSigner(
+      generateRequestAttestationSchemaHash(
       _dataHash,
       _requestNonce
     ), _subjectSig));
@@ -313,10 +313,10 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _sender,
     bytes _delegationSig
     ) public {
-      bytes32 _delegationDigest = SigningLogic.generateRevokeAttestationForDelegationSchemaHash(
+      bytes32 _delegationDigest = generateRevokeAttestationForDelegationSchemaHash(
         _link
       );
-      require(_sender == SigningLogic.recoverSigner(_delegationDigest, _delegationSig));
+      require(_sender == recoverSigner(_delegationDigest, _delegationSig));
       revokeAttestationForUser(_link, _sender);
   }
 

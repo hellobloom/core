@@ -85,21 +85,21 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
 
 
   describe("Linking Accounts", async () => {
-    it.only("Allows a user to add an unclaimed address to their account", async () => {
+    it("Allows a user to add an unclaimed address to their account", async () => {
       await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
     })
 
-    it.only("Allows anyone to submit the link tx", async () => {
+    it("Allows anyone to submit the link tx", async () => {
       await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: bob }).should.be.fulfilled
     })
 
-    it.only("Fails if nonce hash wrong", async () => {
+    it("Fails if nonce hash wrong", async () => {
       await registryLogic
         .linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, differentNonceHash, { from: alice })
         .should.be.rejectedWith(EVMThrow)
     })
 
-    it.only("Does not allow address to be added if does not match the current address sig", async () => {
+    it("Does not allow address to be added if does not match the current address sig", async () => {
       await registryLogic
         .linkAddresses(
           alice,
@@ -113,7 +113,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         .should.rejectedWith(EVMThrow)
     })
 
-    it.only("Does not allow address to be added if does not match the current address sig", async () => {
+    it("Does not allow address to be added if does not match the current address sig", async () => {
       await registryLogic
         .linkAddresses(
           alice,
@@ -127,7 +127,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         .should.rejectedWith(EVMThrow)
     })
 
-    it.only("Does not allow address to be added if does not match the newAddress sig", async () => {
+    it("Does not allow address to be added if does not match the newAddress sig", async () => {
       await registryLogic
         .linkAddresses(
           alice,
@@ -141,7 +141,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         .should.rejectedWith(EVMThrow)
     })
 
-    it.only("Does not allow address to be added if does not match the newAddress sig", async () => {
+    it("Does not allow address to be added if does not match the newAddress sig", async () => {
       await registryLogic
         .linkAddresses(
           bob,
@@ -161,7 +161,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       linkId: BigNumber.BigNumber
     }
 
-    it.only("Emits an event when an address is added", async () => {
+    it("Emits an event when an address is added", async () => {
       const { logs } = ((await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, {
         from: alice
       })) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<AdditionEventArgs>
@@ -176,7 +176,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       matchingLog.args.linkId.should.bignumber.equal(1)
     })
 
-    it.only("Does not allow a new address to be linked if it is already linked to another address", async () => {
+    it("Does not allow a new address to be linked if it is already linked to another address", async () => {
       await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
       await registryLogic
         .linkAddresses(
@@ -194,7 +194,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         .should.be.rejectedWith(EVMThrow)
     })
 
-    it.only("Allows a user to unlink address from linked sender", async () => {
+    it("Allows a user to unlink address from linked sender", async () => {
       await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
       await registryLogic.unlinkAddress(
         alice,
@@ -208,7 +208,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       ;(await registryLogic.linkIds(unclaimed)).should.be.bignumber.equal(0)
     })
 
-    it.only("Allows a user to unlink self", async () => {
+    it("Allows a user to unlink self", async () => {
       await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
       await registryLogic.unlinkAddress(
         alice,
@@ -222,7 +222,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       ;(await registryLogic.linkIds(alice)).should.be.bignumber.equal(0)
     })
 
-    it.only("Allows anyone to submit valid unlink signatures", async () => {
+    it("Allows anyone to submit valid unlink signatures", async () => {
       await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
       await registryLogic.unlinkAddress(
         alice,
@@ -241,7 +241,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       addressToRemove: string
     }
 
-    it.only("Emits an event when an address is removed", async () => {
+    it("Emits an event when an address is removed", async () => {
       await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
       const { logs } = ((await registryLogic.unlinkAddress(
         alice,
@@ -262,7 +262,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       matchingLog.args.addressToRemove.should.equal(unclaimed)
     })
 
-    it.only("Does not allow user to unlink address not linked to signer", async () => {
+    it("Does not allow user to unlink address not linked to signer", async () => {
       await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
       await registryLogic
         .unlinkAddress(
@@ -277,7 +277,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         .should.be.rejectedWith(EVMThrow)
     })
 
-    it.only("Does not allow link sig to be replayed", async () => {
+    it("Does not allow link sig to be replayed", async () => {
       await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
       await registryLogic.unlinkAddress(
         alice,
@@ -293,7 +293,7 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         .should.be.rejectedWith(EVMThrow)
     })
 
-    it.only("Allows user to relink address that has been unlinked using new sig", async () => {
+    it("Allows user to relink address that has been unlinked using new sig", async () => {
       await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
       await registryLogic.unlinkAddress(
         alice,

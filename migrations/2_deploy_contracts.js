@@ -16,10 +16,10 @@ module.exports = function(deployer) {
     .deploy(ECRecovery)
     .then(() => deployer.link(ECRecovery, AccountRegistryLogic))
     .then(() => deployer.link(ECRecovery, AttestationLogic))
+    .then(() => deployer.link(ECRecovery, TokenEscrowMarketplace))
     .then(() => deployer.deploy(BLT))
     .then(() => BLT.deployed())
     .then(blt => (token = blt))
-    // .then(() => deployer.link(ECRecovery, TokenEscrowMarketplace))
     .then(() => deployer.deploy(AccountRegistryLogic))
     .then(() => AccountRegistryLogic.deployed())
     .then(rl => (registryLogic = rl))
@@ -38,20 +38,18 @@ module.exports = function(deployer) {
     .then(() => AttestationLogic.deployed())
     .then(al => (attestationLogic = al))
 
-    // .then(() => deployer.deploy(
-    //   TokenEscrowMarketplace,
-    //   token.address,
-    //   registry.address,
-    //   signingLogic.address,
-    //   attestationLogic.address,
-    // ))
-    // .then(() => TokenEscrowMarketplace.deployed())
-    // .then(te => (tokenEscrowMarketplace = te))
+    .then(() => deployer.deploy(
+      TokenEscrowMarketplace,
+      token.address,
+      attestationLogic.address,
+    ))
+    .then(() => TokenEscrowMarketplace.deployed())
+    .then(te => (tokenEscrowMarketplace = te))
 
-    // .then(() => tokenEscrowMarketplace.setMarketplaceAdmin(adminAddress))
-    // .then(() => tokenEscrowMarketplace.transferOwnership(adminAddress))
+    .then(() => tokenEscrowMarketplace.setMarketplaceAdmin(adminAddress))
+    .then(() => tokenEscrowMarketplace.transferOwnership(adminAddress))
     
-    // .then(() => attestationLogic.setTokenEscrowMarketplace(tokenEscrowMarketplace.address))
+    .then(() => attestationLogic.setTokenEscrowMarketplace(tokenEscrowMarketplace.address))
     .then(() => attestationLogic.endInitialization())
 
     ,{

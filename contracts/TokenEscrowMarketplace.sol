@@ -113,12 +113,12 @@ contract TokenEscrowMarketplace is Ownable, Pausable, SigningLogic {
     ) public onlyMarketplaceAdmin {
     require(!usedSignatures[keccak256(_delegationSig)], "Signature not unique");
     usedSignatures[keccak256(_delegationSig)] = true;
-    bytes32 _delegationDigest = SigningLogic.generateLockupTokensDelegationSchemaHash(
+    bytes32 _delegationDigest = generateLockupTokensDelegationSchemaHash(
       _sender,
       _amount,
       _nonce
     );
-    require(_sender == SigningLogic.recoverSigner(_delegationDigest, _delegationSig));
+    require(_sender == recoverSigner(_delegationDigest, _delegationSig));
     moveTokensToEscrowLockupForUser(_sender, _amount);
   }
 
@@ -210,13 +210,13 @@ contract TokenEscrowMarketplace is Ownable, Pausable, SigningLogic {
     require(!usedSignatures[keccak256(_releaseSig)], "Signature not unique");
     usedSignatures[keccak256(_releaseSig)] = true;
 
-    bytes32 _digest = SigningLogic.generateReleaseTokensSchemaHash(
+    bytes32 _digest = generateReleaseTokensSchemaHash(
       _payer,
       _receiver,
       _amount,
       _nonce
     );
-    address signer = SigningLogic.recoverSigner(_digest, _releaseSig);
+    address signer = recoverSigner(_digest, _releaseSig);
     require(_payer == signer, "Invalid signer");
 
     payTokensFromEscrow(_payer, _receiver, _amount);
