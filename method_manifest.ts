@@ -13,8 +13,6 @@ interface IContractMethodManifest {
     }
   }
 }
-export type TContractNames = keyof typeof EContractNames
-
 export enum EContractNames {
   "AccountRegistryInterface" = "AccountRegistryInterface",
   "AccountRegistryLogic" = "AccountRegistryLogic",
@@ -52,6 +50,8 @@ export enum EContractNames {
   "TokenEscrowMarketplace" = "TokenEscrowMarketplace",
   "VotingCenter" = "VotingCenter"
 }
+
+export type TContractNames = keyof typeof EContractNames
 
 export const AccountRegistryInterface: IContractMethodManifest = {
   methods: {
