@@ -14,7 +14,7 @@ import { latestBlockTime } from "./helpers/blockInfo"
 import * as ipfs from "./../src/ipfs"
 import {
   getFormattedTypedDataAttestationRequest,
-  getFormattedTypedDataReleaseTokens,
+  getFormattedTypedDataPayTokens,
   getFormattedTypedDataAttestFor,
   getFormattedTypedDataContestFor,
   getFormattedTypedDataRevokeAttestationFor
@@ -85,7 +85,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
   let differentNonce: string
 
   let subjectSig: string
-  let tokenReleaseSig: string
+  let tokenPaymentSig: string
   let unrelatedSignature: string
   let attesterDelegationSig: string
   let contesterDelegationSig: string
@@ -166,8 +166,8 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, combinedDataHash, nonce)
     })
 
-    tokenReleaseSig = ethSigUtil.signTypedData(davidPrivkey, {
-      data: getFormattedTypedDataReleaseTokens(
+    tokenPaymentSig = ethSigUtil.signTypedData(davidPrivkey, {
+      data: getFormattedTypedDataPayTokens(
         tokenEscrowMarketplaceAddress,
         1,
         david,
@@ -204,7 +204,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       requester: david,
       reward: new BigNumber(web3.toWei(1, "ether")),
       paymentNonce: nonce,
-      requesterSig: tokenReleaseSig,
+      requesterSig: tokenPaymentSig,
       dataHash: combinedDataHash,
       requestNonce: nonce,
       subjectSig: subjectSig,
@@ -225,7 +225,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       requester: david,
       reward: new BigNumber(web3.toWei(1, "ether")),
       paymentNonce: nonce,
-      requesterSig: tokenReleaseSig,
+      requesterSig: tokenPaymentSig,
       from: bob
     }
 
@@ -258,7 +258,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       await attest({
         reward: new BigNumber(0),
         requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
-          data: getFormattedTypedDataReleaseTokens(tokenEscrowMarketplaceAddress, 1, david, bob, new BigNumber(0).toString(10), nonce)
+          data: getFormattedTypedDataPayTokens(tokenEscrowMarketplaceAddress, 1, david, bob, new BigNumber(0).toString(10), nonce)
         })
       }).should.be.fulfilled
     })
@@ -286,7 +286,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       await attest({
         paymentNonce: differentNonce,
         requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
-          data: getFormattedTypedDataReleaseTokens(
+          data: getFormattedTypedDataPayTokens(
             tokenEscrowMarketplaceAddress,
             1,
             david,
@@ -302,7 +302,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       }).should.be.fulfilled
     })
 
-    it("releases tokens from escrow to the verifier and leaves some leftover", async () => {
+    it("pays tokens from escrow to the verifier and leaves some leftover", async () => {
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(david)
       requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18")
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("0")
@@ -314,7 +314,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("1e18")
     })
 
-    it("releases all tokens from escrow to the verifier", async () => {
+    it("pays all tokens from escrow to the verifier", async () => {
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(david)
       requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18")
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("0")
@@ -322,7 +322,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       await attest({
         reward: new BigNumber(web3.toWei(2, "ether")),
         requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
-          data: getFormattedTypedDataReleaseTokens(
+          data: getFormattedTypedDataPayTokens(
             tokenEscrowMarketplaceAddress,
             1,
             david,
@@ -343,7 +343,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       await attest({
         paymentNonce: differentNonce,
         requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
-          data: getFormattedTypedDataReleaseTokens(
+          data: getFormattedTypedDataPayTokens(
             tokenEscrowMarketplaceAddress,
             1,
             david,
@@ -415,7 +415,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       matchingLog.args.requester.should.be.equal(david)
     })
 
-    it("releases tokens from escrow to the verifier and leaves some leftover", async () => {
+    it("pays tokens from escrow to the verifier and leaves some leftover", async () => {
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(david)
       requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18")
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("0")
@@ -427,7 +427,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("1e18")
     })
 
-    it("releases all tokens from escrow to the verifier", async () => {
+    it("pays all tokens from escrow to the verifier", async () => {
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(david)
       requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18")
       ;(await token.balanceOf(bob)).should.be.bignumber.equal("0")
@@ -435,7 +435,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       await contest({
         reward: new BigNumber(web3.toWei(2, "ether")),
         requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
-          data: getFormattedTypedDataReleaseTokens(
+          data: getFormattedTypedDataPayTokens(
             tokenEscrowMarketplaceAddress,
             1,
             david,
@@ -485,7 +485,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
         requester: david,
         reward: new BigNumber(web3.toWei(1, "ether")),
         paymentNonce: nonce,
-        requesterSig: tokenReleaseSig,
+        requesterSig: tokenPaymentSig,
         delegationSig: contesterDelegationSig,
         from: carl
       }
@@ -576,7 +576,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
         requester: david,
         reward: new BigNumber(web3.toWei(1, "ether")),
         paymentNonce: nonce,
-        requesterSig: tokenReleaseSig,
+        requesterSig: tokenPaymentSig,
         dataHash: combinedDataHash,
         requestNonce: nonce,
         subjectSig: subjectSig,
@@ -793,9 +793,9 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       await attestationLogic.migrateAttestation(bob, david, alice, combinedDataHash, { from: bob }).should.be.rejectedWith(EVMThrow)
     })
     interface WriteEventArgs {
-      subjectId: BigNumber.BigNumber
-      attesterId: BigNumber.BigNumber
-      requesterId: BigNumber.BigNumber
+      subject: string
+      attester: string
+      requester: string
       dataHash: string
     }
 
@@ -809,9 +809,9 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       should.exist(matchingLog)
       if (!matchingLog) return
 
-      matchingLog.args.subjectId.should.be.bignumber.equal(alice)
-      matchingLog.args.attesterId.should.be.bignumber.equal(bob)
-      matchingLog.args.requesterId.should.be.bignumber.equal(david)
+      matchingLog.args.subject.should.be.equal(alice)
+      matchingLog.args.attester.should.be.equal(bob)
+      matchingLog.args.requester.should.be.equal(david)
       matchingLog.args.dataHash.should.be.equal(combinedDataHash)
     })
   })

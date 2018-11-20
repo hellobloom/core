@@ -2235,47 +2235,11 @@ export interface TokenEscrowMarketplaceInstance extends ContractInstance {
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
   }
-  unpause: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(options?: TransactionOptions): Promise<string>
-    estimateGas(options?: TransactionOptions): Promise<number>
-  }
   tokenEscrow: {
     (unnamed11: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(unnamed11: Address, options?: TransactionOptions): Promise<BigNumber.BigNumber>
     sendTransaction(unnamed11: Address, options?: TransactionOptions): Promise<string>
     estimateGas(unnamed11: Address, options?: TransactionOptions): Promise<number>
-  }
-  paused: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(options?: TransactionOptions): Promise<boolean>
-    sendTransaction(options?: TransactionOptions): Promise<string>
-    estimateGas(options?: TransactionOptions): Promise<number>
-  }
-  pause: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(options?: TransactionOptions): Promise<string>
-    estimateGas(options?: TransactionOptions): Promise<number>
-  }
-  owner: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(options?: TransactionOptions): Promise<Address>
-    sendTransaction(options?: TransactionOptions): Promise<string>
-    estimateGas(options?: TransactionOptions): Promise<number>
-  }
-  marketplaceAdmin: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(options?: TransactionOptions): Promise<Address>
-    sendTransaction(options?: TransactionOptions): Promise<string>
-    estimateGas(options?: TransactionOptions): Promise<number>
-  }
-  transferOwnership: {
-    (newOwner: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(newOwner: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(newOwner: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(newOwner: Address, options?: TransactionOptions): Promise<number>
   }
   usedSignatures: {
     (unnamed12: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -2296,28 +2260,6 @@ export interface TokenEscrowMarketplaceInstance extends ContractInstance {
 
   TokenMarketplaceDeposit: Web3.EventFilterCreator<{ escrowPayer: Address; amount: UInt }>
 
-  AttestationLogicChanged: Web3.EventFilterCreator<{ oldAttestationLogic: Address; newAttestationLogic: Address }>
-
-  MarketplaceAdminChanged: Web3.EventFilterCreator<{ oldMarketplaceAdmin: Address; newMarketplaceAdmin: Address }>
-
-  Pause: Web3.EventFilterCreator<{}>
-
-  Unpause: Web3.EventFilterCreator<{}>
-
-  OwnershipTransferred: Web3.EventFilterCreator<{ previousOwner: Address; newOwner: Address }>
-
-  setMarketplaceAdmin: {
-    (newMarketplaceAdmin: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(newMarketplaceAdmin: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(newMarketplaceAdmin: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(newMarketplaceAdmin: Address, options?: TransactionOptions): Promise<number>
-  }
-  setAttestationLogic: {
-    (newAttestationLogic: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(newAttestationLogic: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(newAttestationLogic: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(newAttestationLogic: Address, options?: TransactionOptions): Promise<number>
-  }
   moveTokensToEscrowLockupFor: {
     (sender: Address, amount: UInt, nonce: string, delegationSig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(sender: Address, amount: UInt, nonce: string, delegationSig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -2330,20 +2272,20 @@ export interface TokenEscrowMarketplaceInstance extends ContractInstance {
     sendTransaction(amount: UInt, options?: TransactionOptions): Promise<string>
     estimateGas(amount: UInt, options?: TransactionOptions): Promise<number>
   }
+  releaseTokensFromEscrowFor: {
+    (sender: Address, amount: UInt, nonce: string, delegationSig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(sender: Address, amount: UInt, nonce: string, delegationSig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(sender: Address, amount: UInt, nonce: string, delegationSig: string, options?: TransactionOptions): Promise<string>
+    estimateGas(sender: Address, amount: UInt, nonce: string, delegationSig: string, options?: TransactionOptions): Promise<number>
+  }
   releaseTokensFromEscrow: {
     (amount: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(amount: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     sendTransaction(amount: UInt, options?: TransactionOptions): Promise<string>
     estimateGas(amount: UInt, options?: TransactionOptions): Promise<number>
   }
-  releaseTokensFromEscrowFor: {
-    (payer: Address, amount: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(payer: Address, amount: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(payer: Address, amount: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(payer: Address, amount: UInt, options?: TransactionOptions): Promise<number>
-  }
   requestTokenPayment: {
-    (payer: Address, receiver: Address, amount: UInt, nonce: string, releaseSig: string, options?: TransactionOptions): Promise<
+    (payer: Address, receiver: Address, amount: UInt, nonce: string, paymentSig: string, options?: TransactionOptions): Promise<
       Web3.TransactionReceipt
     >
     call(
@@ -2351,11 +2293,11 @@ export interface TokenEscrowMarketplaceInstance extends ContractInstance {
       receiver: Address,
       amount: UInt,
       nonce: string,
-      releaseSig: string,
+      paymentSig: string,
       options?: TransactionOptions
     ): Promise<Web3.TransactionReceipt>
-    sendTransaction(payer: Address, receiver: Address, amount: UInt, nonce: string, releaseSig: string, options?: TransactionOptions): Promise<string>
-    estimateGas(payer: Address, receiver: Address, amount: UInt, nonce: string, releaseSig: string, options?: TransactionOptions): Promise<number>
+    sendTransaction(payer: Address, receiver: Address, amount: UInt, nonce: string, paymentSig: string, options?: TransactionOptions): Promise<string>
+    estimateGas(payer: Address, receiver: Address, amount: UInt, nonce: string, paymentSig: string, options?: TransactionOptions): Promise<number>
   }
 }
 

@@ -2536,39 +2536,10 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
       args_arr: [],
       args: {}
     },
-    unpause: {
-      args_arr: [],
-      args: {}
-    },
     tokenEscrow: {
       args_arr: ["anonymous_0"],
       args: {
         anonymous_0: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    paused: {
-      args_arr: [],
-      args: {}
-    },
-    pause: {
-      args_arr: [],
-      args: {}
-    },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    marketplaceAdmin: {
-      args_arr: [],
-      args: {}
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
           type: "address",
           index: 0
         }
@@ -2588,24 +2559,6 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
       args: {}
     },
 
-    setMarketplaceAdmin: {
-      args_arr: ["_newMarketplaceAdmin"],
-      args: {
-        _newMarketplaceAdmin: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setAttestationLogic: {
-      args_arr: ["_newAttestationLogic"],
-      args: {
-        _newAttestationLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
     moveTokensToEscrowLockupFor: {
       args_arr: ["_sender", "_amount", "_nonce", "_delegationSig"],
       args: {
@@ -2636,6 +2589,27 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
         }
       }
     },
+    releaseTokensFromEscrowFor: {
+      args_arr: ["_sender", "_amount", "_nonce", "_delegationSig"],
+      args: {
+        _sender: {
+          type: "address",
+          index: 0
+        },
+        _amount: {
+          type: "uint256",
+          index: 1
+        },
+        _nonce: {
+          type: "bytes32",
+          index: 2
+        },
+        _delegationSig: {
+          type: "bytes",
+          index: 3
+        }
+      }
+    },
     releaseTokensFromEscrow: {
       args_arr: ["_amount"],
       args: {
@@ -2645,21 +2619,8 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
         }
       }
     },
-    releaseTokensFromEscrowFor: {
-      args_arr: ["_payer", "_amount"],
-      args: {
-        _payer: {
-          type: "address",
-          index: 0
-        },
-        _amount: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
     requestTokenPayment: {
-      args_arr: ["_payer", "_receiver", "_amount", "_nonce", "_releaseSig"],
+      args_arr: ["_payer", "_receiver", "_amount", "_nonce", "_paymentSig"],
       args: {
         _payer: {
           type: "address",
@@ -2677,7 +2638,7 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
           type: "bytes32",
           index: 3
         },
-        _releaseSig: {
+        _paymentSig: {
           type: "bytes",
           index: 4
         }

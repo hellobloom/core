@@ -46,9 +46,6 @@ module.exports = function(deployer) {
     .then(() => TokenEscrowMarketplace.deployed())
     .then(te => (tokenEscrowMarketplace = te))
 
-    .then(() => tokenEscrowMarketplace.setMarketplaceAdmin(adminAddress))
-    .then(() => tokenEscrowMarketplace.transferOwnership(adminAddress))
-    
     .then(() => attestationLogic.setTokenEscrowMarketplace(tokenEscrowMarketplace.address))
     .then(() => attestationLogic.endInitialization())
 

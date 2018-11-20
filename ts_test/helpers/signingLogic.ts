@@ -121,7 +121,7 @@ export const getFormattedTypedDataRemoveAddress = (
   }
 }
 
-export const getFormattedTypedDataReleaseTokens = (
+export const getFormattedTypedDataPayTokens = (
   contractAddress: string,
   chainId: number,
   sender: string,
@@ -137,14 +137,14 @@ export const getFormattedTypedDataReleaseTokens = (
           { name: 'chainId', type: 'uint256' },
           { name: 'verifyingContract', type: 'address' },
       ],
-      ReleaseTokens: [
+      PayTokens: [
         { name: 'sender', type: 'address'},
         { name: 'receiver', type: 'address'},
         { name: 'amount', type: 'uint256'},
         { name: 'nonce', type: 'bytes32'},
       ]
     },
-    primaryType: 'ReleaseTokens',
+    primaryType: 'PayTokens',
     domain: {
       name: 'Bloom Token Escrow Marketplace',
       version: '2',
@@ -303,6 +303,42 @@ export const getFormattedTypedDataLockupTokensFor = (
       ]
     },
     primaryType: 'LockupTokensFor',
+    domain: {
+      name: 'Bloom Token Escrow Marketplace',
+      version: '2',
+      chainId: chainId,
+      verifyingContract: contractAddress,
+    },
+    message: {
+      sender: sender,
+      amount: amount,
+      nonce: nonce
+    }
+  }
+}
+
+export const getFormattedTypedDataReleaseTokensFor = (
+  contractAddress: string,
+  chainId: number,
+  sender: string,
+  amount: string,
+  nonce: string,
+): IFormattedTypedData => {
+  return {
+    types: {
+      EIP712Domain: [
+          { name: 'name', type: 'string' },
+          { name: 'version', type: 'string' },
+          { name: 'chainId', type: 'uint256' },
+          { name: 'verifyingContract', type: 'address' },
+      ],
+      ReleaseTokensFor: [
+        { name: 'sender', type: 'address'},
+        { name: 'amount', type: 'uint256'},
+        { name: 'nonce', type: 'bytes32'},
+      ]
+    },
+    primaryType: 'ReleaseTokensFor',
     domain: {
       name: 'Bloom Token Escrow Marketplace',
       version: '2',

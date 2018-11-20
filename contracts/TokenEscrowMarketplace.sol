@@ -1,7 +1,5 @@
 pragma solidity 0.4.24;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -19,12 +17,11 @@ import "./SigningLogic.sol";
  *  
  *  Only the AttestationLogic contract is authorized to release funds once a jobs is complete
  */
-contract TokenEscrowMarketplace is Ownable, Pausable, SigningLogic {
+contract TokenEscrowMarketplace is SigningLogic {
   using SafeERC20 for ERC20;
   using SafeMath for uint256;
 
   address public attestationLogic;
-  address public marketplaceAdmin;
 
   // Mapping of hashed signatures to bool. Sigs can only be used once
   mapping (bytes32 => bool) public usedSignatures;
@@ -35,8 +32,6 @@ contract TokenEscrowMarketplace is Ownable, Pausable, SigningLogic {
   event TokenMarketplaceWithdrawal(address escrowPayer, uint256 amount);
   event TokenMarketplaceEscrowPayment(address escrowPayer, address escrowPayee, uint256 amount);
   event TokenMarketplaceDeposit(address escrowPayer, uint256 amount);
-  event AttestationLogicChanged(address oldAttestationLogic, address newAttestationLogic);
-  event MarketplaceAdminChanged(address oldMarketplaceAdmin, address newMarketplaceAdmin);
 
   /**
    * @notice The TokenEscrowMarketplace constructor initializes the interfaces to the other contracts
@@ -51,47 +46,10 @@ contract TokenEscrowMarketplace is Ownable, Pausable, SigningLogic {
     ) public SigningLogic("Bloom Token Escrow Marketplace", "2", 1) {
     token = _token;
     attestationLogic = _attestationLogic;
-    marketplaceAdmin = owner;
-  }
-
-  /**
-   * @notice Change the marketplace admin
-   * @dev Restricted to owner and new address cannot be 0x0
-   * @param _newMarketplaceAdmin Address of new marketplace admin
-   */
-  function setMarketplaceAdmin(address _newMarketplaceAdmin) external onlyOwner nonZero(_newMarketplaceAdmin) {
-    address oldMarketplaceAdmin = marketplaceAdmin;
-    marketplaceAdmin = _newMarketplaceAdmin;
-    emit MarketplaceAdminChanged(oldMarketplaceAdmin, marketplaceAdmin);
-  }
-
-  /**
-   * @notice Change the address of Attestion Logic which has write control over attestations
-   * @dev Restricted to owner and new address cannot be 0x0
-   * @param _newAttestationLogic Address of new Attestation Logic contract
-   */
-  function setAttestationLogic(address _newAttestationLogic)
-    external onlyOwner nonZero(_newAttestationLogic) whenPaused {
-    address oldAttestationLogic = attestationLogic;
-    attestationLogic = _newAttestationLogic;
-    emit AttestationLogicChanged(oldAttestationLogic, attestationLogic);
-  }
-
-  /**
-   * @dev Zero address not allowed
-   */
-  modifier nonZero(address _address) {
-    require(_address != 0);
-    _;
   }
 
   modifier onlyAttestationLogic() {
     require(msg.sender == attestationLogic);
-    _;
-  }
-
-  modifier onlyMarketplaceAdmin() {
-    require(msg.sender == marketplaceAdmin);
     _;
   }
 
@@ -103,14 +61,14 @@ contract TokenEscrowMarketplace is Ownable, Pausable, SigningLogic {
    * @param _sender User locking up their tokens
    * @param _amount Tokens to lock up
    * @param _nonce Unique Id so signatures can't be replayed
-   * @param _delegationSig Signed hash of these input parameters so admin can submit this on behalf of a user
+   * @param _delegationSig Signed hash of these input parameters so an admin can submit this on behalf of a user
    */
   function moveTokensToEscrowLockupFor(
     address _sender,
     uint256 _amount,
     bytes32 _nonce,
     bytes _delegationSig
-    ) public onlyMarketplaceAdmin {
+    ) public {
     require(!usedSignatures[keccak256(_delegationSig)], "Signature not unique");
     usedSignatures[keccak256(_delegationSig)] = true;
     bytes32 _delegationDigest = generateLockupTokensDelegationSchemaHash(
@@ -139,9 +97,36 @@ contract TokenEscrowMarketplace is Ownable, Pausable, SigningLogic {
   function moveTokensToEscrowLockupForUser(
     address _sender,
     uint256 _amount
-    ) private whenNotPaused {
+    ) private {
     token.safeTransferFrom(_sender, this, _amount);
     addToEscrow(_sender, _amount);
+  }
+
+  /**
+   * @notice Withdraw tokens from escrow back to requester
+   * @dev Authorized by a signTypedData signature by sender
+   *  Sigs can only be used once. They contain a unique nonce
+   *  So an action can be repeated, with a different signature
+   * @param _sender User locking up their tokens
+   * @param _amount Tokens to lock up
+   * @param _nonce Unique Id so signatures can't be replayed
+   * @param _delegationSig Signed hash of these input parameters so an admin can submit this on behalf of a user
+   */
+  function releaseTokensFromEscrowFor(
+    address _sender,
+    uint256 _amount,
+    bytes32 _nonce,
+    bytes _delegationSig
+    ) public {
+    require(!usedSignatures[keccak256(_delegationSig)], "Signature not unique");
+    usedSignatures[keccak256(_delegationSig)] = true;
+    bytes32 _delegationDigest = generateReleaseTokensDelegationSchemaHash(
+      _sender,
+      _amount,
+      _nonce
+    );
+    require(_sender == recoverSigner(_delegationDigest, _delegationSig));
+    releaseTokensFromEscrowForUser(_sender, _amount);
   }
 
   /**
@@ -159,20 +144,10 @@ contract TokenEscrowMarketplace is Ownable, Pausable, SigningLogic {
    * @param _payer User retreiving tokens from escrow
    * @param _amount Tokens to retreive from escrow
    */
-  function releaseTokensFromEscrowFor(address _payer, uint256 _amount) public onlyMarketplaceAdmin{
-    releaseTokensFromEscrowForUser(_payer, _amount);
-  }
-
-  /**
-   * @notice Release tokens back to payer's available balance if lockup expires
-   * @dev Token balance retreived by accountId. Can be different address from the one that deposited tokens
-   * @param _payer User retreiving tokens from escrow
-   * @param _amount Tokens to retreive from escrow
-   */
   function releaseTokensFromEscrowForUser(
     address _payer,
     uint256 _amount
-    ) private whenNotPaused {
+    ) private {
     subFromEscrow(_payer, _amount);
     token.safeTransfer(_payer, _amount);
     emit TokenMarketplaceWithdrawal(_payer, _amount);
@@ -191,32 +166,32 @@ contract TokenEscrowMarketplace is Ownable, Pausable, SigningLogic {
   }
 
   /**
-   * @notice Release tokens to receiver from payer's escrow given a valid signature
+   * @notice Pay tokens to receiver from payer's escrow given a valid signature
    * @dev Execution restricted to attestationLogic contract
    * @param _payer User paying tokens from escrow
    * @param _receiver User receiving payment
    * @param _amount Tokens being paid
    * @param _nonce Unique Id for sig to make it one-time-use
-   * @param _releaseSig Signed parameters by payer authorizing payment
+   * @param _paymentSig Signed parameters by payer authorizing payment
    */
   function requestTokenPayment(
     address _payer,
     address _receiver,
     uint256 _amount,
     bytes32 _nonce,
-    bytes _releaseSig
-    ) external onlyAttestationLogic whenNotPaused {
+    bytes _paymentSig
+    ) external onlyAttestationLogic {
 
-    require(!usedSignatures[keccak256(_releaseSig)], "Signature not unique");
-    usedSignatures[keccak256(_releaseSig)] = true;
+    require(!usedSignatures[keccak256(_paymentSig)], "Signature not unique");
+    usedSignatures[keccak256(_paymentSig)] = true;
 
-    bytes32 _digest = generateReleaseTokensSchemaHash(
+    bytes32 _digest = generatePayTokensSchemaHash(
       _payer,
       _receiver,
       _amount,
       _nonce
     );
-    address signer = recoverSigner(_digest, _releaseSig);
+    address signer = recoverSigner(_digest, _paymentSig);
     require(_payer == signer, "Invalid signer");
 
     payTokensFromEscrow(_payer, _receiver, _amount);
@@ -224,8 +199,7 @@ contract TokenEscrowMarketplace is Ownable, Pausable, SigningLogic {
   }
 
   /**
-   * @notice Helper function to add to escrow balance and set releaseDate
-   * @dev Must be later than current release date
+   * @notice Helper function to add to escrow balance 
    * @param _from Account address for escrow mapping
    * @param _amount Tokens to lock up
    */

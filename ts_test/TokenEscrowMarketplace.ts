@@ -1,944 +1,686 @@
-import * as BigNumber from "bignumber.js";
-import {
-  TokenEscrowMarketplaceInstance,
-  SigningLogicLegacyInstance,
-  MockBLTInstance
-} from "./../contracts";
-import { EVMThrow } from "./helpers/EVMThrow";
-import * as ethereumjsWallet from "ethereumjs-wallet";
-const ethSigUtil = require("eth-sig-util");
-import { bufferToHex } from "ethereumjs-util";
-const uuid = require('uuidv4')
-import * as ipfs from "./../src/ipfs";
+import * as BigNumber from "bignumber.js"
+import { TokenEscrowMarketplaceInstance, MockBLTInstance } from "../truffle"
+import { EVMThrow } from "./helpers/EVMThrow"
+import * as ethereumjsWallet from "ethereumjs-wallet"
+const ethSigUtil = require("eth-sig-util")
+import { bufferToHex } from "ethereumjs-util"
+const uuid = require("uuidv4")
+import * as ipfs from "./../src/ipfs"
 
-import { should } from "./test_setup";
-import { latestBlockTime } from "./helpers/blockInfo";
-import { increaseTime } from "./helpers/increaseTime";
-import { hashData } from "./../src/signData";
-import { getFormattedTypedDataReleaseTokens, getFormattedTypedDataLockupTokensFor } from "./helpers/signingLogicLegacy";
+import { should } from "./test_setup"
+import { latestBlockTime } from "./helpers/blockInfo"
+import { increaseTime } from "./helpers/increaseTime"
+import { hashData, generateSigNonce } from "./../src/signData"
+import { getFormattedTypedDataPayTokens, getFormattedTypedDataLockupTokensFor, getFormattedTypedDataReleaseTokensFor } from "./helpers/signingLogic"
 
-const TokenEscrowMarketplace = artifacts.require("TokenEscrowMarketplace");
-const MockBLT = artifacts.require("MockBLT");
-const SigningLogic = artifacts.require("SigningLogicLegacy");
+const TokenEscrowMarketplace = artifacts.require("TokenEscrowMarketplace")
+const MockBLT = artifacts.require("MockBLT")
 
-contract("TokenEscrowMarketplace", function(
-  [
-    alice,
-    bob,
-    mockAttestationLogic,
-    differentMockAttestationLogic,
-    mockAdmin
-  ]) {
-  let marketplace: TokenEscrowMarketplaceInstance;
-  let token: MockBLTInstance;
-  let signingLogic: SigningLogicLegacyInstance;
-  let aliceId: BigNumber.BigNumber;
-  let bobId: BigNumber.BigNumber;
+contract("TokenEscrowMarketplace", function([alice, bob, mockAttestationLogic, mockAdmin]) {
+  let marketplace: TokenEscrowMarketplaceInstance
+  let token: MockBLTInstance
 
-  const aliceWallet = ethereumjsWallet.fromPrivateKey(
-    new Buffer(
-      "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3",
-      "hex"
-    )
-  );
-  const alicePrivkey = aliceWallet.getPrivateKey();
+  const aliceWallet = ethereumjsWallet.fromPrivateKey(new Buffer("c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3", "hex"))
+  const alicePrivkey = aliceWallet.getPrivateKey()
 
-  const bobWallet = ethereumjsWallet.fromPrivateKey(
-    new Buffer(
-      "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
-      "hex"
-    )
-  );
-  const bobPrivkey = bobWallet.getPrivateKey();
-
+  const bobWallet = ethereumjsWallet.fromPrivateKey(new Buffer("ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f", "hex"))
+  const bobPrivkey = bobWallet.getPrivateKey()
 
   // Sanity check
   if (alice != aliceWallet.getAddressString()) {
-    throw new Error("Mnemonic used for truffle tests out of sync?");
+    throw new Error("Mnemonic used for truffle tests out of sync?")
   }
 
   // Sanity check
   if (bob != bobWallet.getAddressString()) {
-    throw new Error("Mnemonic used for truffle tests out of sync?");
+    throw new Error("Mnemonic used for truffle tests out of sync?")
   }
 
-  const nonce = uuid()
-  const differentNonce = uuid()
-  const nonceHash = bufferToHex(hashData(nonce))
-  const differentNonceHash = bufferToHex(hashData(differentNonce))
+  let nonce: string
+  let differentNonce: string
+  let nonceHash: string
+  let differentNonceHash: string
+
+  let lockupTokensForSig: string
+  let releaseTokensForSig: string
+  let tokenPaymentSig: string
 
   beforeEach(async () => {
-    signingLogic = await SigningLogic.new();
-    registry = await AccountRegistry.new(mockAdmin)
-    token = await MockBLT.new();
-    marketplace = await TokenEscrowMarketplace.new(
-      token.address,
-      registry.address,
-      signingLogic.address,
-      mockAttestationLogic,
-      {from: mockAdmin}
-    );
+    token = await MockBLT.new()
+    marketplace = await TokenEscrowMarketplace.new(token.address, mockAttestationLogic, { from: mockAdmin })
 
-    await Promise.all([
-      registry.createNewAccount(alice, {from: mockAdmin}),
-      registry.createNewAccount(bob, {from: mockAdmin})
-    ]);
-    [aliceId, bobId] = await Promise.all([
-      registry.accountIdForAddress.call(alice),
-      registry.accountIdForAddress.call(bob),
-    ]);
-    await Promise.all([
-      token.gift(alice, new BigNumber("1e18")),
-      token.gift(bob, new BigNumber("1e18")),
-    ]);
-  });
+    await Promise.all([token.gift(alice, new BigNumber("1e18")), token.gift(bob, new BigNumber("1e18"))])
+
+    nonceHash = generateSigNonce()
+    differentNonceHash = generateSigNonce()
+    lockupTokensForSig = ethSigUtil.signTypedData(alicePrivkey, {
+      data: getFormattedTypedDataLockupTokensFor(marketplace.address, 1, alice, new BigNumber("5e17").toString(10), nonceHash)
+    })
+  })
 
   interface ActorBalances {
-    marketplace: BigNumber.BigNumber;
-    alice: BigNumber.BigNumber;
-    bob: BigNumber.BigNumber;
+    marketplace: BigNumber.BigNumber
+    alice: BigNumber.BigNumber
+    bob: BigNumber.BigNumber
   }
 
   const allBalances = async () => {
-    const subjects = [alice, bob, marketplace.address];
-    const [
-      aliceToken,
-      bobToken,
-      marketToken,
-    ] = await Promise.all(
-      subjects
-        .map(subject => token.balanceOf(subject))
-    );
+    const subjects = [alice, bob, marketplace.address]
+    const [aliceToken, bobToken, marketToken] = await Promise.all(subjects.map(subject => token.balanceOf(subject)))
 
     return {
       token: {
         alice: aliceToken,
         bob: bobToken,
         market: marketToken
-      },
-    };
-  };
-
-  const lockupTokensForSig = ethSigUtil.signTypedDataLegacy(
-    alicePrivkey,
-    {data: getFormattedTypedDataLockupTokensFor(
-      alice,
-      new BigNumber("5e17").toString(10),
-      nonceHash,
-    )}
-  );
-
-  const tokenReleaseSig = ethSigUtil.signTypedDataLegacy(
-    alicePrivkey,
-    {data: getFormattedTypedDataReleaseTokens(
-      alice,
-      bob,
-      new BigNumber("1e17").toString(10),
-      nonceHash,
-    )}
-  );
+      }
+    }
+  }
 
   context("moving tokens to escrow", () => {
     beforeEach(async () => {
-      await token.approve(marketplace.address, new BigNumber("5e17"));
-    });
+      await token.approve(marketplace.address, new BigNumber("5e17"))
+    })
 
     it("allows users to lock up tokens via approve", async () => {
-      const startBalance = await token.balanceOf(alice);
+      const startBalance = await token.balanceOf(alice)
 
-      await marketplace.moveTokensToEscrowLockup(new BigNumber("1e17"), {from: alice});
+      await marketplace.moveTokensToEscrowLockup(new BigNumber("1e17"), { from: alice })
 
-      const endBalance = await token.balanceOf(alice);
+      const endBalance = await token.balanceOf(alice)
 
-      startBalance.should.be.bignumber.equal("1e18");
-      endBalance.should.be.bignumber.equal("9e17");
-    });
-
-    it("fails if paused", async () => {
-      await marketplace.pause({from: mockAdmin})
-      await marketplace.moveTokensToEscrowLockup(new BigNumber("1e17"), {from: alice}).should.be.rejectedWith(EVMThrow)
-    });
+      startBalance.should.be.bignumber.equal("1e18")
+      endBalance.should.be.bignumber.equal("9e17")
+    })
 
     it("emits an event when paying into escrow", async () => {
-      const { logs } = await marketplace.moveTokensToEscrowLockup(new BigNumber("1e17"));
+      const { logs } = await marketplace.moveTokensToEscrowLockup(new BigNumber("1e17"))
 
-      const matchingLog = logs.find(
-        log => log.event === "TokenMarketplaceDeposit"
-      );
+      const matchingLog = logs.find(log => log.event === "TokenMarketplaceDeposit")
 
-      should.exist(matchingLog);
+      should.exist(matchingLog)
 
-      if (!matchingLog) return; // Satisfy TS
+      if (!matchingLog) return // Satisfy TS
 
-      matchingLog.args.escrowPayer.should.be.bignumber.equal(aliceId);
-      matchingLog.args.amount.should.be.bignumber.equal("1e17");
-    });
+      matchingLog.args.escrowPayer.should.be.bignumber.equal(alice)
+      matchingLog.args.amount.should.be.bignumber.equal("1e17")
+    })
 
     it("marks the tokens as being in escrow from alice", async () => {
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
-      await marketplace.moveTokensToEscrowLockup(new BigNumber("1e17"));
+      await marketplace.moveTokensToEscrowLockup(new BigNumber("1e17"))
 
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
       // balance
-      escrowBefore.should.be.bignumber.equal("0");
+      escrowBefore.should.be.bignumber.equal("0")
       // balance
-      escrowAfter.should.be.bignumber.equal("1e17");
-    });
+      escrowAfter.should.be.bignumber.equal("1e17")
+    })
 
     it("can handle multiple additions to the same escrow", async () => {
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
-      await Promise.all([
-        marketplace.moveTokensToEscrowLockup(new BigNumber("1e17")),
-        marketplace.moveTokensToEscrowLockup(new BigNumber("1e17")),
-      ]);
+      await Promise.all([marketplace.moveTokensToEscrowLockup(new BigNumber("1e17")), marketplace.moveTokensToEscrowLockup(new BigNumber("1e17"))])
 
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
-      escrowBefore.should.be.bignumber.equal("0");
-      escrowAfter.should.be.bignumber.equal("2e17");
-    });
+      escrowBefore.should.be.bignumber.equal("0")
+      escrowAfter.should.be.bignumber.equal("2e17")
+    })
 
     it("fails if user tries to transfer more tokens to escrow than they own", async () => {
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
       const tokenBeforeAlice = await token.balanceOf(alice)
       const tokenBeforeBob = await token.balanceOf(bob)
 
-      await token.transfer(bob, new BigNumber("1e18"), { from: alice });
+      await token.transfer(bob, new BigNumber("1e18"), { from: alice })
 
       await marketplace.moveTokensToEscrowLockup(new BigNumber("5e17")).should.be.rejectedWith(EVMThrow)
 
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
       const tokenAfterAlice = await token.balanceOf(alice)
       const tokenAfterBob = await token.balanceOf(bob)
 
       // balance
-      escrowBefore.should.be.bignumber.equal("0");
+      escrowBefore.should.be.bignumber.equal("0")
       tokenBeforeAlice.should.be.bignumber.equal("1e18")
       tokenBeforeBob.should.be.bignumber.equal("1e18")
       // balance
-      escrowAfter.should.be.bignumber.equal("0");
+      escrowAfter.should.be.bignumber.equal("0")
       tokenAfterAlice.should.be.bignumber.equal("0")
       tokenAfterBob.should.be.bignumber.equal("2e18")
-    });
+    })
 
     it("fails if user tries to transfer more tokens to escrow than they approved", async () => {
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
       const tokenBefore = await token.balanceOf(alice)
 
       await marketplace.moveTokensToEscrowLockup(new BigNumber("6e17")).should.be.rejectedWith(EVMThrow)
 
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
       const tokenAfter = await token.balanceOf(alice)
 
-      escrowBefore.should.be.bignumber.equal("0");
+      escrowBefore.should.be.bignumber.equal("0")
       tokenBefore.should.be.bignumber.equal("1e18")
 
-      escrowAfter.should.be.bignumber.equal("0");
+      escrowAfter.should.be.bignumber.equal("0")
       tokenAfter.should.be.bignumber.equal("1e18")
-    });
+    })
+  })
 
-  });
-
-  
   context("delegating token lockup", () => {
-    beforeEach(async () => {
-      await token.approve(marketplace.address, new BigNumber("5e17"));
-    });
+    let lockupTokensForDefaults: {
+      sender: string
+      amount: BigNumber.BigNumber
+      nonce: string
+      delegationSig: string
+      from: string
+    }
 
-    const lockupTokensForDefaults = {
-      sender: alice,
-      amount: new BigNumber("5e17"),
-      nonce: nonceHash,
-      delegationSig: lockupTokensForSig,
-      from: mockAdmin
-    };
-
-    const lockupTokensFor = async (
-      props: Partial<typeof lockupTokensForDefaults> = lockupTokensForDefaults
-    ) => {
-      let {
-        sender,
-        amount,
-        nonce,
-        delegationSig,
-        from
-      } = {
+    let lockupTokensFor = async (props: Partial<typeof lockupTokensForDefaults> = lockupTokensForDefaults) => {
+      let { sender, amount, nonce, delegationSig, from } = {
         ...lockupTokensForDefaults,
         ...props
-      };
+      }
 
-      return marketplace.moveTokensToEscrowLockupFor(
-        sender,
-        amount,
-        nonce,
-        delegationSig,
-        {
-          from
+      return marketplace.moveTokensToEscrowLockupFor(sender, amount, nonce, delegationSig, {
+        from
+      })
+    }
+    beforeEach(async () => {
+      await token.approve(marketplace.address, new BigNumber("5e17"))
+      lockupTokensForDefaults = {
+        sender: alice,
+        amount: new BigNumber("5e17"),
+        nonce: nonceHash,
+        delegationSig: lockupTokensForSig,
+        from: mockAdmin
+      }
+
+      lockupTokensFor = async (props: Partial<typeof lockupTokensForDefaults> = lockupTokensForDefaults) => {
+        let { sender, amount, nonce, delegationSig, from } = {
+          ...lockupTokensForDefaults,
+          ...props
         }
-      );
-    };
 
-    it("allows users to lockup tokens via delegation ", async () => {
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
-
-      const startBalance = await token.balanceOf(alice);
-
-      await lockupTokensFor().should.be.fulfilled;
-
-      const endBalance = await token.balanceOf(alice);
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
-
-      escrowBefore.should.be.bignumber.equal("0");
-      escrowAfter.should.be.bignumber.equal("5e17");
-
-      startBalance.should.be.bignumber.equal("1e18");
-      endBalance.should.be.bignumber.equal("5e17");
+        return marketplace.moveTokensToEscrowLockupFor(sender, amount, nonce, delegationSig, {
+          from
+        })
+      }
     })
 
-    it("fails if sent by non-admin", async () => {
-      await lockupTokensFor({from: bob}).should.be.rejectedWith(EVMThrow);
+    it("allows users to lockup tokens via delegation ", async () => {
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
+
+      const startBalance = await token.balanceOf(alice)
+
+      await lockupTokensFor().should.be.fulfilled
+
+      const endBalance = await token.balanceOf(alice)
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
+
+      escrowBefore.should.be.bignumber.equal("0")
+      escrowAfter.should.be.bignumber.equal("5e17")
+
+      startBalance.should.be.bignumber.equal("1e18")
+      endBalance.should.be.bignumber.equal("5e17")
+    })
+
+    it("Allows anyone to submit valid sigs", async () => {
+      await lockupTokensFor({ from: bob }).should.be.fulfilled
     })
 
     it("fails if sender does not match sig", async () => {
-      await lockupTokensFor({sender: bob}).should.be.rejectedWith(EVMThrow);
+      await lockupTokensFor({ sender: bob }).should.be.rejectedWith(EVMThrow)
     })
 
     it("fails if amount does not match sig", async () => {
-      await lockupTokensFor({amount: new BigNumber("1e17")}).should.be.rejectedWith(EVMThrow);
+      await lockupTokensFor({ amount: new BigNumber("1e17") }).should.be.rejectedWith(EVMThrow)
     })
 
     it("fails if nonce does not match sig", async () => {
-      await lockupTokensFor({nonce: differentNonceHash}).should.be.rejectedWith(EVMThrow);
+      await lockupTokensFor({ nonce: differentNonceHash }).should.be.rejectedWith(EVMThrow)
     })
 
     it("fails if sig replayed", async () => {
-      await token.approve(marketplace.address, new BigNumber("5e17"));
-      await lockupTokensFor().should.be.fulfilled;
-      await lockupTokensFor().should.be.rejectedWith(EVMThrow);
+      await token.approve(marketplace.address, new BigNumber("5e17"))
+      await lockupTokensFor().should.be.fulfilled
+      await lockupTokensFor().should.be.rejectedWith(EVMThrow)
     })
 
     it("allows multiple txs if different nonce", async () => {
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
-      const startBalance = await token.balanceOf(alice);
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
+      const startBalance = await token.balanceOf(alice)
 
-      await lockupTokensFor().should.be.fulfilled;
-      await token.approve(marketplace.address, new BigNumber("5e17"));
+      await lockupTokensFor().should.be.fulfilled
+      await token.approve(marketplace.address, new BigNumber("5e17"))
       await lockupTokensFor({
         nonce: differentNonceHash,
-        delegationSig: ethSigUtil.signTypedDataLegacy(
-        alicePrivkey,
-        {data: getFormattedTypedDataLockupTokensFor(
-          lockupTokensForDefaults.sender,
-          lockupTokensForDefaults.amount.toString(10),
-          differentNonceHash,
-          )}
-        )
-      }).should.be.fulfilled;
-      const endBalance = await token.balanceOf(alice);
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+        delegationSig: ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataLockupTokensFor(
+            marketplace.address,
+            1,
+            lockupTokensForDefaults.sender,
+            lockupTokensForDefaults.amount.toString(10),
+            differentNonceHash
+          )
+        })
+      }).should.be.fulfilled
+      const endBalance = await token.balanceOf(alice)
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
-      escrowBefore.should.be.bignumber.equal("0");
-      escrowAfter.should.be.bignumber.equal("1e18");
+      escrowBefore.should.be.bignumber.equal("0")
+      escrowAfter.should.be.bignumber.equal("1e18")
 
-      startBalance.should.be.bignumber.equal("1e18");
-      endBalance.should.be.bignumber.equal("0");
+      startBalance.should.be.bignumber.equal("1e18")
+      endBalance.should.be.bignumber.equal("0")
     })
-
   })
 
   context("paying tokens out of escrow", () => {
     beforeEach(async () => {
-      await token.approve(marketplace.address, new BigNumber("5e17"));
-      await marketplace.moveTokensToEscrowLockup(new BigNumber("2e17"));
-    });
+      await token.approve(marketplace.address, new BigNumber("5e17"))
+      await marketplace.moveTokensToEscrowLockup(new BigNumber("2e17"))
+      tokenPaymentSig = ethSigUtil.signTypedData(alicePrivkey, {
+        data: getFormattedTypedDataPayTokens(marketplace.address, 1, alice, bob, new BigNumber("1e17").toString(10), nonceHash)
+      })
+    })
 
     it("increases the receiver balance when escrow is paid out", async () => {
-      const before = await allBalances();
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const before = await allBalances()
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
-      await marketplace.requestTokenPayment(
-        alice,
-        bob,
-        new BigNumber("1e17"),
-        nonceHash,
-        tokenReleaseSig, 
-        {
-          from: mockAttestationLogic
-        }
-      ).should.be.fulfilled
+      await marketplace.requestTokenPayment(alice, bob, new BigNumber("1e17"), nonceHash, tokenPaymentSig, {
+        from: mockAttestationLogic
+      }).should.be.fulfilled
 
-
-      const after = await allBalances();
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const after = await allBalances()
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
       // Bob's balance increases
-      before.token.bob.should.be.bignumber.equal("10e17");
-      after.token.bob.should.be.bignumber.equal("11e17");
+      before.token.bob.should.be.bignumber.equal("10e17")
+      after.token.bob.should.be.bignumber.equal("11e17")
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal("8e17");
-      after.token.alice.should.be.bignumber.equal("8e17");
+      before.token.alice.should.be.bignumber.equal("8e17")
+      after.token.alice.should.be.bignumber.equal("8e17")
 
       // Escrow decreases
-      escrowBefore.should.be.bignumber.equal("2e17");
-      escrowAfter.should.be.bignumber.equal("1e17");
-    });
-
-    it("fails if paused", async () => {
-      await marketplace.pause({from: mockAdmin})
-      await marketplace.requestTokenPayment(
-        alice,
-        bob,
-        new BigNumber("1e17"),
-        nonceHash,
-        tokenReleaseSig, 
-        {
-          from: mockAttestationLogic
-        }
-      ).should.be.rejectedWith(EVMThrow)
-    });
+      escrowBefore.should.be.bignumber.equal("2e17")
+      escrowAfter.should.be.bignumber.equal("1e17")
+    })
 
     it("emits an event when paying from escrow", async () => {
-      const before = await allBalances();
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const before = await allBalances()
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
-      const { logs } = await marketplace.requestTokenPayment(
-        alice,
-        bob,
-        new BigNumber("1e17"),
-        nonceHash,
-        tokenReleaseSig, 
-        {
-          from: mockAttestationLogic
-        }
-      )
+      const { logs } = await marketplace.requestTokenPayment(alice, bob, new BigNumber("1e17"), nonceHash, tokenPaymentSig, {
+        from: mockAttestationLogic
+      })
 
-      const matchingLog = logs.find(
-        log => log.event === "TokenMarketplaceEscrowPayment"
-      );
+      const matchingLog = logs.find(log => log.event === "TokenMarketplaceEscrowPayment")
 
-      should.exist(matchingLog);
+      should.exist(matchingLog)
 
-      if (!matchingLog) return; // Satisfy TS
+      if (!matchingLog) return // Satisfy TS
 
-      matchingLog.args.escrowPayer.should.be.bignumber.equal(aliceId);
-      matchingLog.args.escrowPayee.should.be.equal(bob);
-      matchingLog.args.amount.should.be.bignumber.equal("1e17");
-
-    });
+      matchingLog.args.escrowPayer.should.be.bignumber.equal(alice)
+      matchingLog.args.escrowPayee.should.be.equal(bob)
+      matchingLog.args.amount.should.be.bignumber.equal("1e17")
+    })
 
     it("allows multiple txs with different nonce", async () => {
-      const before = await allBalances();
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const before = await allBalances()
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
-      await marketplace.requestTokenPayment(
-        alice,
-        bob,
-        new BigNumber("1e17"),
-        nonceHash,
-        tokenReleaseSig, 
-        {
-          from: mockAttestationLogic
-        }
-      ).should.be.fulfilled
+      await marketplace.requestTokenPayment(alice, bob, new BigNumber("1e17"), nonceHash, tokenPaymentSig, {
+        from: mockAttestationLogic
+      }).should.be.fulfilled
 
       await marketplace.requestTokenPayment(
         alice,
         bob,
         new BigNumber("1e17"),
         differentNonceHash,
-        ethSigUtil.signTypedDataLegacy(
-          alicePrivkey,
-          {data: getFormattedTypedDataReleaseTokens(
-            alice,
-            bob,
-            new BigNumber("1e17").toString(10),
-            differentNonceHash,
-          )}
-        ),
+        ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataPayTokens(marketplace.address, 1, alice, bob, new BigNumber("1e17").toString(10), differentNonceHash)
+        }),
         {
           from: mockAttestationLogic
         }
       ).should.be.fulfilled
 
-
-      const after = await allBalances();
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const after = await allBalances()
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
       // Bob's balance increases
-      before.token.bob.should.be.bignumber.equal("10e17");
-      after.token.bob.should.be.bignumber.equal("12e17");
+      before.token.bob.should.be.bignumber.equal("10e17")
+      after.token.bob.should.be.bignumber.equal("12e17")
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal("8e17");
-      after.token.alice.should.be.bignumber.equal("8e17");
+      before.token.alice.should.be.bignumber.equal("8e17")
+      after.token.alice.should.be.bignumber.equal("8e17")
 
       // Escrow goes to 0
-      escrowBefore.should.be.bignumber.equal("2e17");
-      escrowAfter.should.be.bignumber.equal("0");
-    });
-
+      escrowBefore.should.be.bignumber.equal("2e17")
+      escrowAfter.should.be.bignumber.equal("0")
+    })
 
     it("fails if not called by attestationLogic", async () => {
-      const before = await allBalances();
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const before = await allBalances()
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
-      await marketplace.requestTokenPayment(
-        alice,
-        bob,
-        new BigNumber("1e17"),
-        nonceHash,
-        tokenReleaseSig, 
-        {
+      await marketplace
+        .requestTokenPayment(alice, bob, new BigNumber("1e17"), nonceHash, tokenPaymentSig, {
           from: bob
-        }
-      ).should.be.rejectedWith(EVMThrow)
+        })
+        .should.be.rejectedWith(EVMThrow)
 
-
-      const after = await allBalances();
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const after = await allBalances()
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
       // Bob's balance stays the sam
-      before.token.bob.should.be.bignumber.equal("1e18");
-      after.token.bob.should.be.bignumber.equal("1e18");
+      before.token.bob.should.be.bignumber.equal("1e18")
+      after.token.bob.should.be.bignumber.equal("1e18")
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal("8e17");
-      after.token.alice.should.be.bignumber.equal("8e17");
+      before.token.alice.should.be.bignumber.equal("8e17")
+      after.token.alice.should.be.bignumber.equal("8e17")
 
       // Escrow stays the same
-      escrowBefore.should.be.bignumber.equal("2e17");
-      escrowAfter.should.be.bignumber.equal("2e17");
-    });
+      escrowBefore.should.be.bignumber.equal("2e17")
+      escrowAfter.should.be.bignumber.equal("2e17")
+    })
 
     it("fails if amount higher than authorization", async () => {
-      const before = await allBalances();
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const before = await allBalances()
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
-      await marketplace.requestTokenPayment(
-        alice,
-        bob,
-        new BigNumber("2e17"),
-        nonceHash,
-        tokenReleaseSig, 
-        {
+      await marketplace
+        .requestTokenPayment(alice, bob, new BigNumber("2e17"), nonceHash, tokenPaymentSig, {
           from: mockAttestationLogic
-        }
-      ).should.be.rejectedWith(EVMThrow)
+        })
+        .should.be.rejectedWith(EVMThrow)
 
-
-      const after = await allBalances();
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
-
+      const after = await allBalances()
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
       // Bob's balance stays the same
-      before.token.bob.should.be.bignumber.equal("1e18");
-      after.token.bob.should.be.bignumber.equal("1e18");
+      before.token.bob.should.be.bignumber.equal("1e18")
+      after.token.bob.should.be.bignumber.equal("1e18")
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal("8e17");
-      after.token.alice.should.be.bignumber.equal("8e17");
+      before.token.alice.should.be.bignumber.equal("8e17")
+      after.token.alice.should.be.bignumber.equal("8e17")
 
       // Escrow stays the same
-      escrowBefore.should.be.bignumber.equal("2e17");
-      escrowAfter.should.be.bignumber.equal("2e17");
-    });
+      escrowBefore.should.be.bignumber.equal("2e17")
+      escrowAfter.should.be.bignumber.equal("2e17")
+    })
 
     it("fails if authorized value higher than available balance", async () => {
-      const before = await allBalances();
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const before = await allBalances()
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
-      await marketplace.requestTokenPayment(
-        alice,
-        bob,
-        new BigNumber("3e17"),
-        nonceHash,
-        ethSigUtil.signTypedDataLegacy(
-          alicePrivkey,
-          {data: getFormattedTypedDataReleaseTokens(
-            alice,
-            bob,
-            new BigNumber("3e17").toString(10),
-            nonceHash,
-          )}
-        ),
-        {
-          from: mockAttestationLogic
-        }
-      ).should.be.rejectedWith(EVMThrow)
+      await marketplace
+        .requestTokenPayment(
+          alice,
+          bob,
+          new BigNumber("3e17"),
+          nonceHash,
+          ethSigUtil.signTypedData(alicePrivkey, {
+            data: getFormattedTypedDataPayTokens(marketplace.address, 1, alice, bob, new BigNumber("3e17").toString(10), nonceHash)
+          }),
+          {
+            from: mockAttestationLogic
+          }
+        )
+        .should.be.rejectedWith(EVMThrow)
 
-
-      const after = await allBalances();
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const after = await allBalances()
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
       // Bob's balance stays the same
-      before.token.bob.should.be.bignumber.equal("1e18");
-      after.token.bob.should.be.bignumber.equal("1e18");
+      before.token.bob.should.be.bignumber.equal("1e18")
+      after.token.bob.should.be.bignumber.equal("1e18")
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal("8e17");
-      after.token.alice.should.be.bignumber.equal("8e17");
+      before.token.alice.should.be.bignumber.equal("8e17")
+      after.token.alice.should.be.bignumber.equal("8e17")
 
       // Escrow stays the same
-      escrowBefore.should.be.bignumber.equal("2e17");
-      escrowAfter.should.be.bignumber.equal("2e17");
-    });
+      escrowBefore.should.be.bignumber.equal("2e17")
+      escrowAfter.should.be.bignumber.equal("2e17")
+    })
 
     it("fails if sig replayed", async () => {
-      const before = await allBalances();
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const before = await allBalances()
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
-      await marketplace.requestTokenPayment(
-        alice,
-        bob,
-        new BigNumber("1e17"),
-        nonceHash,
-        tokenReleaseSig, 
-        {
+      await marketplace.requestTokenPayment(alice, bob, new BigNumber("1e17"), nonceHash, tokenPaymentSig, {
+        from: mockAttestationLogic
+      }).should.be.fulfilled
+      await marketplace
+        .requestTokenPayment(alice, bob, new BigNumber("1e17"), nonceHash, tokenPaymentSig, {
           from: mockAttestationLogic
-        }
-      ).should.be.fulfilled
-      await marketplace.requestTokenPayment(
-        alice,
-        bob,
-        new BigNumber("1e17"),
-        nonceHash,
-        tokenReleaseSig, 
-        {
-          from: mockAttestationLogic
-        }
-      ).should.be.rejectedWith(EVMThrow)
+        })
+        .should.be.rejectedWith(EVMThrow)
 
-
-      const after = await allBalances();
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const after = await allBalances()
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
       // Bob's balance increases
-      before.token.bob.should.be.bignumber.equal("1e18");
-      after.token.bob.should.be.bignumber.equal("11e17");
+      before.token.bob.should.be.bignumber.equal("1e18")
+      after.token.bob.should.be.bignumber.equal("11e17")
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal("8e17");
-      after.token.alice.should.be.bignumber.equal("8e17");
+      before.token.alice.should.be.bignumber.equal("8e17")
+      after.token.alice.should.be.bignumber.equal("8e17")
 
       // Escrow decreases
-      escrowBefore.should.be.bignumber.equal("2e17");
-      escrowAfter.should.be.bignumber.equal("1e17");
-    });
-
+      escrowBefore.should.be.bignumber.equal("2e17")
+      escrowAfter.should.be.bignumber.equal("1e17")
+    })
 
     it("fails if amount lower than authorization", async () => {
-      const before = await allBalances();
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const before = await allBalances()
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
-      await marketplace.requestTokenPayment(
-        alice,
-        bob,
-        new BigNumber("1e16"),
-        nonceHash,
-        tokenReleaseSig, 
-        {
+      await marketplace
+        .requestTokenPayment(alice, bob, new BigNumber("1e16"), nonceHash, tokenPaymentSig, {
           from: mockAttestationLogic
-        }
-      ).should.be.rejectedWith(EVMThrow)
+        })
+        .should.be.rejectedWith(EVMThrow)
 
-
-      const after = await allBalances();
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const after = await allBalances()
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
       // Bob's balance stays the same
-      before.token.bob.should.be.bignumber.equal("1e18");
-      after.token.bob.should.be.bignumber.equal("1e18");
+      before.token.bob.should.be.bignumber.equal("1e18")
+      after.token.bob.should.be.bignumber.equal("1e18")
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal("8e17");
-      after.token.alice.should.be.bignumber.equal("8e17");
+      before.token.alice.should.be.bignumber.equal("8e17")
+      after.token.alice.should.be.bignumber.equal("8e17")
 
       // Escrow stays the same
-      escrowBefore.should.be.bignumber.equal("2e17");
-      escrowAfter.should.be.bignumber.equal("2e17");
-    });
-
-  });
+      escrowBefore.should.be.bignumber.equal("2e17")
+      escrowAfter.should.be.bignumber.equal("2e17")
+    })
+  })
 
   context("releasing tokens from escrow back to payer", () => {
     beforeEach(async () => {
-      await token.approve(marketplace.address, new BigNumber("5e17"));
-      await marketplace.moveTokensToEscrowLockup(new BigNumber("2e17"));
-    });
+      await token.approve(marketplace.address, new BigNumber("5e17"))
+      await marketplace.moveTokensToEscrowLockup(new BigNumber("2e17"))
+    })
 
     it("increases the payer balance when escrow released", async () => {
-      const before = await allBalances();
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const before = await allBalances()
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
-      await marketplace.releaseTokensFromEscrow(new BigNumber("2e17"), {from: alice}).should.be.fulfilled
+      await marketplace.releaseTokensFromEscrow(new BigNumber("2e17"), { from: alice }).should.be.fulfilled
 
-      const after = await allBalances();
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const after = await allBalances()
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
       // Bob's balance stays the same
-      before.token.bob.should.be.bignumber.equal("1e18");
-      after.token.bob.should.be.bignumber.equal("1e18");
+      before.token.bob.should.be.bignumber.equal("1e18")
+      after.token.bob.should.be.bignumber.equal("1e18")
 
       // Alice's increases
-      before.token.alice.should.be.bignumber.equal("8e17");
-      after.token.alice.should.be.bignumber.equal("1e18");
+      before.token.alice.should.be.bignumber.equal("8e17")
+      after.token.alice.should.be.bignumber.equal("1e18")
 
       // Escrow goes to zero
-      escrowBefore.should.be.bignumber.equal("2e17");
-      escrowAfter.should.be.bignumber.equal("0");
-    });
-
-    it("fails if paused", async () => {
-      await marketplace.pause({from: mockAdmin})
-      await marketplace.releaseTokensFromEscrow(new BigNumber("2e17"), {from: alice}).should.be.rejectedWith(EVMThrow)
-    });
+      escrowBefore.should.be.bignumber.equal("2e17")
+      escrowAfter.should.be.bignumber.equal("0")
+    })
 
     it("fails if more than available balance", async () => {
-      const before = await allBalances();
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const before = await allBalances()
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
       await marketplace.releaseTokensFromEscrow(new BigNumber("3e17")).should.be.rejectedWith(EVMThrow)
 
-      const after = await allBalances();
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const after = await allBalances()
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
       // Bob's balance stays the same
-      before.token.bob.should.be.bignumber.equal("1e18");
-      after.token.bob.should.be.bignumber.equal("1e18");
+      before.token.bob.should.be.bignumber.equal("1e18")
+      after.token.bob.should.be.bignumber.equal("1e18")
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal("8e17");
-      after.token.alice.should.be.bignumber.equal("8e17");
+      before.token.alice.should.be.bignumber.equal("8e17")
+      after.token.alice.should.be.bignumber.equal("8e17")
 
       // Escrow stays the same
-      escrowBefore.should.be.bignumber.equal("2e17");
-      escrowAfter.should.be.bignumber.equal("2e17");
-    });
-
+      escrowBefore.should.be.bignumber.equal("2e17")
+      escrowAfter.should.be.bignumber.equal("2e17")
+    })
 
     it("emits an event when escrow is released", async () => {
       const { logs } = await marketplace.releaseTokensFromEscrow(new BigNumber("2e17"))
 
-      const matchingLog = logs.find(
-        log => log.event === "TokenMarketplaceWithdrawal"
-      );
+      const matchingLog = logs.find(log => log.event === "TokenMarketplaceWithdrawal")
 
-      should.exist(matchingLog);
+      should.exist(matchingLog)
 
-      if (!matchingLog) return; // Satisfy TS
+      if (!matchingLog) return // Satisfy TS
 
-      matchingLog.args.subject.should.be.bignumber.equal(aliceId);
-      matchingLog.args.amount.should.be.bignumber.equal("2e17");
-    });
+      matchingLog.args.escrowPayer.should.be.bignumber.equal(alice)
+      matchingLog.args.amount.should.be.bignumber.equal("2e17")
+    })
+  })
 
-  });
-  
   context("releasing tokens from escrow back to payer on behalf of user", () => {
     beforeEach(async () => {
-      await token.approve(marketplace.address, new BigNumber("5e17"));
-      await marketplace.moveTokensToEscrowLockup(new BigNumber("2e17"));
-    });
+      await token.approve(marketplace.address, new BigNumber("5e17"))
+      await marketplace.moveTokensToEscrowLockup(new BigNumber("2e17"))
+      releaseTokensForSig = ethSigUtil.signTypedData(alicePrivkey, {
+        data: getFormattedTypedDataReleaseTokensFor(marketplace.address, 1, alice, new BigNumber("2e17").toString(10), nonceHash)
+      })
+    })
 
     it("increases the payer balance when escrow released", async () => {
-      const before = await allBalances();
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+      const before = await allBalances()
+      const escrowBefore = await marketplace.tokenEscrow.call(alice)
 
-      await marketplace.releaseTokensFromEscrowFor(alice, new BigNumber("2e17"), {from: mockAdmin}).should.be.fulfilled
+      await marketplace.releaseTokensFromEscrowFor(alice, new BigNumber("2e17"), nonceHash, releaseTokensForSig, { from: mockAdmin }).should.be
+        .fulfilled
 
-      const after = await allBalances();
-      const escrowAfter = await marketplace.tokenEscrow.call(aliceId);
+      const after = await allBalances()
+      const escrowAfter = await marketplace.tokenEscrow.call(alice)
 
       // Bob's balance stays the same
-      before.token.bob.should.be.bignumber.equal("1e18");
-      after.token.bob.should.be.bignumber.equal("1e18");
+      before.token.bob.should.be.bignumber.equal("1e18")
+      after.token.bob.should.be.bignumber.equal("1e18")
 
       // Alice's increases
-      before.token.alice.should.be.bignumber.equal("8e17");
-      after.token.alice.should.be.bignumber.equal("1e18");
+      before.token.alice.should.be.bignumber.equal("8e17")
+      after.token.alice.should.be.bignumber.equal("1e18")
 
       // Escrow goes to zero
-      escrowBefore.should.be.bignumber.equal("2e17");
-      escrowAfter.should.be.bignumber.equal("0");
-    });
+      escrowBefore.should.be.bignumber.equal("2e17")
+      escrowAfter.should.be.bignumber.equal("0")
+    })
 
-    it("fails if called by non-admin", async () => {
-      const before = await allBalances();
-      const escrowBefore = await marketplace.tokenEscrow.call(aliceId);
+    it("allows anyone to submit valid sigs", async () => {
+      await marketplace.releaseTokensFromEscrowFor(alice, new BigNumber("2e17"), nonceHash, releaseTokensForSig, { from: bob }).should.be.fulfilled
+    })
 
-      await marketplace.releaseTokensFromEscrowFor(alice, new BigNumber("2e17"), {from: alice}).should.be.rejectedWith(EVMThrow)
-    });
-  });
-
-  describe("configuring the Attestation Logic", async () => {
-    let attestationLogicAddressBefore: string;
-
-    beforeEach(async () => {
-      attestationLogicAddressBefore = await marketplace.attestationLogic.call();
-      await marketplace.pause({from: mockAdmin})
-    });
-
-    it("allows the owner to change the Attestation Logic", async () => {
-      await marketplace.setAttestationLogic(
-        differentMockAttestationLogic,
-        {from: mockAdmin}
-      );
-      const attestationLogicAddressAfter = await marketplace.attestationLogic();
-
-      attestationLogicAddressBefore.should.be.equal(mockAttestationLogic);
-      attestationLogicAddressAfter.should.be.equal(
-        differentMockAttestationLogic
-      );
-    });
-    
-    it("fails if not paused", async () => {
-      await marketplace.unpause({from: mockAdmin})
-      await marketplace.setAttestationLogic(
-        differentMockAttestationLogic,
-        {from: mockAdmin}
+    it("fails if sender does not match sig", async () => {
+      await token.approve(marketplace.address, new BigNumber("2e17"), {from: bob})
+      await marketplace.moveTokensToEscrowLockup(new BigNumber("2e17"), {from: bob})
+      await marketplace.releaseTokensFromEscrowFor(
+        bob,
+        new BigNumber("2e17"),
+        nonceHash,
+        releaseTokensForSig
       ).should.be.rejectedWith(EVMThrow)
-      const attestationLogicAddressAfter = await marketplace.attestationLogic();
+    })
 
-      attestationLogicAddressBefore.should.be.equal(mockAttestationLogic);
-      attestationLogicAddressAfter.should.be.equal(mockAttestationLogic);
-    });
+    it("fails if amount does not match sig", async () => {
+      await marketplace.releaseTokensFromEscrowFor(alice, new BigNumber("1e17"), nonceHash, releaseTokensForSig, { from: mockAdmin }).should.be.rejectedWith(EVMThrow)
+    })
 
-    it("doesn't allow anyone else to change the Attestation Logic", async () => {
-      await marketplace
-        .setAttestationLogic(differentMockAttestationLogic, {
-          from: bob
-        })
-        .should.be.rejectedWith(EVMThrow);
-      const attestationLogicAddressAfter = await marketplace.attestationLogic();
+    it("fails if amount does not match sig", async () => {
+      await marketplace.releaseTokensFromEscrowFor(alice, new BigNumber("3e17"), nonceHash, releaseTokensForSig, { from: mockAdmin }).should.be.rejectedWith(EVMThrow)
+    })
 
-      attestationLogicAddressBefore.should.be.equal(mockAttestationLogic);
-      attestationLogicAddressAfter.should.be.equal(mockAttestationLogic);
-    });
-  });
+    it("fails if nonce does not match sig", async () => {
+      await marketplace.releaseTokensFromEscrowFor(alice, new BigNumber("2e17"), differentNonceHash, releaseTokensForSig, { from: mockAdmin }).should.be.rejectedWith(EVMThrow)
+    })
 
-  describe("configuring the marketplace admin", async () => {
-    let marketplaceAdminBefore: string;
-    let differentMarketplaceAdmin = alice;
+    it("fails if sig replayed", async () => {
+      const partialReleaseSig = ethSigUtil.signTypedData(alicePrivkey, {
+        data: getFormattedTypedDataReleaseTokensFor(marketplace.address, 1, alice, new BigNumber("1e17").toString(10), nonceHash)
+      })
+      await marketplace.releaseTokensFromEscrowFor(
+        alice,
+        new BigNumber("1e17"),
+        nonceHash,
+        partialReleaseSig,
 
-    beforeEach(async () => {
-      marketplaceAdminBefore = await marketplace.marketplaceAdmin.call();
-    });
+        { from: bob }
+      ).should.be.fulfilled
+      console.log(`remaining balance ${await marketplace.tokenEscrow.call(alice)}`)
+      await marketplace.releaseTokensFromEscrowFor(
+        alice,
+        new BigNumber("1e17"),
+        nonceHash,
+        partialReleaseSig,
 
-    it("allows the owner to change the marketplace admin", async () => {
-      await marketplace.setMarketplaceAdmin(
-        differentMarketplaceAdmin,
-        {from: mockAdmin}
-      );
-      const marketplaceAdminAfter = await marketplace.marketplaceAdmin();
+        { from: bob }
+      ).should.be.rejectedWith(EVMThrow)
+    })
 
-      marketplaceAdminBefore.should.be.equal(mockAdmin);
-      marketplaceAdminAfter.should.be.equal(
-        differentMarketplaceAdmin
-      );
-    });
-    
-    it("doesn't allow anyone else to change the marketplace admin", async () => {
-      await marketplace
-        .setMarketplaceAdmin(differentMarketplaceAdmin, {
-          from: bob
-        })
-        .should.be.rejectedWith(EVMThrow);
-      const marketplaceAdminAfter = await marketplace.marketplaceAdmin();
+    it("allows multiple txs if different nonce", async () => {
+      const partialReleaseSig = ethSigUtil.signTypedData(alicePrivkey, {
+        data: getFormattedTypedDataReleaseTokensFor(marketplace.address, 1, alice, new BigNumber("1e17").toString(10), nonceHash)
+      })
+      const diffPartialReleaseSig = ethSigUtil.signTypedData(alicePrivkey, {
+        data: getFormattedTypedDataReleaseTokensFor(marketplace.address, 1, alice, new BigNumber("1e17").toString(10), differentNonceHash)
+      })
+      await marketplace.releaseTokensFromEscrowFor(
+        alice,
+        new BigNumber("1e17"),
+        nonceHash,
+        partialReleaseSig,
 
-      marketplaceAdminBefore.should.be.equal(mockAdmin);
-      marketplaceAdminAfter.should.be.equal(mockAdmin);
-    });
-  });
+        { from: bob }
+      ).should.be.fulfilled
+      console.log(`remaining balance ${await marketplace.tokenEscrow.call(alice)}`)
+      await marketplace.releaseTokensFromEscrowFor(
+        alice,
+        new BigNumber("1e17"),
+        differentNonceHash,
+        diffPartialReleaseSig,
 
-  describe("configuring the signing logic", async () => {
-    let differentSigningLogic: SigningLogicLegacyInstance;
-    let signingLogicAddressBefore: string;
-
-    beforeEach(async () => {
-      differentSigningLogic = await SigningLogic.new();
-      signingLogicAddressBefore = await marketplace.signingLogic.call();
-      await marketplace.pause({from: mockAdmin})
-    });
-
-    it("allows the owner to change the signing logic", async () => {
-      await marketplace.setSigningLogic(differentSigningLogic.address, {from: mockAdmin});
-      const signingLogicAddressAfter = await marketplace.signingLogic();
-
-      signingLogicAddressBefore.should.be.equal(signingLogic.address);
-      signingLogicAddressAfter.should.be.equal(differentSigningLogic.address);
-    });
-
-    it("fails if not paused", async () => {
-      await marketplace.unpause({from: mockAdmin})
-      await marketplace
-        .setSigningLogic(differentSigningLogic.address, {
-          from: mockAdmin
-        })
-        .should.be.rejectedWith(EVMThrow);
-      const signingLogicAddressAfter = await marketplace.signingLogic();
-
-      signingLogicAddressBefore.should.be.equal(signingLogic.address);
-      signingLogicAddressAfter.should.be.equal(signingLogic.address);
-    });
-
-    it("doesn't allow anyone else to change the signing logic", async () => {
-      await marketplace
-        .setSigningLogic(differentSigningLogic.address, {
-          from: bob
-        })
-        .should.be.rejectedWith(EVMThrow);
-      const signingLogicAddressAfter = await marketplace.signingLogic();
-
-      signingLogicAddressBefore.should.be.equal(signingLogic.address);
-      signingLogicAddressAfter.should.be.equal(signingLogic.address);
-    });
-  });
-
-  describe("configuring the signing logic", async () => {
-    let differentRegistry: AccountRegistryInstance;
-    let registryBefore: string;
-
-    beforeEach(async () => {
-      differentRegistry = await AccountRegistry.new(mockAdmin);
-      registryBefore = await marketplace.registry.call();
-      await marketplace.pause({from: mockAdmin})
-    });
-
-    it("allows the owner to change the signing logic", async () => {
-      await marketplace.setAccountRegistry(differentRegistry.address, {from: mockAdmin});
-      const registryAfter = await marketplace.registry.call();
-
-      registryBefore.should.be.equal(registry.address);
-      registryAfter.should.be.equal(differentRegistry.address);
-    });
-
-    it("fails if not paused", async () => {
-      await marketplace.unpause({from: mockAdmin})
-      await marketplace
-        .setAccountRegistry(differentRegistry.address, {
-          from: mockAdmin
-        })
-        .should.be.rejectedWith(EVMThrow);
-      const registryAfter = await marketplace.registry();
-
-      registryBefore.should.be.equal(registry.address);
-      registryAfter.should.be.equal(registry.address);
-    });
-
-    it("doesn't allow anyone else to change the signing logic", async () => {
-      await marketplace
-        .setAccountRegistry(differentRegistry.address, {
-          from: bob
-        })
-        .should.be.rejectedWith(EVMThrow);
-      const registryAfter = await marketplace.registry();
-
-      registryBefore.should.be.equal(registry.address);
-      registryAfter.should.be.equal(registry.address);
-    });
-  });
-
-});
+        { from: bob }
+      ).should.be.fulfilled
+    })
+  })
+})

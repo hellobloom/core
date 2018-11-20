@@ -25,8 +25,12 @@ contract SigningLogic {
     "RemoveAddress(address addressToRemove,bytes32 nonce)"
   );
 
-  bytes32 constant RELEASE_TOKENS_TYPEHASH = keccak256(
-    "ReleaseTokens(address sender,address receiver,uint256 amount,bytes32 nonce)"
+  bytes32 constant PAY_TOKENS_TYPEHASH = keccak256(
+    "PayTokens(address sender,address receiver,uint256 amount,bytes32 nonce)"
+  );
+
+  bytes32 constant RELEASE_TOKENS_FOR_TYPEHASH = keccak256(
+    "ReleaseTokensFor(address sender,uint256 amount,bytes32 nonce)"
   );
 
   bytes32 constant ATTEST_FOR_TYPEHASH = keccak256(
@@ -45,7 +49,7 @@ contract SigningLogic {
     "VoteFor(uint16 choice,address voter,bytes32 nonce,address poll)"
   );
 
-  bytes32 constant LOCKUP_TOKENS_FOR = keccak256(
+  bytes32 constant LOCKUP_TOKENS_FOR_TYPEHASH = keccak256(
     "LockupTokensFor(address sender,uint256 amount,bytes32 nonce)"
   );
 
@@ -116,16 +120,16 @@ contract SigningLogic {
     ));
   }
 
-  struct ReleaseTokens {
+  struct PayTokens {
       address sender;
       address receiver;
       uint256 amount;
       bytes32 nonce;
   }
 
-  function hash(ReleaseTokens request) internal pure returns (bytes32) {
+  function hash(PayTokens request) internal pure returns (bytes32) {
     return keccak256(abi.encode(
-      RELEASE_TOKENS_TYPEHASH,
+      PAY_TOKENS_TYPEHASH,
       request.sender,
       request.receiver,
       request.amount,
@@ -205,7 +209,22 @@ contract SigningLogic {
 
   function hash(LockupTokensFor request) internal pure returns (bytes32) {
     return keccak256(abi.encode(
-      LOCKUP_TOKENS_FOR,
+      LOCKUP_TOKENS_FOR_TYPEHASH,
+      request.sender,
+      request.amount,
+      request.nonce
+    ));
+  }
+
+  struct ReleaseTokensFor {
+    address sender;
+    uint256 amount;
+    bytes32 nonce;
+  }
+
+  function hash(ReleaseTokensFor request) internal pure returns (bytes32) {
+    return keccak256(abi.encode(
+      RELEASE_TOKENS_FOR_TYPEHASH,
       request.sender,
       request.amount,
       request.nonce
@@ -260,7 +279,7 @@ contract SigningLogic {
       );
   }
 
-  function generateReleaseTokensSchemaHash(
+  function generatePayTokensSchemaHash(
     address _sender,
     address _receiver,
     uint256 _amount,
@@ -270,7 +289,7 @@ contract SigningLogic {
       abi.encodePacked(
         "\x19\x01",
         DOMAIN_SEPARATOR,
-        hash(ReleaseTokens(
+        hash(PayTokens(
           _sender,
           _receiver,
           _amount,
@@ -366,6 +385,24 @@ contract SigningLogic {
         "\x19\x01",
         DOMAIN_SEPARATOR,
         hash(LockupTokensFor(
+          _sender,
+          _amount,
+          _nonce
+        ))
+      )
+      );
+  }
+
+  function generateReleaseTokensDelegationSchemaHash(
+    address _sender,
+    uint256 _amount,
+    bytes32 _nonce
+  ) internal view returns (bytes32) {
+    return keccak256(
+      abi.encodePacked(
+        "\x19\x01",
+        DOMAIN_SEPARATOR,
+        hash(ReleaseTokensFor(
           _sender,
           _amount,
           _nonce
