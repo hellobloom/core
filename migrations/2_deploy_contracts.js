@@ -19,6 +19,7 @@ module.exports = function(deployer) {
     .then(() => deployer.link(ECRecovery, AttestationLogic))
     .then(() => deployer.link(ECRecovery, TokenEscrowMarketplace))
     .then(() => deployer.link(ECRecovery, VotingCenter))
+    .then(() => deployer.link(ECRecovery, Poll))
     .then(() => deployer.deploy(BLT))
     .then(() => BLT.deployed())
     .then(blt => (token = blt))

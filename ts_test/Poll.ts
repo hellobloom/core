@@ -1,5 +1,5 @@
 import * as BigNumber from "bignumber.js";
-import { PollInstance } from "./../truffle";
+import { PollInstance, VotingCenterInstance } from "./../truffle";
 import "./test_setup";
 import { latestBlockTime } from "./helpers/blockInfo";
 import { EVMThrow } from "./helpers/EVMThrow";
@@ -13,10 +13,10 @@ const uuid = require('uuidv4')
 import { bufferToHex } from "ethereumjs-util";
 
 import { hashData } from "./../src/signData";
-import { getFormattedTypedDataVoteFor } from "./helpers/signingLogicLegacy";
+import { getFormattedTypedDataVoteFor } from "./helpers/signingLogic";
 
+const VotingCenter = artifacts.require("VotingCenter");
 const Poll = artifacts.require("Poll");
-const SigningLogic = artifacts.require("SigningLogicLegacy");
 
 contract("Poll", function([alice, bob, carl]) {
   let poll: PollInstance;
@@ -37,8 +37,6 @@ contract("Poll", function([alice, bob, carl]) {
   );
   const bobPrivkey = bobWallet.getPrivateKey();
 
-  let aliceId: BigNumber.BigNumber;
-
   // Sanity check
   if (alice != aliceWallet.getAddressString()) {
     throw new Error("Mnemonic used for truffle tests out of sync?");
@@ -53,46 +51,35 @@ contract("Poll", function([alice, bob, carl]) {
   const differentNonce = uuid()
   const nonceHash = bufferToHex(hashData(nonce))
   const differentNonceHash = bufferToHex(hashData(differentNonce))
+  const pollName = 'Bloom Poll'
 
   // latestBlockTime() is wrong for the first test if we don't do this.
   before(advanceBlock);
 
   beforeEach(async () => {
-    signingLogic = await SigningLogic.new();
-    registry = await AccountRegistry.new(alice);
-    await registry.createNewAccount(alice);
-    await registry.createNewAccount(bob);
-    await registry.createNewAccount(carl);
     poll = await Poll.new(
+      pollName,
+      1,
       ipfs.toHex("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe"),
       10,
       latestBlockTime() + 10,
       latestBlockTime() + 100,
-      alice,
-      registry.address,
-      signingLogic.address,
-      bob
+      alice
     );
-    aliceId = await registry.accountIdForAddress.call(alice);
   });
 
   context("Voting", () => {
     it("allows users to cast votes", async () => {
       await increaseTime(10);
 
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
-      await poll.vote(1, { from: alice });
-      (await poll.votes(aliceId)).should.be.bignumber.equal(1);
+      await poll.vote(1, { from: alice }).should.be.fulfilled;
     });
 
-    it("allows users to change their vote", async () => {
+    it("allows users to vote multiple times to change their vote", async () => {
       await increaseTime(10);
 
-      await poll.vote(1, { from: alice });
-      (await poll.votes(aliceId)).should.be.bignumber.equal(1);
-
-      await poll.vote(2, { from: alice });
-      (await poll.votes(aliceId)).should.be.bignumber.equal(2);
+      await poll.vote(1, { from: alice }).should.be.fulfilled;
+      await poll.vote(2, { from: alice }).should.be.fulfilled;
     });
 
     it("does not let users vote for invalid options", async () => {
@@ -144,183 +131,163 @@ contract("Poll", function([alice, bob, carl]) {
 
     it("rejects polls with a start date earlier than now", async () => {
       await Poll.new(
+        pollName,
+        1,
         ipfs.toHex("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe"),
         10,
         100,
         200,
-        alice,
-        registry.address,
-        signingLogic.address,
-        bob
+        alice
       ).should.be.rejectedWith(EVMThrow);
     });
 
     it("rejects polls with an end date that is not later than the start date", async () => {
       await Poll.new(
+        pollName,
+        1,
         ipfs.toHex("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe"),
         10,
         latestBlockTime() + 10,
         latestBlockTime() + 10,
-        alice,
-        registry.address,
-        signingLogic.address,
-        bob
+        alice
       ).should.be.rejectedWith(EVMThrow);
     });
   })
 
   context("Delegating votes", () => {
-    it("Allows the poll admin to vote on behalf of a voter", async () => {
-      const aliceSig = ethSigUtil.signTypedDataLegacy(
+    it("Allows an admin to vote on behalf of a voter", async () => {
+      const aliceSig = ethSigUtil.signTypedData(
         alicePrivkey,
         {
           data:
-          getFormattedTypedDataVoteFor(1, alice, nonceHash, poll.address)
+          getFormattedTypedDataVoteFor(pollName, poll.address, 1, 1, alice, nonceHash, poll.address)
         }
       )
 
       await increaseTime(10);
 
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
       await poll.voteFor(1, alice, nonceHash, aliceSig, { from: bob }).should.be.fulfilled;
-      (await poll.votes(aliceId)).should.be.bignumber.equal(1);
     });
 
     it("Fails if trying to replay sig", async () => {
-      const aliceSig = ethSigUtil.signTypedDataLegacy(
+      const aliceSig = ethSigUtil.signTypedData(
         alicePrivkey,
         {
           data:
-        getFormattedTypedDataVoteFor(1, alice, nonceHash, poll.address)
+          getFormattedTypedDataVoteFor(pollName, poll.address, 1, 1, alice, nonceHash, poll.address)
         }
       )
 
       await increaseTime(10);
 
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
       await poll.voteFor(1, alice, nonceHash, aliceSig, { from: bob }).should.be.fulfilled;
       await poll.voteFor(1, alice, nonceHash, aliceSig, { from: bob }).should.be.rejectedWith(EVMThrow);
-      (await poll.votes(aliceId)).should.be.bignumber.equal(1);
     });
 
     it("Allows user to change vote with new nonce", async () => {
-      const aliceSig = ethSigUtil.signTypedDataLegacy(
+      const aliceSig = ethSigUtil.signTypedData(
         alicePrivkey,
         {
           data:
-        getFormattedTypedDataVoteFor(1, alice, nonceHash, poll.address)
+          getFormattedTypedDataVoteFor(pollName, poll.address, 1, 1, alice, nonceHash, poll.address)
         }
       )
-      const anotherAliceSig = ethSigUtil.signTypedDataLegacy(
+      const differentAliceSig = ethSigUtil.signTypedData(
         alicePrivkey,
         {
           data:
-        getFormattedTypedDataVoteFor(2, alice, differentNonceHash, poll.address)
+          getFormattedTypedDataVoteFor(pollName, poll.address, 1, 2, alice, differentNonceHash, poll.address)
         }
       )
 
       await increaseTime(10);
 
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
       await poll.voteFor(1, alice, nonceHash, aliceSig, { from: bob }).should.be.fulfilled;
-      await poll.voteFor(2, alice, differentNonceHash, anotherAliceSig, { from: bob }).should.be.fulfilled;
-      (await poll.votes(aliceId)).should.be.bignumber.equal(2);
+      await poll.voteFor(2, alice, differentNonceHash, differentAliceSig, { from: bob }).should.be.fulfilled;
     });
 
     it("Rejects a vote if vote does not match sig", async () => {
-      const aliceSig = ethSigUtil.signTypedDataLegacy(
+      const aliceSig = ethSigUtil.signTypedData(
         alicePrivkey,
         {
           data:
-        getFormattedTypedDataVoteFor(1, alice, nonceHash, poll.address)
+          getFormattedTypedDataVoteFor(pollName, poll.address, 1, 1, alice, nonceHash, poll.address)
         }
       )
 
       await increaseTime(10);
 
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
       await poll.voteFor(2, alice, nonceHash, aliceSig, { from: bob }).should.be.rejectedWith(EVMThrow);
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
     });
 
     it("Rejects a vote if nonce does not match sig", async () => {
-      const aliceSig = ethSigUtil.signTypedDataLegacy(
+      const aliceSig = ethSigUtil.signTypedData(
         alicePrivkey,
         {
           data:
-        getFormattedTypedDataVoteFor(1, alice, differentNonceHash, poll.address)
+          getFormattedTypedDataVoteFor(pollName, poll.address, 1, 1, alice, nonceHash, poll.address)
         }
       )
 
       await increaseTime(10);
 
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
-      await poll.voteFor(1, alice, nonceHash, aliceSig, { from: bob }).should.be.rejectedWith(EVMThrow);
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
+      await poll.voteFor(1, alice, differentNonceHash, aliceSig, { from: bob }).should.be.rejectedWith(EVMThrow);
     });
 
     it("Rejects a vote if poll address is invalid in signature", async () => {
-      const badSig = ethSigUtil.signTypedDataLegacy(
+      const badSig = ethSigUtil.signTypedData(
         alicePrivkey,
         {
           data:
-        getFormattedTypedDataVoteFor(1, alice, nonceHash, carl)
+          getFormattedTypedDataVoteFor(pollName, poll.address, 1, 1, alice, nonceHash, carl)
         }
       )
 
       await increaseTime(10);
 
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
       await poll.voteFor(1, alice, nonceHash, badSig, { from: bob }).should.be.rejectedWith(EVMThrow);
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
     });
 
     it("Rejects a vote if signed by different user", async () => {
-      const badSig = ethSigUtil.signTypedDataLegacy(
+      const badSig = ethSigUtil.signTypedData(
         bobPrivkey,
         {
           data:
-        getFormattedTypedDataVoteFor(1, alice, nonceHash, poll.address)
+          getFormattedTypedDataVoteFor(pollName, poll.address, 1, 1, alice, nonceHash, poll.address)
         }
       )
 
       await increaseTime(10);
 
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
       await poll.voteFor(1, alice, nonceHash, badSig, { from: bob }).should.be.rejectedWith(EVMThrow);
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
     });
 
     it("Rejects a vote if valid sig from wrong user", async () => {
-      const badSig = ethSigUtil.signTypedDataLegacy(
+      const badSig = ethSigUtil.signTypedData(
         bobPrivkey,
         {
           data:
-        getFormattedTypedDataVoteFor(1, bob, nonceHash, poll.address)
+          getFormattedTypedDataVoteFor(pollName, poll.address, 1, 1, bob, nonceHash, poll.address)
         }
       )
 
       await increaseTime(10);
 
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
       await poll.voteFor(1, alice, nonceHash, badSig, { from: bob }).should.be.rejectedWith(EVMThrow);
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
     });
   
-    it("Rejects a vote if sent by non poll admin", async () => {
-      const aliceSig = ethSigUtil.signTypedDataLegacy(
+    it("Allows anyone to submit a vote with valid sigs", async () => {
+      const aliceSig = ethSigUtil.signTypedData(
         alicePrivkey,
         {
           data:
-        getFormattedTypedDataVoteFor(1, alice, nonceHash, poll.address)
+          getFormattedTypedDataVoteFor(pollName, poll.address, 1, 1, alice, nonceHash, poll.address)
         }
       )
 
       await increaseTime(10);
 
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
-      await poll.voteFor(1, alice, nonceHash, aliceSig, { from: carl }).should.be.rejectedWith(EVMThrow);
-      (await poll.votes(aliceId)).should.be.bignumber.equal(0);
+      await poll.voteFor(1, alice, nonceHash, aliceSig, { from: carl }).should.be.fulfilled;
     });
 
   })
