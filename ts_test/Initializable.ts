@@ -1,5 +1,5 @@
 import * as Web3 from "web3";
-import { InitializableInstance } from './../contracts'
+import { InitializableInstance } from './../truffle'
 import './test_setup'
 import { EVMThrow } from './helpers/EVMThrow'
 import { should } from './test_setup'

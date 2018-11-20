@@ -1,5 +1,5 @@
 import * as BigNumber from "bignumber.js";
-import { PollInstance } from "./../contracts";
+import { PollInstance } from "./../truffle";
 import "./test_setup";
 import { latestBlockTime } from "./helpers/blockInfo";
 import { EVMThrow } from "./helpers/EVMThrow";
@@ -7,7 +7,6 @@ import { increaseTime } from "./helpers/increaseTime";
 import { should } from "./test_setup";
 import { advanceBlock } from "./helpers/advanceBlock";
 import * as ipfs from "./../src/ipfs";
-import { SigningLogicLegacyInstance} from "../contracts";
 const ethSigUtil = require("eth-sig-util");
 import * as ethereumjsWallet from "ethereumjs-wallet";
 const uuid = require('uuidv4')
@@ -21,7 +20,6 @@ const SigningLogic = artifacts.require("SigningLogicLegacy");
 
 contract("Poll", function([alice, bob, carl]) {
   let poll: PollInstance;
-  let signingLogic: SigningLogicLegacyInstance;
 
   const aliceWallet = ethereumjsWallet.fromPrivateKey(
     new Buffer(

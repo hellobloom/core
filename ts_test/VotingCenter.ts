@@ -2,7 +2,7 @@ import "./test_setup";
 import { latestBlockTime } from "./helpers/blockInfo";
 import { should } from "./test_setup";
 import * as ipfs from "../src/ipfs";
-import { VotingCenterInstance, SigningLogicLegacyInstance} from "../contracts";
+import { VotingCenterInstance} from "../truffle";
 
 const VotingCenter = artifacts.require("VotingCenter");
 const Poll = artifacts.require("Poll");
@@ -14,7 +14,6 @@ contract("VotingCenter", function([alice, bob, carl]) {
   let pollAddress: string;
   let startTime: number;
   let endTime: number;
-  let signingLogic: SigningLogicLegacyInstance;
 
   beforeEach(async () => {
     signingLogic = await SigningLogic.new();

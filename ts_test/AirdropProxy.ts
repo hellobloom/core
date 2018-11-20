@@ -1,8 +1,8 @@
 import "./test_setup"
 import * as BigNumber from "bignumber.js"
-import { AirdropProxyInstance } from "../contracts"
+import { AirdropProxyInstance } from "../truffle"
 import { should } from "./test_setup"
-import { MockBLTInstance } from "./../contracts"
+import { MockBLTInstance } from "./../truffle"
 import { EVMThrow } from "./helpers/EVMThrow"
 
 const BLT = artifacts.require("MockBLT")
