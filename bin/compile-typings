@@ -38,7 +38,7 @@ reset_build() {
 }
 
 compile_typings() {
-  ./node_modules/.bin/ts-node generate.ts $1
+  ./node_modules/.bin/ts-node generate.ts $@
 }
 
 compile_method_manifest() {
@@ -51,6 +51,7 @@ format_typings() {
 
 update_typings() {
   compile_typings --contracts | format_typings > contracts.d.ts
+  compile_typings --contracts --truffle | format_typings > truffle.d.ts
   compile_method_manifest | format_typings > method_manifest.ts
 }
 

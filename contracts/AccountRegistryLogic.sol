@@ -114,6 +114,10 @@ contract AccountRegistryLogic {
     bytes _unlinkSignature
   ) public {
 
+    // require that address to remove is currently linked to senderAddress
+    require(linkIds[_addressToRemove] != 0, "Address does not have active link");
+    require(linkIds[_addressToRemove] == linkIds[_senderAddress], "Addresses not linked to each other");
+
     require(!usedSignatures[keccak256(abi.encodePacked(_unlinkSignature))], "Signature not unique");
     usedSignatures[keccak256(abi.encodePacked(_unlinkSignature))] = true;
 

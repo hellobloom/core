@@ -1,7 +1,6 @@
 pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./AccountRegistryInterface.sol";
 
 /**
  * @title AccreditationRepo stores the whitelisted attesters
