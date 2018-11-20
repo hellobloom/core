@@ -53,177 +53,11 @@ export type TContractNames = keyof typeof EContractNames
 
 export const AccountRegistryLogic: IContractMethodManifest = {
   methods: {
-    generateRemoveAddressSchemaHash: {
-      args_arr: ["_addressToRemove", "_nonce"],
-      args: {
-        _addressToRemove: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-    generateAttestForDelegationSchemaHash: {
-      args_arr: ["_subject", "_requester", "_reward", "_paymentNonce", "_dataHash", "_requestNonce"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _requester: {
-          type: "address",
-          index: 1
-        },
-        _reward: {
-          type: "uint256",
-          index: 2
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 3
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 4
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 5
-        }
-      }
-    },
-    generateAddAddressSchemaHash: {
-      args_arr: ["_addressToAdd", "_nonce"],
-      args: {
-        _addressToAdd: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-    generateRequestAttestationSchemaHash: {
-      args_arr: ["_dataHash", "_nonce"],
-      args: {
-        _dataHash: {
-          type: "bytes32",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-    recoverSigner: {
-      args_arr: ["_hash", "_sig"],
-      args: {
-        _hash: {
-          type: "bytes32",
-          index: 0
-        },
-        _sig: {
-          type: "bytes",
-          index: 1
-        }
-      }
-    },
     linkIds: {
       args_arr: ["anonymous_0"],
       args: {
         anonymous_0: {
           type: "address",
-          index: 0
-        }
-      }
-    },
-    generateVoteForDelegationSchemaHash: {
-      args_arr: ["_choice", "_voter", "_nonce", "_poll"],
-      args: {
-        _choice: {
-          type: "uint16",
-          index: 0
-        },
-        _voter: {
-          type: "address",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _poll: {
-          type: "address",
-          index: 3
-        }
-      }
-    },
-    generateContestForDelegationSchemaHash: {
-      args_arr: ["_requester", "_reward", "_paymentNonce"],
-      args: {
-        _requester: {
-          type: "address",
-          index: 0
-        },
-        _reward: {
-          type: "uint256",
-          index: 1
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
-    },
-    generateReleaseTokensSchemaHash: {
-      args_arr: ["_sender", "_receiver", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _receiver: {
-          type: "address",
-          index: 1
-        },
-        _amount: {
-          type: "uint256",
-          index: 2
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 3
-        }
-      }
-    },
-    generateLockupTokensDelegationSchemaHash: {
-      args_arr: ["_sender", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _amount: {
-          type: "uint256",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
-    },
-    generateRevokeAttestationForDelegationSchemaHash: {
-      args_arr: ["_link"],
-      args: {
-        _link: {
-          type: "bytes32",
           index: 0
         }
       }
@@ -504,61 +338,6 @@ export const ApproveAndCallFallBack: IContractMethodManifest = {
 
 export const AttestationLogic: IContractMethodManifest = {
   methods: {
-    generateRemoveAddressSchemaHash: {
-      args_arr: ["_addressToRemove", "_nonce"],
-      args: {
-        _addressToRemove: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-    generateAttestForDelegationSchemaHash: {
-      args_arr: ["_subject", "_requester", "_reward", "_paymentNonce", "_dataHash", "_requestNonce"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _requester: {
-          type: "address",
-          index: 1
-        },
-        _reward: {
-          type: "uint256",
-          index: 2
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 3
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 4
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 5
-        }
-      }
-    },
-    generateAddAddressSchemaHash: {
-      args_arr: ["_addressToAdd", "_nonce"],
-      args: {
-        _addressToAdd: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
     initializing: {
       args_arr: [],
       args: {}
@@ -567,32 +346,6 @@ export const AttestationLogic: IContractMethodManifest = {
       args_arr: [],
       args: {}
     },
-    generateRequestAttestationSchemaHash: {
-      args_arr: ["_dataHash", "_nonce"],
-      args: {
-        _dataHash: {
-          type: "bytes32",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-    recoverSigner: {
-      args_arr: ["_hash", "_sig"],
-      args: {
-        _hash: {
-          type: "bytes32",
-          index: 0
-        },
-        _sig: {
-          type: "bytes",
-          index: 1
-        }
-      }
-    },
     initializer: {
       args_arr: [],
       args: {}
@@ -600,91 +353,6 @@ export const AttestationLogic: IContractMethodManifest = {
     endInitialization: {
       args_arr: [],
       args: {}
-    },
-    generateVoteForDelegationSchemaHash: {
-      args_arr: ["_choice", "_voter", "_nonce", "_poll"],
-      args: {
-        _choice: {
-          type: "uint16",
-          index: 0
-        },
-        _voter: {
-          type: "address",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _poll: {
-          type: "address",
-          index: 3
-        }
-      }
-    },
-    generateContestForDelegationSchemaHash: {
-      args_arr: ["_requester", "_reward", "_paymentNonce"],
-      args: {
-        _requester: {
-          type: "address",
-          index: 0
-        },
-        _reward: {
-          type: "uint256",
-          index: 1
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
-    },
-    generateReleaseTokensSchemaHash: {
-      args_arr: ["_sender", "_receiver", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _receiver: {
-          type: "address",
-          index: 1
-        },
-        _amount: {
-          type: "uint256",
-          index: 2
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 3
-        }
-      }
-    },
-    generateLockupTokensDelegationSchemaHash: {
-      args_arr: ["_sender", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _amount: {
-          type: "uint256",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
-    },
-    generateRevokeAttestationForDelegationSchemaHash: {
-      args_arr: ["_link"],
-      args: {
-        _link: {
-          type: "bytes32",
-          index: 0
-        }
-      }
     },
     usedSignatures: {
       args_arr: ["anonymous_0"],
@@ -2425,77 +2093,9 @@ export const Pausable: IContractMethodManifest = {
 
 export const Poll: IContractMethodManifest = {
   methods: {
-    generateRemoveAddressSchemaHash: {
-      args_arr: ["_addressToRemove", "_nonce"],
-      args: {
-        _addressToRemove: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-    generateAttestForDelegationSchemaHash: {
-      args_arr: ["_subject", "_requester", "_reward", "_paymentNonce", "_dataHash", "_requestNonce"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _requester: {
-          type: "address",
-          index: 1
-        },
-        _reward: {
-          type: "uint256",
-          index: 2
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 3
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 4
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 5
-        }
-      }
-    },
-    generateAddAddressSchemaHash: {
-      args_arr: ["_addressToAdd", "_nonce"],
-      args: {
-        _addressToAdd: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
     endTime: {
       args_arr: [],
       args: {}
-    },
-    generateRequestAttestationSchemaHash: {
-      args_arr: ["_dataHash", "_nonce"],
-      args: {
-        _dataHash: {
-          type: "bytes32",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
     },
     startTime: {
       args_arr: [],
@@ -2505,19 +2105,6 @@ export const Poll: IContractMethodManifest = {
       args_arr: [],
       args: {}
     },
-    recoverSigner: {
-      args_arr: ["_hash", "_sig"],
-      args: {
-        _hash: {
-          type: "bytes32",
-          index: 0
-        },
-        _sig: {
-          type: "bytes",
-          index: 1
-        }
-      }
-    },
     author: {
       args_arr: [],
       args: {}
@@ -2525,91 +2112,6 @@ export const Poll: IContractMethodManifest = {
     numChoices: {
       args_arr: [],
       args: {}
-    },
-    generateVoteForDelegationSchemaHash: {
-      args_arr: ["_choice", "_voter", "_nonce", "_poll"],
-      args: {
-        _choice: {
-          type: "uint16",
-          index: 0
-        },
-        _voter: {
-          type: "address",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _poll: {
-          type: "address",
-          index: 3
-        }
-      }
-    },
-    generateContestForDelegationSchemaHash: {
-      args_arr: ["_requester", "_reward", "_paymentNonce"],
-      args: {
-        _requester: {
-          type: "address",
-          index: 0
-        },
-        _reward: {
-          type: "uint256",
-          index: 1
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
-    },
-    generateReleaseTokensSchemaHash: {
-      args_arr: ["_sender", "_receiver", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _receiver: {
-          type: "address",
-          index: 1
-        },
-        _amount: {
-          type: "uint256",
-          index: 2
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 3
-        }
-      }
-    },
-    generateLockupTokensDelegationSchemaHash: {
-      args_arr: ["_sender", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _amount: {
-          type: "uint256",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
-    },
-    generateRevokeAttestationForDelegationSchemaHash: {
-      args_arr: ["_link"],
-      args: {
-        _link: {
-          type: "bytes32",
-          index: 0
-        }
-      }
     },
     usedSignatures: {
       args_arr: ["anonymous_0"],
@@ -2663,174 +2165,7 @@ export const SafeMath: IContractMethodManifest = {
 }
 
 export const SigningLogic: IContractMethodManifest = {
-  methods: {
-    generateRequestAttestationSchemaHash: {
-      args_arr: ["_dataHash", "_nonce"],
-      args: {
-        _dataHash: {
-          type: "bytes32",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-    generateAddAddressSchemaHash: {
-      args_arr: ["_addressToAdd", "_nonce"],
-      args: {
-        _addressToAdd: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-    generateRemoveAddressSchemaHash: {
-      args_arr: ["_addressToRemove", "_nonce"],
-      args: {
-        _addressToRemove: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-    generateReleaseTokensSchemaHash: {
-      args_arr: ["_sender", "_receiver", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _receiver: {
-          type: "address",
-          index: 1
-        },
-        _amount: {
-          type: "uint256",
-          index: 2
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 3
-        }
-      }
-    },
-    generateAttestForDelegationSchemaHash: {
-      args_arr: ["_subject", "_requester", "_reward", "_paymentNonce", "_dataHash", "_requestNonce"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _requester: {
-          type: "address",
-          index: 1
-        },
-        _reward: {
-          type: "uint256",
-          index: 2
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 3
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 4
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 5
-        }
-      }
-    },
-    generateContestForDelegationSchemaHash: {
-      args_arr: ["_requester", "_reward", "_paymentNonce"],
-      args: {
-        _requester: {
-          type: "address",
-          index: 0
-        },
-        _reward: {
-          type: "uint256",
-          index: 1
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
-    },
-    generateRevokeAttestationForDelegationSchemaHash: {
-      args_arr: ["_link"],
-      args: {
-        _link: {
-          type: "bytes32",
-          index: 0
-        }
-      }
-    },
-    generateVoteForDelegationSchemaHash: {
-      args_arr: ["_choice", "_voter", "_nonce", "_poll"],
-      args: {
-        _choice: {
-          type: "uint16",
-          index: 0
-        },
-        _voter: {
-          type: "address",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _poll: {
-          type: "address",
-          index: 3
-        }
-      }
-    },
-    generateLockupTokensDelegationSchemaHash: {
-      args_arr: ["_sender", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _amount: {
-          type: "uint256",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
-    },
-    recoverSigner: {
-      args_arr: ["_hash", "_sig"],
-      args: {
-        _hash: {
-          type: "bytes32",
-          index: 0
-        },
-        _sig: {
-          type: "bytes",
-          index: 1
-        }
-      }
-    }
-  }
+  methods: {}
 }
 
 export const SigningLogicLegacy: IContractMethodManifest = {
@@ -3197,61 +2532,6 @@ export const TokenController: IContractMethodManifest = {
 
 export const TokenEscrowMarketplace: IContractMethodManifest = {
   methods: {
-    generateRemoveAddressSchemaHash: {
-      args_arr: ["_addressToRemove", "_nonce"],
-      args: {
-        _addressToRemove: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-    generateAttestForDelegationSchemaHash: {
-      args_arr: ["_subject", "_requester", "_reward", "_paymentNonce", "_dataHash", "_requestNonce"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _requester: {
-          type: "address",
-          index: 1
-        },
-        _reward: {
-          type: "uint256",
-          index: 2
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 3
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 4
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 5
-        }
-      }
-    },
-    generateAddAddressSchemaHash: {
-      args_arr: ["_addressToAdd", "_nonce"],
-      args: {
-        _addressToAdd: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
     attestationLogic: {
       args_arr: [],
       args: {}
@@ -3269,19 +2549,6 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
         }
       }
     },
-    generateRequestAttestationSchemaHash: {
-      args_arr: ["_dataHash", "_nonce"],
-      args: {
-        _dataHash: {
-          type: "bytes32",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
     paused: {
       args_arr: [],
       args: {}
@@ -3294,113 +2561,15 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
       args_arr: [],
       args: {}
     },
-    recoverSigner: {
-      args_arr: ["_hash", "_sig"],
-      args: {
-        _hash: {
-          type: "bytes32",
-          index: 0
-        },
-        _sig: {
-          type: "bytes",
-          index: 1
-        }
-      }
-    },
-    generateVoteForDelegationSchemaHash: {
-      args_arr: ["_choice", "_voter", "_nonce", "_poll"],
-      args: {
-        _choice: {
-          type: "uint16",
-          index: 0
-        },
-        _voter: {
-          type: "address",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _poll: {
-          type: "address",
-          index: 3
-        }
-      }
-    },
-    generateContestForDelegationSchemaHash: {
-      args_arr: ["_requester", "_reward", "_paymentNonce"],
-      args: {
-        _requester: {
-          type: "address",
-          index: 0
-        },
-        _reward: {
-          type: "uint256",
-          index: 1
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
-    },
-    generateReleaseTokensSchemaHash: {
-      args_arr: ["_sender", "_receiver", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _receiver: {
-          type: "address",
-          index: 1
-        },
-        _amount: {
-          type: "uint256",
-          index: 2
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 3
-        }
-      }
-    },
     marketplaceAdmin: {
       args_arr: [],
       args: {}
-    },
-    generateLockupTokensDelegationSchemaHash: {
-      args_arr: ["_sender", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _amount: {
-          type: "uint256",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
     },
     transferOwnership: {
       args_arr: ["newOwner"],
       args: {
         newOwner: {
           type: "address",
-          index: 0
-        }
-      }
-    },
-    generateRevokeAttestationForDelegationSchemaHash: {
-      args_arr: ["_link"],
-      args: {
-        _link: {
-          type: "bytes32",
           index: 0
         }
       }

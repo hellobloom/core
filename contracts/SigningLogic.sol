@@ -215,7 +215,7 @@ contract SigningLogic {
   function generateRequestAttestationSchemaHash(
     bytes32 _dataHash,
     bytes32 _nonce
-  ) public view returns (bytes32) {
+  ) internal view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -231,7 +231,7 @@ contract SigningLogic {
   function generateAddAddressSchemaHash(
     address _addressToAdd,
     bytes32 _nonce
-  ) public view returns (bytes32) {
+  ) internal view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -247,7 +247,7 @@ contract SigningLogic {
   function generateRemoveAddressSchemaHash(
     address _addressToRemove,
     bytes32 _nonce
-  ) public view returns (bytes32) {
+  ) internal view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -265,7 +265,7 @@ contract SigningLogic {
     address _receiver,
     uint256 _amount,
     bytes32 _nonce
-  ) public view returns (bytes32) {
+  ) internal view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -287,7 +287,7 @@ contract SigningLogic {
     bytes32 _paymentNonce,
     bytes32 _dataHash,
     bytes32 _requestNonce
-  ) public view returns (bytes32) {
+  ) internal view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -308,7 +308,7 @@ contract SigningLogic {
     address _requester,
     uint256 _reward,
     bytes32 _paymentNonce
-  ) public view returns (bytes32) {
+  ) internal view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -324,7 +324,7 @@ contract SigningLogic {
 
   function generateRevokeAttestationForDelegationSchemaHash(
     bytes32 _link
-  ) public view returns (bytes32) {
+  ) internal view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -341,7 +341,7 @@ contract SigningLogic {
     address _voter,
     bytes32 _nonce,
     address _poll
-  ) public view returns (bytes32) {
+  ) internal view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -360,7 +360,7 @@ contract SigningLogic {
     address _sender,
     uint256 _amount,
     bytes32 _nonce
-  ) public view returns (bytes32) {
+  ) internal view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -374,7 +374,7 @@ contract SigningLogic {
       );
   }
 
-  function recoverSigner(bytes32 _hash, bytes _sig) public pure returns (address) {
+  function recoverSigner(bytes32 _hash, bytes _sig) internal pure returns (address) {
     address signer = ECRecovery.recover(_hash, _sig);
     require(signer != address(0));
 

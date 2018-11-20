@@ -10,19 +10,19 @@ const uuid = require("uuidv4")
 import { bufferToHex } from "ethereumjs-util"
 import { hashData } from "./../src/signData"
 
-import { SigningLogicLegacyInstance, AccountRegistryLogicInstance } from "../truffle"
+import { AccountRegistryLogicInstance } from "../truffle"
 import { EVMThrow } from "./helpers/EVMThrow"
 import * as ipfs from "./../src/ipfs"
 
 import { should } from "./test_setup"
-import { getFormattedTypedDataAddAddress, getFormattedTypedDataRemoveAddress } from "./helpers/signingLogicLegacy"
+import { getFormattedTypedDataAddAddress, getFormattedTypedDataRemoveAddress } from "./helpers/signingLogic"
 
-const SigningLogic = artifacts.require("SigningLogicLegacy")
+const SigningLogic = artifacts.require("SigningLogic")
 const AccountRegistryLogic = artifacts.require("AccountRegistryLogic")
 
 contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaimedB]) {
-  let signingLogic: SigningLogicLegacyInstance
   let registryLogic: AccountRegistryLogicInstance
+  let registryLogicAddress: string
 
   // Keys come from default ganache mnemonic
 
@@ -61,24 +61,28 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
     throw new Error("Mnemonic used for truffle tests out of sync?")
   }
 
+  let newAddressLinkSig: string
+  let currentAddressLinkSig: string
+  let nonceHash: string
+  let differentNonceHash: string
+
   beforeEach(async () => {
-    signingLogic = await SigningLogic.new()
+    registryLogic = await AccountRegistryLogic.new();
+    registryLogicAddress = registryLogic.address
+    const nonce = uuid();
+    const differentNonce = uuid();
+    nonceHash = bufferToHex(hashData(nonce));
+    differentNonceHash = bufferToHex(hashData(differentNonce));
 
-    registryLogic = await AccountRegistryLogic.new(signingLogic.address)
+    newAddressLinkSig = ethSigUtil.signTypedData(unclaimedPrivkey, {
+      data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, alice, nonceHash)
+    });
+
+    currentAddressLinkSig = ethSigUtil.signTypedData(alicePrivkey, {
+      data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimed, nonceHash)
+    });
   })
 
-  const nonce = uuid()
-  const differentNonce = uuid()
-  const nonceHash = bufferToHex(hashData(nonce))
-  const differentNonceHash = bufferToHex(hashData(differentNonce))
-
-  const newAddressLinkSig = ethSigUtil.signTypedDataLegacy(unclaimedPrivkey, {
-    data: getFormattedTypedDataAddAddress(alice, nonceHash)
-  })
-
-  const currentAddressLinkSig = ethSigUtil.signTypedDataLegacy(alicePrivkey, {
-    data: getFormattedTypedDataAddAddress(unclaimed, nonceHash)
-  })
 
   describe("Linking Accounts", async () => {
     it.only("Allows a user to add an unclaimed address to their account", async () => {
@@ -99,8 +103,8 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       await registryLogic
         .linkAddresses(
           alice,
-          ethSigUtil.signTypedDataLegacy(alicePrivkey, {
-            data: getFormattedTypedDataAddAddress(unclaimedB, nonceHash)
+          ethSigUtil.signTypedData(alicePrivkey, {
+            data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimedB, nonceHash)
           }),
           unclaimed,
           newAddressLinkSig,
@@ -113,8 +117,8 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       await registryLogic
         .linkAddresses(
           alice,
-          ethSigUtil.signTypedDataLegacy(alicePrivkey, {
-            data: getFormattedTypedDataAddAddress(unclaimedB, nonceHash)
+          ethSigUtil.signTypedData(alicePrivkey, {
+            data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimedB, nonceHash)
           }),
           unclaimedB,
           newAddressLinkSig,
@@ -129,8 +133,8 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
           alice,
           currentAddressLinkSig,
           unclaimed,
-          ethSigUtil.signTypedDataLegacy(unclaimedPrivkey, {
-            data: getFormattedTypedDataAddAddress(bob, nonceHash)
+          ethSigUtil.signTypedData(unclaimedPrivkey, {
+            data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, bob, nonceHash)
           }),
           nonceHash
         )
@@ -143,8 +147,8 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
           bob,
           currentAddressLinkSig,
           unclaimed,
-          ethSigUtil.signTypedDataLegacy(unclaimedPrivkey, {
-            data: getFormattedTypedDataAddAddress(bob, nonceHash)
+          ethSigUtil.signTypedData(unclaimedPrivkey, {
+            data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, bob, nonceHash)
           }),
           nonceHash
         )
@@ -177,12 +181,12 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       await registryLogic
         .linkAddresses(
           bob,
-          ethSigUtil.signTypedDataLegacy(bobPrivkey, {
-            data: getFormattedTypedDataAddAddress(unclaimed, nonceHash)
+          ethSigUtil.signTypedData(bobPrivkey, {
+            data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimed, nonceHash)
           }),
           unclaimed,
-          ethSigUtil.signTypedDataLegacy(unclaimedPrivkey, {
-            data: getFormattedTypedDataAddAddress(bob, nonceHash)
+          ethSigUtil.signTypedData(unclaimedPrivkey, {
+            data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, bob, nonceHash)
           }),
           nonceHash,
           { from: alice }
@@ -196,8 +200,8 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         alice,
         unclaimed,
         nonceHash,
-        ethSigUtil.signTypedDataLegacy(alicePrivkey, {
-          data: getFormattedTypedDataRemoveAddress(unclaimed, nonceHash)
+        ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, unclaimed, nonceHash)
         }),
         { from: alice }
       ).should.be.fulfilled
@@ -210,8 +214,8 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         alice,
         alice,
         nonceHash,
-        ethSigUtil.signTypedDataLegacy(alicePrivkey, {
-          data: getFormattedTypedDataRemoveAddress(alice, nonceHash)
+        ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, alice, nonceHash)
         }),
         { from: alice }
       ).should.be.fulfilled
@@ -224,8 +228,8 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         alice,
         unclaimed,
         nonceHash,
-        ethSigUtil.signTypedDataLegacy(alicePrivkey, {
-          data: getFormattedTypedDataRemoveAddress(unclaimed, nonceHash)
+        ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, unclaimed, nonceHash)
         }),
         { from: bob }
       ).should.be.fulfilled
@@ -243,8 +247,8 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         alice,
         unclaimed,
         nonceHash,
-        ethSigUtil.signTypedDataLegacy(alicePrivkey, {
-          data: getFormattedTypedDataRemoveAddress(unclaimed, nonceHash)
+        ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, unclaimed, nonceHash)
         }),
         { from: alice }
       )) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<UnlinkEventArgs>
@@ -265,8 +269,8 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
           bob,
           unclaimed,
           nonceHash,
-          ethSigUtil.signTypedDataLegacy(bobPrivkey, {
-            data: getFormattedTypedDataRemoveAddress(unclaimed, nonceHash)
+          ethSigUtil.signTypedData(bobPrivkey, {
+            data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, unclaimed, nonceHash)
           }),
           { from: bob }
         )
@@ -279,8 +283,8 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         alice,
         unclaimed,
         nonceHash,
-        ethSigUtil.signTypedDataLegacy(alicePrivkey, {
-          data: getFormattedTypedDataRemoveAddress(unclaimed, nonceHash)
+        ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, unclaimed, nonceHash)
         }),
         { from: alice }
       ).should.be.fulfilled
@@ -295,16 +299,16 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         alice,
         unclaimed,
         nonceHash,
-        ethSigUtil.signTypedDataLegacy(alicePrivkey, {
-          data: getFormattedTypedDataRemoveAddress(unclaimed, nonceHash)
+        ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, unclaimed, nonceHash)
         }),
         { from: alice }
       ).should.be.fulfilled
       await registryLogic.linkAddresses(
         alice,
-        ethSigUtil.signTypedDataLegacy(alicePrivkey, { data: getFormattedTypedDataAddAddress(unclaimed, differentNonceHash) }),
+        ethSigUtil.signTypedData(alicePrivkey, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimed, differentNonceHash) }),
         unclaimed,
-        ethSigUtil.signTypedDataLegacy(unclaimedPrivkey, { data: getFormattedTypedDataAddAddress(alice, differentNonceHash) }),
+        ethSigUtil.signTypedData(unclaimedPrivkey, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, alice, differentNonceHash) }),
         differentNonceHash,
         { from: alice }
       ).should.be.fulfilled

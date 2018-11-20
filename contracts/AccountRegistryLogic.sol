@@ -85,8 +85,8 @@ contract AccountRegistryLogic is SigningLogic {
     require(!usedSignatures[keccak256(abi.encodePacked(_linkSignature))], "Signature not unique");
     usedSignatures[keccak256(abi.encodePacked(_linkSignature))] = true;
 
-    require(_addressA == SigningLogic.recoverSigner(
-      SigningLogic.generateAddAddressSchemaHash(
+    require(_addressA == recoverSigner(
+      generateAddAddressSchemaHash(
       _addressB,
       _nonce
     ), _linkSignature));
@@ -113,8 +113,8 @@ contract AccountRegistryLogic is SigningLogic {
     require(!usedSignatures[keccak256(abi.encodePacked(_unlinkSignature))], "Signature not unique");
     usedSignatures[keccak256(abi.encodePacked(_unlinkSignature))] = true;
 
-    require(_senderAddress == SigningLogic.recoverSigner(
-      SigningLogic.generateRemoveAddressSchemaHash(
+    require(_senderAddress == recoverSigner(
+      generateRemoveAddressSchemaHash(
       _addressToRemove,
       _nonce
     ), _unlinkSignature));
