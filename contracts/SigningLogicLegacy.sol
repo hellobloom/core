@@ -1,7 +1,6 @@
 pragma solidity 0.4.24;
 
 import "./ECRecovery.sol";
-import "./SigningLogicInterface.sol";
 
 /**
  * @title SigningLogic is an upgradeable contract implementing signature recovery from typed data signatures
@@ -10,7 +9,7 @@ import "./SigningLogicInterface.sol";
  *  The other contracts have functions that allow this contract to be swapped out
  *  They will continue to work as long as this contract implements at least the functions in SigningLogicInterface
  */
-contract SigningLogicLegacy is SigningLogicInterface{
+contract SigningLogicLegacy {
 
   bytes32 constant ATTESTATION_REQUEST_TYPEHASH = keccak256(
       abi.encodePacked(

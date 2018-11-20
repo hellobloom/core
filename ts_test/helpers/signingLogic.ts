@@ -59,7 +59,7 @@ export const getFormattedTypedDataAttestationRequest= (
 }
 
 export const getFormattedTypedDataAddAddress = (
-  sender: string,
+  addressToAdd: string,
   nonce: string,
 ): IFormattedTypedData => {
   return {
@@ -67,11 +67,9 @@ export const getFormattedTypedDataAddAddress = (
       EIP712Domain: [
           { name: 'name', type: 'string' },
           { name: 'version', type: 'string' },
-          { name: 'chainId', type: 'uint256' },
-          { name: 'verifyingContract', type: 'address' },
       ],
       AddAddress: [
-        { name: 'sender', type: 'address'},
+        { name: 'addressToAdd', type: 'address'},
         { name: 'nonce', type: 'bytes32'},
       ]
     },
@@ -81,7 +79,34 @@ export const getFormattedTypedDataAddAddress = (
       version: '1',
     },
     message: {
-      sender: sender,
+      sender: addressToAdd,
+      nonce: nonce
+    }
+  }
+}
+
+export const getFormattedTypedDataRemoveAddress = (
+  addressToRemove: string,
+  nonce: string,
+): IFormattedTypedData => {
+  return {
+    types: {
+      EIP712Domain: [
+          { name: 'name', type: 'string' },
+          { name: 'version', type: 'string' },
+      ],
+      AddAddress: [
+        { name: 'addressToRemove', type: 'address'},
+        { name: 'nonce', type: 'bytes32'},
+      ]
+    },
+    primaryType: 'RemoveAddress',
+    domain: {
+      name: 'Bloom',
+      version: '1',
+    },
+    message: {
+      sender: addressToRemove,
       nonce: nonce
     }
   }

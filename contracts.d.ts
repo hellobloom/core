@@ -33,7 +33,6 @@ interface ContractInstance {
 }
 
 interface Artifacts {
-  require(name: "AccountRegistryInterface"): AccountRegistryInterfaceContract
   require(name: "AccountRegistryLogic"): AccountRegistryLogicContract
   require(name: "AccreditationRepo"): AccreditationRepoContract
   require(name: "AirdropProxy"): AirdropProxyContract
@@ -62,7 +61,6 @@ interface Artifacts {
   require(name: "SafeERC20"): SafeERC20Contract
   require(name: "SafeMath"): SafeMathContract
   require(name: "SigningLogic"): SigningLogicContract
-  require(name: "SigningLogicInterface"): SigningLogicInterfaceContract
   require(name: "SigningLogicLegacy"): SigningLogicLegacyContract
   require(name: "StandardToken"): StandardTokenContract
   require(name: "TokenController"): TokenControllerContract
@@ -70,57 +68,104 @@ interface Artifacts {
   require(name: "VotingCenter"): VotingCenterContract
 }
 
-export interface AccountRegistryInterfaceInstance extends ContractInstance {
-  accountIdForAddress: {
-    (address: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(address: Address, options?: TransactionOptions): Promise<BigNumber.BigNumber>
-    sendTransaction(address: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(address: Address, options?: TransactionOptions): Promise<number>
-  }
-  addressBelongsToAccount: {
-    (address: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(address: Address, options?: TransactionOptions): Promise<boolean>
-    sendTransaction(address: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(address: Address, options?: TransactionOptions): Promise<number>
-  }
-  createNewAccount: {
-    (newUser: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(newUser: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(newUser: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(newUser: Address, options?: TransactionOptions): Promise<number>
-  }
-  addAddressToAccount: {
-    (newAddress: Address, sender: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(newAddress: Address, sender: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(newAddress: Address, sender: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(newAddress: Address, sender: Address, options?: TransactionOptions): Promise<number>
-  }
-  removeAddressFromAccount: {
-    (addressToRemove: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(addressToRemove: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(addressToRemove: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(addressToRemove: Address, options?: TransactionOptions): Promise<number>
-  }
-}
-
-export interface AccountRegistryInterfaceContract {
-  new: (options?: TransactionOptions) => Promise<AccountRegistryInterfaceInstance>
-  deployed(): Promise<AccountRegistryInterfaceInstance>
-  at(address: string): AccountRegistryInterfaceInstance
-}
-
 export interface AccountRegistryLogicInstance extends ContractInstance {
-  signingLogic: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(options?: TransactionOptions): Promise<Address>
-    sendTransaction(options?: TransactionOptions): Promise<string>
-    estimateGas(options?: TransactionOptions): Promise<number>
+  generateRemoveAddressSchemaHash: {
+    (addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateAttestForDelegationSchemaHash: {
+    (
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>
+    call(
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<string>
+    sendTransaction(
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<string>
+    estimateGas(
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<number>
+  }
+  generateAddAddressSchemaHash: {
+    (addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateRequestAttestationSchemaHash: {
+    (dataHash: string, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(dataHash: string, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  recoverSigner: {
+    (hash: string, sig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(hash: string, sig: string, options?: TransactionOptions): Promise<Address>
+    sendTransaction(hash: string, sig: string, options?: TransactionOptions): Promise<string>
+    estimateGas(hash: string, sig: string, options?: TransactionOptions): Promise<number>
   }
   linkIds: {
     (unnamed0: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(unnamed0: Address, options?: TransactionOptions): Promise<BigNumber.BigNumber>
     sendTransaction(unnamed0: Address, options?: TransactionOptions): Promise<string>
     estimateGas(unnamed0: Address, options?: TransactionOptions): Promise<number>
+  }
+  generateVoteForDelegationSchemaHash: {
+    (choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<string>
+    sendTransaction(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<number>
+  }
+  generateContestForDelegationSchemaHash: {
+    (requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateReleaseTokensSchemaHash: {
+    (sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateLockupTokensDelegationSchemaHash: {
+    (sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateRevokeAttestationForDelegationSchemaHash: {
+    (link: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(link: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(link: string, options?: TransactionOptions): Promise<string>
+    estimateGas(link: string, options?: TransactionOptions): Promise<number>
   }
   usedSignatures: {
     (unnamed1: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -228,7 +273,7 @@ export interface AccountRegistryLogicInstance extends ContractInstance {
 }
 
 export interface AccountRegistryLogicContract {
-  new: (signingLogic: Address, options?: TransactionOptions) => Promise<AccountRegistryLogicInstance>
+  new: (options?: TransactionOptions) => Promise<AccountRegistryLogicInstance>
   deployed(): Promise<AccountRegistryLogicInstance>
   at(address: string): AccountRegistryLogicInstance
 }
@@ -401,15 +446,59 @@ export interface ApproveAndCallFallBackContract {
 }
 
 export interface AttestationLogicInstance extends ContractInstance {
+  generateRemoveAddressSchemaHash: {
+    (addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateAttestForDelegationSchemaHash: {
+    (
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>
+    call(
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<string>
+    sendTransaction(
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<string>
+    estimateGas(
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<number>
+  }
+  generateAddAddressSchemaHash: {
+    (addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<number>
+  }
   initializing: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(options?: TransactionOptions): Promise<boolean>
-    sendTransaction(options?: TransactionOptions): Promise<string>
-    estimateGas(options?: TransactionOptions): Promise<number>
-  }
-  signingLogic: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(options?: TransactionOptions): Promise<Address>
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
   }
@@ -418,6 +507,18 @@ export interface AttestationLogicInstance extends ContractInstance {
     call(options?: TransactionOptions): Promise<Address>
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
+  }
+  generateRequestAttestationSchemaHash: {
+    (dataHash: string, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(dataHash: string, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  recoverSigner: {
+    (hash: string, sig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(hash: string, sig: string, options?: TransactionOptions): Promise<Address>
+    sendTransaction(hash: string, sig: string, options?: TransactionOptions): Promise<string>
+    estimateGas(hash: string, sig: string, options?: TransactionOptions): Promise<number>
   }
   initializer: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -430,6 +531,36 @@ export interface AttestationLogicInstance extends ContractInstance {
     call(options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
+  }
+  generateVoteForDelegationSchemaHash: {
+    (choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<string>
+    sendTransaction(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<number>
+  }
+  generateContestForDelegationSchemaHash: {
+    (requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateReleaseTokensSchemaHash: {
+    (sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateLockupTokensDelegationSchemaHash: {
+    (sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateRevokeAttestationForDelegationSchemaHash: {
+    (link: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(link: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(link: string, options?: TransactionOptions): Promise<string>
+    estimateGas(link: string, options?: TransactionOptions): Promise<number>
   }
   usedSignatures: {
     (unnamed3: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -625,12 +756,7 @@ export interface AttestationLogicInstance extends ContractInstance {
 }
 
 export interface AttestationLogicContract {
-  new: (
-    initializer: Address,
-    signingLogic: Address,
-    tokenEscrowMarketplace: Address,
-    options?: TransactionOptions
-  ) => Promise<AttestationLogicInstance>
+  new: (initializer: Address, tokenEscrowMarketplace: Address, options?: TransactionOptions) => Promise<AttestationLogicInstance>
   deployed(): Promise<AttestationLogicInstance>
   at(address: string): AttestationLogicInstance
 }
@@ -1961,39 +2087,71 @@ export interface PausableContract {
 }
 
 export interface PollInstance extends ContractInstance {
+  generateRemoveAddressSchemaHash: {
+    (addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateAttestForDelegationSchemaHash: {
+    (
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>
+    call(
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<string>
+    sendTransaction(
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<string>
+    estimateGas(
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<number>
+  }
+  generateAddAddressSchemaHash: {
+    (addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<number>
+  }
   endTime: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(options?: TransactionOptions): Promise<BigNumber.BigNumber>
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
   }
-  signingLogic: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(options?: TransactionOptions): Promise<Address>
-    sendTransaction(options?: TransactionOptions): Promise<string>
-    estimateGas(options?: TransactionOptions): Promise<number>
-  }
-  votes: {
-    (unnamed10: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed10: UInt, options?: TransactionOptions): Promise<BigNumber.BigNumber>
-    sendTransaction(unnamed10: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed10: UInt, options?: TransactionOptions): Promise<number>
+  generateRequestAttestationSchemaHash: {
+    (dataHash: string, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(dataHash: string, nonce: string, options?: TransactionOptions): Promise<number>
   }
   startTime: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(options?: TransactionOptions): Promise<BigNumber.BigNumber>
-    sendTransaction(options?: TransactionOptions): Promise<string>
-    estimateGas(options?: TransactionOptions): Promise<number>
-  }
-  registry: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(options?: TransactionOptions): Promise<Address>
-    sendTransaction(options?: TransactionOptions): Promise<string>
-    estimateGas(options?: TransactionOptions): Promise<number>
-  }
-  pollAdmin: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(options?: TransactionOptions): Promise<Address>
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
   }
@@ -2002,6 +2160,12 @@ export interface PollInstance extends ContractInstance {
     call(options?: TransactionOptions): Promise<string>
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
+  }
+  recoverSigner: {
+    (hash: string, sig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(hash: string, sig: string, options?: TransactionOptions): Promise<Address>
+    sendTransaction(hash: string, sig: string, options?: TransactionOptions): Promise<string>
+    estimateGas(hash: string, sig: string, options?: TransactionOptions): Promise<number>
   }
   author: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -2015,11 +2179,41 @@ export interface PollInstance extends ContractInstance {
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
   }
+  generateVoteForDelegationSchemaHash: {
+    (choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<string>
+    sendTransaction(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<number>
+  }
+  generateContestForDelegationSchemaHash: {
+    (requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateReleaseTokensSchemaHash: {
+    (sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateLockupTokensDelegationSchemaHash: {
+    (sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateRevokeAttestationForDelegationSchemaHash: {
+    (link: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(link: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(link: string, options?: TransactionOptions): Promise<string>
+    estimateGas(link: string, options?: TransactionOptions): Promise<number>
+  }
   usedSignatures: {
-    (unnamed11: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed11: string, options?: TransactionOptions): Promise<boolean>
-    sendTransaction(unnamed11: string, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed11: string, options?: TransactionOptions): Promise<number>
+    (unnamed10: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(unnamed10: string, options?: TransactionOptions): Promise<boolean>
+    sendTransaction(unnamed10: string, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed10: string, options?: TransactionOptions): Promise<number>
   }
 
   VoteCast: Web3.EventFilterCreator<{ voter: Address; choice: UInt }>
@@ -2040,14 +2234,13 @@ export interface PollInstance extends ContractInstance {
 
 export interface PollContract {
   new: (
+    name: string,
+    chainId: UInt,
     ipfsHash: string,
     numChoices: UInt,
     startTime: UInt,
     endTime: UInt,
     author: Address,
-    registry: Address,
-    signingLogic: Address,
-    pollAdmin: Address,
     options?: TransactionOptions
   ) => Promise<PollInstance>
   deployed(): Promise<PollInstance>
@@ -2139,50 +2332,6 @@ export interface SigningLogicInstance extends ContractInstance {
     sendTransaction(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<string>
     estimateGas(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<number>
   }
-  generateStakeForDelegationSchemaHash: {
-    (
-      subject: Address,
-      value: UInt,
-      paymentNonce: string,
-      dataHash: string,
-      requestNonce: string,
-      stakeDuration: UInt,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>
-    call(
-      subject: Address,
-      value: UInt,
-      paymentNonce: string,
-      dataHash: string,
-      requestNonce: string,
-      stakeDuration: UInt,
-      options?: TransactionOptions
-    ): Promise<string>
-    sendTransaction(
-      subject: Address,
-      value: UInt,
-      paymentNonce: string,
-      dataHash: string,
-      requestNonce: string,
-      stakeDuration: UInt,
-      options?: TransactionOptions
-    ): Promise<string>
-    estimateGas(
-      subject: Address,
-      value: UInt,
-      paymentNonce: string,
-      dataHash: string,
-      requestNonce: string,
-      stakeDuration: UInt,
-      options?: TransactionOptions
-    ): Promise<number>
-  }
-  generateRevokeStakeForDelegationSchemaHash: {
-    (subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<string>
-    sendTransaction(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<number>
-  }
   generateRevokeAttestationForDelegationSchemaHash: {
     (link: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(link: string, options?: TransactionOptions): Promise<string>
@@ -2210,154 +2359,9 @@ export interface SigningLogicInstance extends ContractInstance {
 }
 
 export interface SigningLogicContract {
-  new: (options?: TransactionOptions) => Promise<SigningLogicInstance>
+  new: (name: string, version: string, chainId: UInt, options?: TransactionOptions) => Promise<SigningLogicInstance>
   deployed(): Promise<SigningLogicInstance>
   at(address: string): SigningLogicInstance
-}
-
-export interface SigningLogicInterfaceInstance extends ContractInstance {
-  recoverSigner: {
-    (hash: string, sig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(hash: string, sig: string, options?: TransactionOptions): Promise<Address>
-    sendTransaction(hash: string, sig: string, options?: TransactionOptions): Promise<string>
-    estimateGas(hash: string, sig: string, options?: TransactionOptions): Promise<number>
-  }
-  generateRequestAttestationSchemaHash: {
-    (dataHash: string, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
-    sendTransaction(dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
-    estimateGas(dataHash: string, nonce: string, options?: TransactionOptions): Promise<number>
-  }
-  generateAttestForDelegationSchemaHash: {
-    (
-      subject: Address,
-      requester: Address,
-      reward: UInt,
-      paymentNonce: string,
-      dataHash: string,
-      requestNonce: string,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>
-    call(
-      subject: Address,
-      requester: Address,
-      reward: UInt,
-      paymentNonce: string,
-      dataHash: string,
-      requestNonce: string,
-      options?: TransactionOptions
-    ): Promise<string>
-    sendTransaction(
-      subject: Address,
-      requester: Address,
-      reward: UInt,
-      paymentNonce: string,
-      dataHash: string,
-      requestNonce: string,
-      options?: TransactionOptions
-    ): Promise<string>
-    estimateGas(
-      subject: Address,
-      requester: Address,
-      reward: UInt,
-      paymentNonce: string,
-      dataHash: string,
-      requestNonce: string,
-      options?: TransactionOptions
-    ): Promise<number>
-  }
-  generateContestForDelegationSchemaHash: {
-    (requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<string>
-    sendTransaction(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<string>
-    estimateGas(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<number>
-  }
-  generateStakeForDelegationSchemaHash: {
-    (
-      subject: Address,
-      value: UInt,
-      paymentNonce: string,
-      dataHash: string,
-      requestNonce: string,
-      stakeDuration: UInt,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>
-    call(
-      subject: Address,
-      value: UInt,
-      paymentNonce: string,
-      dataHash: string,
-      requestNonce: string,
-      stakeDuration: UInt,
-      options?: TransactionOptions
-    ): Promise<string>
-    sendTransaction(
-      subject: Address,
-      value: UInt,
-      paymentNonce: string,
-      dataHash: string,
-      requestNonce: string,
-      stakeDuration: UInt,
-      options?: TransactionOptions
-    ): Promise<string>
-    estimateGas(
-      subject: Address,
-      value: UInt,
-      paymentNonce: string,
-      dataHash: string,
-      requestNonce: string,
-      stakeDuration: UInt,
-      options?: TransactionOptions
-    ): Promise<number>
-  }
-  generateRevokeStakeForDelegationSchemaHash: {
-    (subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<string>
-    sendTransaction(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(subjectId: UInt, attestationId: UInt, options?: TransactionOptions): Promise<number>
-  }
-  generateRevokeAttestationForDelegationSchemaHash: {
-    (link: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(link: string, options?: TransactionOptions): Promise<string>
-    sendTransaction(link: string, options?: TransactionOptions): Promise<string>
-    estimateGas(link: string, options?: TransactionOptions): Promise<number>
-  }
-  generateAddAddressSchemaHash: {
-    (addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<string>
-    sendTransaction(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<string>
-    estimateGas(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<number>
-  }
-  generateRemoveAddressSchemaHash: {
-    (addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
-    sendTransaction(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
-    estimateGas(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<number>
-  }
-  generateVoteForDelegationSchemaHash: {
-    (choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<string>
-    sendTransaction(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<number>
-  }
-  generateReleaseTokensSchemaHash: {
-    (sender: Address, receiver: Address, amount: UInt, uuid: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(sender: Address, receiver: Address, amount: UInt, uuid: string, options?: TransactionOptions): Promise<string>
-    sendTransaction(sender: Address, receiver: Address, amount: UInt, uuid: string, options?: TransactionOptions): Promise<string>
-    estimateGas(sender: Address, receiver: Address, amount: UInt, uuid: string, options?: TransactionOptions): Promise<number>
-  }
-  generateLockupTokensDelegationSchemaHash: {
-    (sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
-    sendTransaction(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
-    estimateGas(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<number>
-  }
-}
-
-export interface SigningLogicInterfaceContract {
-  new: (options?: TransactionOptions) => Promise<SigningLogicInterfaceInstance>
-  deployed(): Promise<SigningLogicInterfaceInstance>
-  at(address: string): SigningLogicInterfaceInstance
 }
 
 export interface SigningLogicLegacyInstance extends ContractInstance {
@@ -2594,6 +2598,56 @@ export interface TokenControllerContract {
 }
 
 export interface TokenEscrowMarketplaceInstance extends ContractInstance {
+  generateRemoveAddressSchemaHash: {
+    (addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(addressToRemove: Address, nonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateAttestForDelegationSchemaHash: {
+    (
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>
+    call(
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<string>
+    sendTransaction(
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<string>
+    estimateGas(
+      subject: Address,
+      requester: Address,
+      reward: UInt,
+      paymentNonce: string,
+      dataHash: string,
+      requestNonce: string,
+      options?: TransactionOptions
+    ): Promise<number>
+  }
+  generateAddAddressSchemaHash: {
+    (addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(addressToAdd: Address, nonce: string, options?: TransactionOptions): Promise<number>
+  }
   attestationLogic: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(options?: TransactionOptions): Promise<Address>
@@ -2606,17 +2660,17 @@ export interface TokenEscrowMarketplaceInstance extends ContractInstance {
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
   }
-  signingLogic: {
-    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(options?: TransactionOptions): Promise<Address>
-    sendTransaction(options?: TransactionOptions): Promise<string>
-    estimateGas(options?: TransactionOptions): Promise<number>
-  }
   tokenEscrow: {
-    (unnamed12: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed12: Address, options?: TransactionOptions): Promise<BigNumber.BigNumber>
-    sendTransaction(unnamed12: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed12: Address, options?: TransactionOptions): Promise<number>
+    (unnamed11: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(unnamed11: Address, options?: TransactionOptions): Promise<BigNumber.BigNumber>
+    sendTransaction(unnamed11: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed11: Address, options?: TransactionOptions): Promise<number>
+  }
+  generateRequestAttestationSchemaHash: {
+    (dataHash: string, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(dataHash: string, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(dataHash: string, nonce: string, options?: TransactionOptions): Promise<number>
   }
   paused: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -2636,11 +2690,41 @@ export interface TokenEscrowMarketplaceInstance extends ContractInstance {
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
   }
+  recoverSigner: {
+    (hash: string, sig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(hash: string, sig: string, options?: TransactionOptions): Promise<Address>
+    sendTransaction(hash: string, sig: string, options?: TransactionOptions): Promise<string>
+    estimateGas(hash: string, sig: string, options?: TransactionOptions): Promise<number>
+  }
+  generateVoteForDelegationSchemaHash: {
+    (choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<string>
+    sendTransaction(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(choice: UInt, voter: Address, nonce: string, poll: Address, options?: TransactionOptions): Promise<number>
+  }
+  generateContestForDelegationSchemaHash: {
+    (requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(requester: Address, reward: UInt, paymentNonce: string, options?: TransactionOptions): Promise<number>
+  }
+  generateReleaseTokensSchemaHash: {
+    (sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(sender: Address, receiver: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<number>
+  }
   marketplaceAdmin: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(options?: TransactionOptions): Promise<Address>
     sendTransaction(options?: TransactionOptions): Promise<string>
     estimateGas(options?: TransactionOptions): Promise<number>
+  }
+  generateLockupTokensDelegationSchemaHash: {
+    (sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<string>
+    estimateGas(sender: Address, amount: UInt, nonce: string, options?: TransactionOptions): Promise<number>
   }
   transferOwnership: {
     (newOwner: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -2648,11 +2732,17 @@ export interface TokenEscrowMarketplaceInstance extends ContractInstance {
     sendTransaction(newOwner: Address, options?: TransactionOptions): Promise<string>
     estimateGas(newOwner: Address, options?: TransactionOptions): Promise<number>
   }
+  generateRevokeAttestationForDelegationSchemaHash: {
+    (link: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(link: string, options?: TransactionOptions): Promise<string>
+    sendTransaction(link: string, options?: TransactionOptions): Promise<string>
+    estimateGas(link: string, options?: TransactionOptions): Promise<number>
+  }
   usedSignatures: {
-    (unnamed13: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed13: string, options?: TransactionOptions): Promise<boolean>
-    sendTransaction(unnamed13: string, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed13: string, options?: TransactionOptions): Promise<number>
+    (unnamed12: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(unnamed12: string, options?: TransactionOptions): Promise<boolean>
+    sendTransaction(unnamed12: string, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed12: string, options?: TransactionOptions): Promise<number>
   }
   token: {
     (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -2666,8 +2756,6 @@ export interface TokenEscrowMarketplaceInstance extends ContractInstance {
   TokenMarketplaceEscrowPayment: Web3.EventFilterCreator<{ escrowPayer: Address; escrowPayee: Address; amount: UInt }>
 
   TokenMarketplaceDeposit: Web3.EventFilterCreator<{ escrowPayer: Address; amount: UInt }>
-
-  SigningLogicChanged: Web3.EventFilterCreator<{ oldSigningLogic: Address; newSigningLogic: Address }>
 
   AttestationLogicChanged: Web3.EventFilterCreator<{ oldAttestationLogic: Address; newAttestationLogic: Address }>
 
@@ -2684,12 +2772,6 @@ export interface TokenEscrowMarketplaceInstance extends ContractInstance {
     call(newMarketplaceAdmin: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     sendTransaction(newMarketplaceAdmin: Address, options?: TransactionOptions): Promise<string>
     estimateGas(newMarketplaceAdmin: Address, options?: TransactionOptions): Promise<number>
-  }
-  setSigningLogic: {
-    (newSigningLogic: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(newSigningLogic: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(newSigningLogic: Address, options?: TransactionOptions): Promise<string>
-    estimateGas(newSigningLogic: Address, options?: TransactionOptions): Promise<number>
   }
   setAttestationLogic: {
     (newAttestationLogic: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
@@ -2739,59 +2821,49 @@ export interface TokenEscrowMarketplaceInstance extends ContractInstance {
 }
 
 export interface TokenEscrowMarketplaceContract {
-  new: (token: Address, signingLogic: Address, attestationLogic: Address, options?: TransactionOptions) => Promise<TokenEscrowMarketplaceInstance>
+  new: (token: Address, attestationLogic: Address, options?: TransactionOptions) => Promise<TokenEscrowMarketplaceInstance>
   deployed(): Promise<TokenEscrowMarketplaceInstance>
   at(address: string): TokenEscrowMarketplaceInstance
 }
 
 export interface VotingCenterInstance extends ContractInstance {
   polls: {
-    (unnamed14: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(unnamed14: UInt, options?: TransactionOptions): Promise<Address>
-    sendTransaction(unnamed14: UInt, options?: TransactionOptions): Promise<string>
-    estimateGas(unnamed14: UInt, options?: TransactionOptions): Promise<number>
+    (unnamed13: UInt, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(unnamed13: UInt, options?: TransactionOptions): Promise<Address>
+    sendTransaction(unnamed13: UInt, options?: TransactionOptions): Promise<string>
+    estimateGas(unnamed13: UInt, options?: TransactionOptions): Promise<number>
   }
   PollCreated: Web3.EventFilterCreator<{ poll: Address; author: Address }>
 
   createPoll: {
-    (
-      ipfsHash: string,
-      numOptions: UInt,
-      startTime: UInt,
-      endTime: UInt,
-      registry: Address,
-      signingLogic: Address,
-      pollAdmin: Address,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>
+    (name: string, chainId: UInt, ipfsHash: string, numOptions: UInt, startTime: UInt, endTime: UInt, options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >
     call(
+      name: string,
+      chainId: UInt,
       ipfsHash: string,
       numOptions: UInt,
       startTime: UInt,
       endTime: UInt,
-      registry: Address,
-      signingLogic: Address,
-      pollAdmin: Address,
       options?: TransactionOptions
     ): Promise<Address>
     sendTransaction(
+      name: string,
+      chainId: UInt,
       ipfsHash: string,
       numOptions: UInt,
       startTime: UInt,
       endTime: UInt,
-      registry: Address,
-      signingLogic: Address,
-      pollAdmin: Address,
       options?: TransactionOptions
     ): Promise<string>
     estimateGas(
+      name: string,
+      chainId: UInt,
       ipfsHash: string,
       numOptions: UInt,
       startTime: UInt,
       endTime: UInt,
-      registry: Address,
-      signingLogic: Address,
-      pollAdmin: Address,
       options?: TransactionOptions
     ): Promise<number>
   }

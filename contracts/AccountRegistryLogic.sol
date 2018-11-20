@@ -1,25 +1,17 @@
 pragma solidity 0.4.24;
 
-import "./SigningLogicInterface.sol";
+import "./SigningLogic.sol";
 
 /**
  * @title Bloom account registry
  * @notice Account Registry Logic allows users to link multiple addresses to the same owner
  *
  */
-contract AccountRegistryLogic {
-
-  SigningLogicInterface public signingLogic;
-
+contract AccountRegistryLogic is SigningLogic {
   /**
    * @notice The AccountRegistry constructor configures the signing logic implementation
-   * @param _signingLogic The address of the deployed SigningLogic contract
    */
-  constructor(
-    SigningLogicInterface _signingLogic
-    ) public {
-    signingLogic = _signingLogic;
-  }
+  constructor() public SigningLogic("Bloom Account Registry", "2", 1) {}
 
   event AddressLinked(address indexed currentAddress, address indexed newAddress, uint256 indexed linkId);
   event AddressUnlinked(address indexed senderAddress, address indexed addressToRemove);
@@ -93,8 +85,8 @@ contract AccountRegistryLogic {
     require(!usedSignatures[keccak256(abi.encodePacked(_linkSignature))], "Signature not unique");
     usedSignatures[keccak256(abi.encodePacked(_linkSignature))] = true;
 
-    require(_addressA == signingLogic.recoverSigner(
-      signingLogic.generateAddAddressSchemaHash(
+    require(_addressA == SigningLogic.recoverSigner(
+      SigningLogic.generateAddAddressSchemaHash(
       _addressB,
       _nonce
     ), _linkSignature));
@@ -121,8 +113,8 @@ contract AccountRegistryLogic {
     require(!usedSignatures[keccak256(abi.encodePacked(_unlinkSignature))], "Signature not unique");
     usedSignatures[keccak256(abi.encodePacked(_unlinkSignature))] = true;
 
-    require(_senderAddress == signingLogic.recoverSigner(
-      signingLogic.generateRemoveAddressSchemaHash(
+    require(_senderAddress == SigningLogic.recoverSigner(
+      SigningLogic.generateRemoveAddressSchemaHash(
       _addressToRemove,
       _nonce
     ), _unlinkSignature));

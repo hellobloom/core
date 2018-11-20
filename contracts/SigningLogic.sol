@@ -1,19 +1,16 @@
 pragma solidity 0.4.24;
 
 import "./ECRecovery.sol";
-import "./SigningLogicInterface.sol";
 
 /**
- * @title SigningLogic is an upgradeable contract implementing signature recovery from typed data signatures
+ * @title SigningLogic is library implementing signature recovery from typed data signatures
  * @notice Recovers signatures based on the SignTypedData implementation provided by Metamask
- * @dev This contract is deployed separately and is referenced by other contracts.
- *  The other contracts have functions that allow this contract to be swapped out
- *  They will continue to work as long as this contract implements at least the functions in SigningLogicInterface
+ * @dev This contract is deployed separately and is linked to other contracts.
  */
-contract SigningLogic is SigningLogicInterface{
+contract SigningLogic {
 
   bytes32 constant EIP712DOMAIN_TYPEHASH = keccak256(
-    "EIP712Domain(string name,string version)"
+    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
   );
 
   bytes32 constant ATTESTATION_REQUEST_TYPEHASH = keccak256(
@@ -40,14 +37,6 @@ contract SigningLogic is SigningLogicInterface{
     "ContestFor(address requester,uint256 reward,bytes32 paymentNonce)"
   );
 
-  bytes32 constant STAKE_FOR_TYPEHASH = keccak256(
-    "StakeFor(address subject,uint256 value,bytes32 paymentNonce,bytes32 dataHash,bytes32 requestNonce,uint256 stakeDuration)"
-  );
-
-  bytes32 constant REVOKE_STAKE_FOR_TYPEHASH = keccak256(
-    "RevokeStakeFor(uint256 subjectId,uint256 attestationId)"
-  );
-
   bytes32 constant REVOKE_ATTESTATION_FOR_TYPEHASH = keccak256(
     "RevokeAttestationFor(bytes32 link)"
   );
@@ -62,23 +51,29 @@ contract SigningLogic is SigningLogicInterface{
 
   bytes32 DOMAIN_SEPARATOR;
 
-  constructor () public {
+  constructor (string name, string version, uint256 chainId) public {
     DOMAIN_SEPARATOR = hash(EIP712Domain({
-      name: "Bloom",
-      version: '1'
+      name: name,
+      version: version,
+      chainId: chainId,
+      verifyingContract: this
     }));
   }
 
   struct EIP712Domain {
       string  name;
       string  version;
+      uint256 chainId;
+      address verifyingContract;
   }
 
   function hash(EIP712Domain eip712Domain) internal pure returns (bytes32) {
     return keccak256(abi.encode(
       EIP712DOMAIN_TYPEHASH,
       keccak256(bytes(eip712Domain.name)),
-      keccak256(bytes(eip712Domain.version))
+      keccak256(bytes(eip712Domain.version)),
+      eip712Domain.chainId,
+      eip712Domain.verifyingContract
     ));
   }
 
@@ -174,40 +169,6 @@ contract SigningLogic is SigningLogicInterface{
     ));
   }
 
-  struct StakeFor {
-      address subject;
-      uint256 value;
-      bytes32 paymentNonce;
-      bytes32 dataHash;
-      bytes32 requestNonce;
-      uint256 stakeDuration;
-  }
-
-  function hash(StakeFor request) internal pure returns (bytes32) {
-    return keccak256(abi.encode(
-      STAKE_FOR_TYPEHASH,
-      request.subject,
-      request.value,
-      request.paymentNonce,
-      request.dataHash,
-      request.requestNonce,
-      request.stakeDuration
-    ));
-  }
-
-  struct RevokeStakeFor {
-      uint256 subjectId;
-      uint256 attestationId;
-  }
-
-  function hash(RevokeStakeFor request) internal pure returns (bytes32) {
-    return keccak256(abi.encode(
-      REVOKE_STAKE_FOR_TYPEHASH,
-      request.subjectId,
-      request.attestationId
-    ));
-  }
-
   struct RevokeAttestationFor {
       bytes32 link;
   }
@@ -254,7 +215,7 @@ contract SigningLogic is SigningLogicInterface{
   function generateRequestAttestationSchemaHash(
     bytes32 _dataHash,
     bytes32 _nonce
-  ) external view returns (bytes32) {
+  ) public view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -270,7 +231,7 @@ contract SigningLogic is SigningLogicInterface{
   function generateAddAddressSchemaHash(
     address _addressToAdd,
     bytes32 _nonce
-  ) external view returns (bytes32) {
+  ) public view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -286,7 +247,7 @@ contract SigningLogic is SigningLogicInterface{
   function generateRemoveAddressSchemaHash(
     address _addressToRemove,
     bytes32 _nonce
-  ) external view returns (bytes32) {
+  ) public view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -304,7 +265,7 @@ contract SigningLogic is SigningLogicInterface{
     address _receiver,
     uint256 _amount,
     bytes32 _nonce
-  ) external view returns (bytes32) {
+  ) public view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -326,7 +287,7 @@ contract SigningLogic is SigningLogicInterface{
     bytes32 _paymentNonce,
     bytes32 _dataHash,
     bytes32 _requestNonce
-  ) external view returns (bytes32) {
+  ) public view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -347,7 +308,7 @@ contract SigningLogic is SigningLogicInterface{
     address _requester,
     uint256 _reward,
     bytes32 _paymentNonce
-  ) external view returns (bytes32) {
+  ) public view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -361,49 +322,9 @@ contract SigningLogic is SigningLogicInterface{
       );
   }
 
-  function generateStakeForDelegationSchemaHash(
-    address _subject,
-    uint256 _value,
-    bytes32 _paymentNonce,
-    bytes32 _dataHash,
-    bytes32 _requestNonce,
-    uint256 _stakeDuration
-  ) external view returns (bytes32) {
-    return keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        DOMAIN_SEPARATOR,
-        hash(StakeFor(
-          _subject,
-          _value,
-          _paymentNonce,
-          _dataHash,
-          _requestNonce,
-          _stakeDuration
-        ))
-      )
-      );
-  }
-
-  function generateRevokeStakeForDelegationSchemaHash(
-    uint256 _subjectId,
-    uint256 _attestationId
-  ) external view returns (bytes32) {
-    return keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        DOMAIN_SEPARATOR,
-        hash(RevokeStakeFor(
-          _subjectId,
-          _attestationId
-        ))
-      )
-      );
-  }
-
   function generateRevokeAttestationForDelegationSchemaHash(
     bytes32 _link
-  ) external view returns (bytes32) {
+  ) public view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -420,7 +341,7 @@ contract SigningLogic is SigningLogicInterface{
     address _voter,
     bytes32 _nonce,
     address _poll
-  ) external view returns (bytes32) {
+  ) public view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -439,7 +360,7 @@ contract SigningLogic is SigningLogicInterface{
     address _sender,
     uint256 _amount,
     bytes32 _nonce
-  ) external view returns (bytes32) {
+  ) public view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
@@ -453,7 +374,7 @@ contract SigningLogic is SigningLogicInterface{
       );
   }
 
-  function recoverSigner(bytes32 _hash, bytes _sig) external pure returns (address) {
+  function recoverSigner(bytes32 _hash, bytes _sig) public pure returns (address) {
     address signer = ECRecovery.recover(_hash, _sig);
     require(signer != address(0));
 

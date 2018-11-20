@@ -16,18 +16,14 @@ module.exports = function(deployer) {
   deployer
     .deploy(ECRecovery)
     .then(() => deployer.link(ECRecovery, SigningLogic))
-    .then(() => deployer.link(ECRecovery, SigningLogicLegacy))
     .then(() => deployer.deploy(BLT))
     .then(() => BLT.deployed())
     .then(blt => (token = blt))
     .then(() => deployer.deploy(SigningLogic))
-    .then(() => SigningLogic.deployed())
-    .then(s => (signingLogic = s))
-    .then(() => deployer.deploy(SigningLogicLegacy))
-    .then(() => SigningLogicLegacy.deployed())
-    .then(s => (SigningLogicLegacy = s))
-
-    .then(() => deployer.deploy(AccountRegistryLogic, SigningLogic.address))
+    .then(() => deployer.link(SigningLogic, AccountRegistryLogic))
+    .then(() => deployer.link(SigningLogic, AttestationLogic))
+    .then(() => deployer.link(SigningLogic, TokenEscrowMarketplace))
+    .then(() => deployer.deploy(AccountRegistryLogic))
     .then(() => AccountRegistryLogic.deployed())
     .then(rl => (registryLogic = rl))
 

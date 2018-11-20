@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import "./SigningLogicInterface.sol";
+import "./SigningLogic.sol";
 import "./TokenEscrowMarketplace.sol";
 import "./Initializable.sol";
 
@@ -9,22 +9,18 @@ import "./Initializable.sol";
  * @notice Attestation Logic Logic provides a public interface for Bloom and
  *  users to submit attestations.
  */
-contract AttestationLogic is Initializable{
-    SigningLogicInterface public signingLogic;
+contract AttestationLogic is Initializable, SigningLogic{
     TokenEscrowMarketplace public tokenEscrowMarketplace;
 
   /**
    * @notice AttestationLogic constructor sets the implementation address of all related contracts
-   * @param _signingLogic Address of deployed signing logic implementation (upgradeable)
    * @param _tokenEscrowMarketplace Address of marketplace holding tokens which are
    *  released to attesters upon completion of a job
    */
   constructor(
     address _initializer,
-    SigningLogicInterface _signingLogic,
     TokenEscrowMarketplace _tokenEscrowMarketplace
-    ) Initializable(_initializer) public {
-    signingLogic = _signingLogic;
+    ) Initializable(_initializer) SigningLogic("Bloom Attestation Logic", "2", 1) public {
     tokenEscrowMarketplace = _tokenEscrowMarketplace;
   }
 
@@ -103,7 +99,7 @@ contract AttestationLogic is Initializable{
     bytes _delegationSig
   ) public {
     // Reconstruct attestation delegation message
-    bytes32 _delegationDigest = signingLogic.generateAttestForDelegationSchemaHash(
+    bytes32 _delegationDigest = SigningLogic.generateAttestForDelegationSchemaHash(
       _subject,
       _requester,
       _reward,
@@ -112,7 +108,7 @@ contract AttestationLogic is Initializable{
       _requestNonce
     );
     // Confirm attester address matches recovered address from signature
-    require(_attester == signingLogic.recoverSigner(_delegationDigest, _delegationSig));
+    require(_attester == SigningLogic.recoverSigner(_delegationDigest, _delegationSig));
     attestForUser(
       _subject,
       _attester,
@@ -212,12 +208,12 @@ contract AttestationLogic is Initializable{
     bytes _delegationSig
   ) public {
     // Reconstruct attestation delegation message
-    bytes32 _delegationDigest = signingLogic.generateContestForDelegationSchemaHash(
+    bytes32 _delegationDigest = SigningLogic.generateContestForDelegationSchemaHash(
       _requester,
       _reward,
       _paymentNonce
     );
-    require(_attester == signingLogic.recoverSigner(_delegationDigest, _delegationSig));
+    require(_attester == SigningLogic.recoverSigner(_delegationDigest, _delegationSig));
     contestForUser(
       _attester,
       _requester,
@@ -267,8 +263,8 @@ contract AttestationLogic is Initializable{
     require(!usedSignatures[keccak256(abi.encodePacked(_subjectSig))], "Signature not unique");
     usedSignatures[keccak256(abi.encodePacked(_subjectSig))] = true;
 
-    require(_subject == signingLogic.recoverSigner(
-      signingLogic.generateRequestAttestationSchemaHash(
+    require(_subject == SigningLogic.recoverSigner(
+      SigningLogic.generateRequestAttestationSchemaHash(
       _dataHash,
       _requestNonce
     ), _subjectSig));
@@ -317,10 +313,10 @@ contract AttestationLogic is Initializable{
     address _sender,
     bytes _delegationSig
     ) public {
-      bytes32 _delegationDigest = signingLogic.generateRevokeAttestationForDelegationSchemaHash(
+      bytes32 _delegationDigest = SigningLogic.generateRevokeAttestationForDelegationSchemaHash(
         _link
       );
-      require(_sender == signingLogic.recoverSigner(_delegationDigest, _delegationSig));
+      require(_sender == SigningLogic.recoverSigner(_delegationDigest, _delegationSig));
       revokeAttestationForUser(_link, _sender);
   }
 

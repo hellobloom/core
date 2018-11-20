@@ -5,7 +5,7 @@ import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./SigningLogicInterface.sol";
+import "./SigningLogic.sol";
 
 /**
  * @notice TokenEscrowMarketplace is an ERC20 payment channel that enables users to send BLT by exchanging signatures off-chain
@@ -19,11 +19,10 @@ import "./SigningLogicInterface.sol";
  *  
  *  Only the AttestationLogic contract is authorized to release funds once a jobs is complete
  */
-contract TokenEscrowMarketplace is Ownable, Pausable{
+contract TokenEscrowMarketplace is Ownable, Pausable, SigningLogic {
   using SafeERC20 for ERC20;
   using SafeMath for uint256;
 
-  SigningLogicInterface public signingLogic;
   address public attestationLogic;
   address public marketplaceAdmin;
 
@@ -36,7 +35,6 @@ contract TokenEscrowMarketplace is Ownable, Pausable{
   event TokenMarketplaceWithdrawal(address escrowPayer, uint256 amount);
   event TokenMarketplaceEscrowPayment(address escrowPayer, address escrowPayee, uint256 amount);
   event TokenMarketplaceDeposit(address escrowPayer, uint256 amount);
-  event SigningLogicChanged(address oldSigningLogic, address newSigningLogic);
   event AttestationLogicChanged(address oldAttestationLogic, address newAttestationLogic);
   event MarketplaceAdminChanged(address oldMarketplaceAdmin, address newMarketplaceAdmin);
 
@@ -45,16 +43,13 @@ contract TokenEscrowMarketplace is Ownable, Pausable{
    * @dev Some actions are restricted to be performed by the attestationLogic contract.
    *  Signing logic is upgradeable in case the signTypedData spec changes
    * @param _token Address of BLT
-   * @param _signingLogic Address of SigningLogic
    * @param _attestationLogic Address of current attestation logic contract
    */
   constructor(
     ERC20 _token,
-    SigningLogicInterface _signingLogic,
     address _attestationLogic
-    ) public {
+    ) public SigningLogic("Bloom Token Escrow Marketplace", "2", 1) {
     token = _token;
-    signingLogic = _signingLogic;
     attestationLogic = _attestationLogic;
     marketplaceAdmin = owner;
   }
@@ -68,18 +63,6 @@ contract TokenEscrowMarketplace is Ownable, Pausable{
     address oldMarketplaceAdmin = marketplaceAdmin;
     marketplaceAdmin = _newMarketplaceAdmin;
     emit MarketplaceAdminChanged(oldMarketplaceAdmin, marketplaceAdmin);
-  }
-
-  /**
-   * @notice Change the implementation of the SigningLogic contract by setting a new address
-   * @dev Restricted to owner and new implementation address cannot be 0x0
-   * @param _newSigningLogic Address of new SigningLogic implementation
-   */
-  function setSigningLogic(SigningLogicInterface _newSigningLogic) 
-    external nonZero(_newSigningLogic) onlyOwner whenPaused {
-    address oldSigningLogic = signingLogic;
-    signingLogic = _newSigningLogic;
-    emit SigningLogicChanged(oldSigningLogic, signingLogic);
   }
 
   /**
@@ -130,12 +113,12 @@ contract TokenEscrowMarketplace is Ownable, Pausable{
     ) public onlyMarketplaceAdmin {
     require(!usedSignatures[keccak256(_delegationSig)], "Signature not unique");
     usedSignatures[keccak256(_delegationSig)] = true;
-    bytes32 _delegationDigest = signingLogic.generateLockupTokensDelegationSchemaHash(
+    bytes32 _delegationDigest = SigningLogic.generateLockupTokensDelegationSchemaHash(
       _sender,
       _amount,
       _nonce
     );
-    require(_sender == signingLogic.recoverSigner(_delegationDigest, _delegationSig));
+    require(_sender == SigningLogic.recoverSigner(_delegationDigest, _delegationSig));
     moveTokensToEscrowLockupForUser(_sender, _amount);
   }
 
@@ -227,13 +210,13 @@ contract TokenEscrowMarketplace is Ownable, Pausable{
     require(!usedSignatures[keccak256(_releaseSig)], "Signature not unique");
     usedSignatures[keccak256(_releaseSig)] = true;
 
-    bytes32 _digest = signingLogic.generateReleaseTokensSchemaHash(
+    bytes32 _digest = SigningLogic.generateReleaseTokensSchemaHash(
       _payer,
       _receiver,
       _amount,
       _nonce
     );
-    address signer = signingLogic.recoverSigner(_digest, _releaseSig);
+    address signer = SigningLogic.recoverSigner(_digest, _releaseSig);
     require(_payer == signer, "Invalid signer");
 
     payTokensFromEscrow(_payer, _receiver, _amount);
