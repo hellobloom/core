@@ -83,7 +83,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
     address _addressB,
     bytes32 _nonce,
     bytes _linkSignature
-  ) internal {
+  ) internal view {
     require(_addressA == recoverSigner(
       generateAddAddressSchemaHash(
       _addressB,
@@ -103,7 +103,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
     address _addressToRemove,
     bytes32 _nonce,
     bytes _unlinkSignature
-  ) internal {
+  ) internal view {
 
     // require that address to remove is currently linked to senderAddress
     require(linkIds[_addressToRemove] != 0, "Address does not have active link");

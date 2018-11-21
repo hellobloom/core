@@ -256,7 +256,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _dataHash,
     bytes32 _requestNonce,
     bytes _subjectSig
-  ) internal {
+  ) internal view {
 
     require(_subject == recoverSigner(
       generateRequestAttestationSchemaHash(
