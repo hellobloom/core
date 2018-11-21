@@ -21,8 +21,6 @@ contract Poll is DependentOnIPFS, SigningLogic {
   uint256 public endTime;
   address public author;
 
-  mapping (bytes32 => bool) public usedSignatures;
-
   event VoteCast(address indexed voter, uint16 indexed choice);
 
   constructor(
@@ -49,15 +47,16 @@ contract Poll is DependentOnIPFS, SigningLogic {
   }
 
   function voteFor(uint16 _choice, address _voter, bytes32 _nonce, bytes _delegationSig) external {
-    require(!usedSignatures[keccak256(abi.encodePacked(_delegationSig))], "Signature not unique");
-    usedSignatures[keccak256(abi.encodePacked(_delegationSig))] = true;
-    bytes32 _delegationDigest = generateVoteForDelegationSchemaHash(
-      _choice,
-      _voter,
-      _nonce,
-      this
-    );
-    require(_voter == recoverSigner(_delegationDigest, _delegationSig));
+    require(_voter == recoverSigner(
+      generateVoteForDelegationSchemaHash(
+        _choice,
+        _voter,
+        _nonce,
+        this),
+      _delegationSig),
+      "Invalid signer"
+      );
+    burnSignature(_delegationSig);
     voteForUser(_choice, _voter);
   }
 

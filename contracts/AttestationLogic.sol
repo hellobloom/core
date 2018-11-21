@@ -34,9 +34,6 @@ contract AttestationLogic is Initializable, SigningLogic{
   event AttestationRevoked(bytes32 link, address attester);
   event TokenEscrowMarketplaceChanged(address oldTokenEscrowMarketplace, address newTokenEscrowMarketplace);
 
-  // Mapping of nonce per subject. Sigs can only be used once
-  mapping(bytes32 => bool) public usedSignatures;
-
   /**
    * @notice Function for attester to submit attestation from their own account) 
    * @dev Wrapper for attestForUser using msg.sender
@@ -153,6 +150,7 @@ contract AttestationLogic is Initializable, SigningLogic{
       _requestNonce,
       _subjectSig
     );
+    burnSignature(_subjectSig);
 
     emit TraitAttested(
       _subject,
@@ -258,10 +256,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _dataHash,
     bytes32 _requestNonce,
     bytes _subjectSig
-  ) public {
-
-    require(!usedSignatures[keccak256(abi.encodePacked(_subjectSig))], "Signature not unique");
-    usedSignatures[keccak256(abi.encodePacked(_subjectSig))] = true;
+  ) internal {
 
     require(_subject == recoverSigner(
       generateRequestAttestationSchemaHash(

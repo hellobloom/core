@@ -490,27 +490,6 @@ export const AttestationLogic: IContractMethodManifest = {
         }
       }
     },
-    validateSubjectSig: {
-      args_arr: ["_subject", "_dataHash", "_requestNonce", "_subjectSig"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 1
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _subjectSig: {
-          type: "bytes",
-          index: 3
-        }
-      }
-    },
     migrateAttestation: {
       args_arr: ["_requester", "_attester", "_subject", "_dataHash"],
       args: {
@@ -2148,7 +2127,17 @@ export const SafeMath: IContractMethodManifest = {
 }
 
 export const SigningLogic: IContractMethodManifest = {
-  methods: {}
+  methods: {
+    usedSignatures: {
+      args_arr: ["anonymous_0"],
+      args: {
+        anonymous_0: {
+          type: "bytes32",
+          index: 0
+        }
+      }
+    }
+  }
 }
 
 export const SigningLogicLegacy: IContractMethodManifest = {

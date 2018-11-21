@@ -3,11 +3,20 @@ pragma solidity 0.4.24;
 import "./ECRecovery.sol";
 
 /**
- * @title SigningLogic is library implementing signature recovery from typed data signatures
- * @notice Recovers signatures based on the SignTypedData implementation provided by Metamask
- * @dev This contract is deployed separately and is linked to other contracts.
+ * @title SigningLogic is contract implementing signature recovery from typed data signatures
+ * @notice Recovers signatures based on the SignTypedData implementation provided by ethSigUtil
+ * @dev This contract is inherited by other contracts.
  */
 contract SigningLogic {
+
+  // Signatures contain a nonce to make them unique. usedSignatures tracks which signatures
+  //  have been used so they can't be replayed
+  mapping (bytes32 => bool) public usedSignatures;
+
+  function burnSignature(bytes _signature) internal {
+    require(!usedSignatures[keccak256(abi.encodePacked(_signature))], "Signature not unique");
+    usedSignatures[keccak256(abi.encodePacked(_signature))] = true;
+  }
 
   bytes32 constant EIP712DOMAIN_TYPEHASH = keccak256(
     "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"

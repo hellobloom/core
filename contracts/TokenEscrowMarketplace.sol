@@ -23,9 +23,6 @@ contract TokenEscrowMarketplace is SigningLogic {
 
   address public attestationLogic;
 
-  // Mapping of hashed signatures to bool. Sigs can only be used once
-  mapping (bytes32 => bool) public usedSignatures;
-
   mapping(address => uint256) public tokenEscrow;
   ERC20 public token;
 
@@ -69,15 +66,14 @@ contract TokenEscrowMarketplace is SigningLogic {
     bytes32 _nonce,
     bytes _delegationSig
     ) public {
-    require(!usedSignatures[keccak256(_delegationSig)], "Signature not unique");
-    usedSignatures[keccak256(_delegationSig)] = true;
-    bytes32 _delegationDigest = generateLockupTokensDelegationSchemaHash(
-      _sender,
-      _amount,
-      _nonce
-    );
-    require(_sender == recoverSigner(_delegationDigest, _delegationSig));
-    moveTokensToEscrowLockupForUser(_sender, _amount);
+      bytes32 _delegationDigest = generateLockupTokensDelegationSchemaHash(
+        _sender,
+        _amount,
+        _nonce
+      );
+      require(_sender == recoverSigner(_delegationDigest, _delegationSig));
+      burnSignature(_delegationSig);
+      moveTokensToEscrowLockupForUser(_sender, _amount);
   }
 
   /**
@@ -118,15 +114,14 @@ contract TokenEscrowMarketplace is SigningLogic {
     bytes32 _nonce,
     bytes _delegationSig
     ) public {
-    require(!usedSignatures[keccak256(_delegationSig)], "Signature not unique");
-    usedSignatures[keccak256(_delegationSig)] = true;
-    bytes32 _delegationDigest = generateReleaseTokensDelegationSchemaHash(
-      _sender,
-      _amount,
-      _nonce
-    );
-    require(_sender == recoverSigner(_delegationDigest, _delegationSig));
-    releaseTokensFromEscrowForUser(_sender, _amount);
+      bytes32 _delegationDigest = generateReleaseTokensDelegationSchemaHash(
+        _sender,
+        _amount,
+        _nonce
+      );
+      require(_sender == recoverSigner(_delegationDigest, _delegationSig));
+      burnSignature(_delegationSig);
+      releaseTokensFromEscrowForUser(_sender, _amount);
   }
 
   /**
@@ -148,9 +143,9 @@ contract TokenEscrowMarketplace is SigningLogic {
     address _payer,
     uint256 _amount
     ) private {
-    subFromEscrow(_payer, _amount);
-    token.safeTransfer(_payer, _amount);
-    emit TokenMarketplaceWithdrawal(_payer, _amount);
+      subFromEscrow(_payer, _amount);
+      token.safeTransfer(_payer, _amount);
+      emit TokenMarketplaceWithdrawal(_payer, _amount);
   }
 
   /**
@@ -182,17 +177,17 @@ contract TokenEscrowMarketplace is SigningLogic {
     bytes _paymentSig
     ) external onlyAttestationLogic {
 
-    require(!usedSignatures[keccak256(_paymentSig)], "Signature not unique");
-    usedSignatures[keccak256(_paymentSig)] = true;
+    require(_payer == recoverSigner(
+      generatePayTokensSchemaHash(
+        _payer,
+        _receiver,
+        _amount,
+        _nonce
+        ),
+      _paymentSig),
+      "Invalid signer");
 
-    bytes32 _digest = generatePayTokensSchemaHash(
-      _payer,
-      _receiver,
-      _amount,
-      _nonce
-    );
-    address signer = recoverSigner(_digest, _paymentSig);
-    require(_payer == signer, "Invalid signer");
+    burnSignature(_paymentSig);
 
     payTokensFromEscrow(_payer, _receiver, _amount);
     emit TokenMarketplaceEscrowPayment(_payer, _receiver, _amount);
