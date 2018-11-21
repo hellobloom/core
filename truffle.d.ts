@@ -106,7 +106,7 @@ export interface AccountRegistryLogicInstance extends ContractInstance {
 
   AddressLinked: Web3.EventFilterCreator<{ currentAddress: Address; newAddress: Address; linkId: UInt }>
 
-  AddressUnlinked: Web3.EventFilterCreator<{ senderAddress: Address; addressToRemove: Address }>
+  AddressUnlinked: Web3.EventFilterCreator<{ addressToRemove: Address }>
 
   InitializationEnded: Web3.EventFilterCreator<{}>
 
@@ -145,30 +145,10 @@ export interface AccountRegistryLogicInstance extends ContractInstance {
     ): Promise<number>
   }
   unlinkAddress: {
-    (senderAddress: Address, addressToRemove: Address, nonce: string, unlinkSignature: string, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >
-    call(
-      senderAddress: Address,
-      addressToRemove: Address,
-      nonce: string,
-      unlinkSignature: string,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>
-    sendTransaction(
-      senderAddress: Address,
-      addressToRemove: Address,
-      nonce: string,
-      unlinkSignature: string,
-      options?: TransactionOptions
-    ): Promise<string>
-    estimateGas(
-      senderAddress: Address,
-      addressToRemove: Address,
-      nonce: string,
-      unlinkSignature: string,
-      options?: TransactionOptions
-    ): Promise<number>
+    (addressToRemove: Address, nonce: string, unlinkSignature: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(addressToRemove: Address, nonce: string, unlinkSignature: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(addressToRemove: Address, nonce: string, unlinkSignature: string, options?: TransactionOptions): Promise<string>
+    estimateGas(addressToRemove: Address, nonce: string, unlinkSignature: string, options?: TransactionOptions): Promise<number>
   }
   migrateLink: {
     (currentAddress: Address, newAddress: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>

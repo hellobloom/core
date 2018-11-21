@@ -110,23 +110,19 @@ export const AccountRegistryLogic: IContractMethodManifest = {
       }
     },
     unlinkAddress: {
-      args_arr: ["_senderAddress", "_addressToRemove", "_nonce", "_unlinkSignature"],
+      args_arr: ["_addressToRemove", "_nonce", "_unlinkSignature"],
       args: {
-        _senderAddress: {
+        _addressToRemove: {
           type: "address",
           index: 0
         },
-        _addressToRemove: {
-          type: "address",
-          index: 1
-        },
         _nonce: {
           type: "bytes32",
-          index: 2
+          index: 1
         },
         _unlinkSignature: {
           type: "bytes",
-          index: 3
+          index: 2
         }
       }
     },

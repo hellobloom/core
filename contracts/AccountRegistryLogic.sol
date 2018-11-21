@@ -17,7 +17,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
   ) public Initializable(_initializer) SigningLogic("Bloom Account Registry", "2", 1) {}
 
   event AddressLinked(address indexed currentAddress, address indexed newAddress, uint256 indexed linkId);
-  event AddressUnlinked(address indexed senderAddress, address indexed addressToRemove);
+  event AddressUnlinked(address indexed addressToRemove);
 
   // Counter to generate unique link Ids
   uint256 linkCounter;
@@ -58,17 +58,16 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
   }
 
   function unlinkAddress(
-    address _senderAddress,
     address _addressToRemove,
     bytes32 _nonce,
     bytes _unlinkSignature
   ) public {
     // Confirm unlink request is signed by sender and is unused
-    validateUnlinkSignature(_senderAddress, _addressToRemove, _nonce, _unlinkSignature);
+    validateUnlinkSignature(_addressToRemove, _nonce, _unlinkSignature);
     burnSignature(_unlinkSignature);
     linkIds[_addressToRemove] = 0;
 
-    emit AddressUnlinked(_senderAddress, _addressToRemove);
+    emit AddressUnlinked(_addressToRemove);
   }
 
   /**
@@ -93,13 +92,11 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
 
   /**
    * @notice Verify unlink signature is valid and unused 
-   * @param _senderAddress Address requesting unlink
    * @param _addressToRemove Address being unlinked
    * @param _nonce Unique nonce for this request
    * @param _unlinkSignature Signature of senderAddress
    */
   function validateUnlinkSignature(
-    address _senderAddress,
     address _addressToRemove,
     bytes32 _nonce,
     bytes _unlinkSignature
@@ -107,9 +104,8 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
 
     // require that address to remove is currently linked to senderAddress
     require(linkIds[_addressToRemove] != 0, "Address does not have active link");
-    require(linkIds[_addressToRemove] == linkIds[_senderAddress], "Addresses not linked to each other");
 
-    require(_senderAddress == recoverSigner(
+    require(_addressToRemove == recoverSigner(
       generateRemoveAddressSchemaHash(
       _addressToRemove,
       _nonce
