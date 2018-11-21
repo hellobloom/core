@@ -6,7 +6,7 @@ The documentation is also available in the readme below.
 
 **Accounts**
 
-AccountRegistry associates Ethereum addresses with BloomIDs. Users authorize transactions within the Bloom protocol using addresses they associate with their BloomID. Users can associate multiple addresses with their BloomID.
+Anyone can use the Bloom Protocol smart contracts using any address. Bloom supports regular EOA addresses or smart contracts like multisigs. The AccountRegistryLogic contract enables users to demonstrate ownership of multiple addresses by linking the addresses on chain.
 
 **Signing Logic**
 
@@ -16,15 +16,13 @@ Bloom relies on the signTypedData proposal described in EIP712 for many protocol
 
 One of the core components of Bloom protocol is Identity Attestations. The attestations contracts enable users to securely associate verified identity information with their BloomID in order to strengthen their profile.
 
-Users can stake a specified amount of BLT on the validity of an attestation. A stake is valid for a specified amount of time. After the stake period, users can reclaim the BLT they staked. Stakes can be revoked at any time without penalty. This may change in the future.
-
 **Accreditation**
 
 Bloom maintains a whitelist of accredited data verifiers via an Accreditation Repo. Currently Bloom retains the rights to grant and revoke accreditation. In the future this contract can be upgraded to enable community voting based accreditation.
 
 **Token Escrow** 
 
-Users can lock up BLT in the Token Escrow contract. Once locked up users can send micropayments to other users by signing payment authorizations with an address associated with their BloomID.
+Users can lock up BLT in the Token Escrow contract. Once locked up users can send micropayments to other users by signing payment authorizations.
 
 **Voting**
 
@@ -54,192 +52,79 @@ The tests are in the `ts_test` folder. They are separated by contract. Each test
 3. Initialize the accounts with properties relevant to the contract (create accounts, gift them tokens, etc)
 4. Test each contract function
 
-## Explanation of Compiler Warnings
-
-The following compiler warnings will be presented when compiling with solc v0.4.24
-
-```
-Compilation warnings encountered:
-
-// Outdated constructor in oppenzeppelin-solidity module
-openzeppelin-solidity/contracts/ownership/Ownable.sol:20:3: Warning: Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
-  function Ownable() public {
-  ^ (Relevant source part starts here and spans across multiple lines).
-,openzeppelin-solidity/contracts/ownership/HasNoEther.sol:25:3: Warning: Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
-  function HasNoEther() public payable {
-  ^ (Relevant source part starts here and spans across multiple lines).
-
-// Interface is being used to define consistent function format in the event of upgraded contract internals
-// These functions are used both internally by AccountRegistry and externally so they are defined public, not external
-,/Users/.../core-private-audit/contracts/AccountRegistryInterface.sol:4:3: Warning: Functions in interfaces should be declared external.
-  function accountIdForAddress(address _address) public view returns (uint256);
-  ^---------------------------------------------------------------------------^
-,/Users/.../core-private-audit/contracts/AccountRegistryInterface.sol:5:3: Warning: Functions in interfaces should be declared external.
-  function accountTypeForAddress(address _address) public view returns (uint256);
-  ^-----------------------------------------------------------------------------^
-,/Users/.../core-private-audit/contracts/AccountRegistryInterface.sol:6:3: Warning: Functions in interfaces should be declared external.
-  function addressBelongsToAccount(address _address) public view returns (bool);
-  ^----------------------------------------------------------------------------^
-```
 
 ## 3rd Party Contract Dependencies
 |File|Dependencies|Description|
 |---|---|---|
-|AccountRegistry.sol|open-zeppelin#Ownable|Owner can update interface contracts|
-|AccountRegistryLogic.sol|open-zeppelin#Ownable|Owner can update interface contracts|
-|AttestationRepo.sol|open-zeppelin#Ownable|Owner can update interface contracts|
-|AttestationRepo.sol|open-zeppelin#Pausable|This contract holds collateralized tokens so it should be able to be paused if a vulnerability is discovered|
-|AttestationRepo.sol|open-zeppelin#SafeERC20|Wrapper for ERC20 methods that throw on failure|
-|AttestationRepo.sol|open-zeppelin#ERC20|ERC20 methods to enable this contract to interact with BLT|
 |AccreditationRepo.sol|open-zeppelin#Ownable|Owner can update interface contracts|
 |AirdropProxy.sol|open-zeppelin#Ownable|Owner can update interface contracts|
 |AirdropProxy.sol|open-zeppelin#Pausable|This contract holds collateralized tokens so it should be able to be paused if a vulnerability is discovered|
 |AirdropProxy.sol|open-zeppelin#SafeERC20|Wrapper for ERC20 methods that throw on failure|
 |AirdropProxy.sol|open-zeppelin#ERC20|ERC20 methods to enable this contract to interact with BLT|
 |AirdropProxy.sol|open-zeppelin#HasNoEther|Enables owner to retrieve eth from this contract and attempts to stop eth from being deposited|
-|AttestationLogic.sol|open-zeppelin#Ownable|Owner can update interface contracts|
-|AttestationLogicUpgradeMode.sol|open-zeppelin#Ownable|Owner can write to AttestationRepo when in upgrade mode|
 |SigningLogic.sol|open-zeppelin#ECRecovery|ECRecovery.recover is used for all delegated transactions and other interactions requiring a signature from the user|
-|TokenEscrowMarketplace.sol|open-zeppelin#Ownable|Owner can update interface contracts|
-|TokenEscrowMarketplace.sol|open-zeppelin#Pausable|This contract holds escrow tokens so it should be able to be paused if a vulnerability is discovered|
 |TokenEscrowMarketplace.sol|open-zeppelin#SafeERC20|Wrapper for ERC20 methods that throw on failure|
 |TokenEscrowMarketplace.sol|open-zeppelin#ERC20|ERC20 methods to enable this contract to interact with BLT|
 |TokenEscrowMarketplace.sol|open-zeppelin#SafeMath|Safety checks for math operations to manipulate escrow balances|
 
 
 # Design Patterns
-## Storage & Logic Contracts
-Storage contracts store the data associated with BloomID accounts and attestations. The contracts implement basic read/ write functionality but delegate all protocol logic to external logic contracts. As the Bloom protocol matures, the logic contracts can be upgraded without having to migrate and rewrite all of the stored data. This design pattern is implemented in:
+## Hard Fork Upgrades
+Previously Bloom's smart contracts used the separate storage & logic contract design pattern. This enabled Bloom to swap out contract logic to fix bugs or add features. As the protocol has matured this centralized control is no longer appropriate. Contract storage and logic is now immutable upon deployment and initialization. Upgrades can only be made by deploying new contracts and recommending the community transition to the new contracts.
 
-|Storage Contract|Logic Contract|
-|---|---|
-|Attestation Repo|Attestation Logic|
-|Account Registry|Account Registry Logic|
+## Initializable
+Contracts inherit Initializable.sol to allow a specified address to migrate data without signature validation. This is only allowed during initialization of the contract and the privilege is removed once migration is complete.
 
 ## Delegated Transactions
-Users can delegate certain protocol actions to the Bloom admin in order to have Bloom pays the transaction. Many functions throughout these contracts are implemented with 3 functions.
+Users can delegate certain protocol actions have a third party pay the transaction fees. Many functions throughout these contracts are implemented with 3 functions.
 
 * Action - Public function enabling users to interact with the contract directly
-* ActionFor - Admin function enabling Bloom admin to call *Action* on behalf of a user
+* ActionFor - Delegated function enabling 3rd party to call *Action* on behalf of a user
 * ActionForUser - Private function enabling the logic of this action. Both *Action* and *ActionFor* call *ActionForUser*.
 
-Users authorize Bloom to perform actions on their behalf by signing a message containing their intended protocol action with a private key associated with their BloomID. Each signature contains a nonce to make the signature single-use. The contracts maintain a mapping of used signatures.
+Users authorize a 3rd party to perform actions on their behalf by signing a message containing their intended protocol action with a private key. Each signature contains a nonce to make the signature single-use. The contracts maintain a mapping of used signatures.
 
 `mapping (bytes32 => bool) public usedSignatures;`
 
-If a user signs a delegated transaction, Bloom is only able to submit that signature one time. If the user needs to complete the same action again, they sign a new delegated transaction with a new nonce.
+If a user signs a delegated transaction, the 3rd party is only able to submit that signature one time. If the user needs to complete the same action again, they sign a new delegated transaction with a new nonce.
 
-The signature definition is contained in the Signing Logic contract. The web3 APIs enabling users to sign messages with their ethereum private keys are frequently updated, sometimes with breaking changes. By isolating the signing logic in an upgradeable contract, the logic can be swapped out without needing to upgrade the whole contract.
+The signature definition is contained in the Signing Logic contract. This contract is inherited by all contracts needing delegated actions.
 
 # Account Registry
-*Account Registry* implements the Bloom ID data structures and the low-level account administration functions.  The account administration functions are not publicly accessible. *Account Registry Logic* implements the public functions which access the functions in *Account Registry*.
+*Account Registry Logic* implements the storage and logic to enable users to link multiple addresses to the same owner.
 
 ## Account Registry Data Structures
-Accounts are stored as mapping from addresses account Id.
+Links are stored as mapping from addresses to a link Id. Users can have any number of addresses point to the same linkId.
 
 ```
-  mapping(address => uint256) public accountByAddress;
+  mapping(address => uint256) public linkIds;
 ```
 
-Users can have multiple addresses associated with their Bloom Id by having the mapping of each address point to the same accountId.
-
-## Account Registry Public Functions
-### accountIdForAddress
+## Account Registry Logic Public Functions
+### linkIds
+Public getter to check if an address is linked to another address. Returns 0 if no link.
 Retrieve the account Id associated with an address. Reverts if the address is not associated with an account
 #### Interface
 ```
-function accountIdForAddress(address _address) public view returns (uint256)
+function linkIds(address _address) public view returns (uint256)
 ```
-#### Example
+#### Example - Check if two addresses have the same owner
 ```
-// Solidity
-AccountRegistryInterface registry = "0x[address of registry contract]";
-uint256 userId = registry.accountIdForAddress("0x0123...")
-
 // Web3
-accountRegistry = AccountRegistry.at("[address of registry contract]")
-userId = accountRegistry.accountIdForAddress.call(address)
+const addressA = '0xabc123...'
+const addressB = '0xdef456...'
+accountRegistry = AccountRegistryLogic.at("0x123...")
+const linkA = accountRegistry.linkIds.call(addressA)
+const linkB = accountRegistry.linkIds.call(addressB)
+if (linkA === linkB && linkA !== 0) {
+  // Addresses are linked
+}
 ```
 
-### addressBelongsToAccount
-Returns bool indicating if address is associated with an account
-#### Interface
-```
-function addressBelongsToAccount(address _address) public view returns (bool)
-```
-#### Example
-```
-// Solidity
-AccountRegistryInterface registry = "0x[address of registry contract]";
-require(registry.addressBelongsToAccount("0x0123..."))
+### linkAddresses
+Store a link demonstrating ownership of multiple addresses. Each address much sign a message indicating intention to be linked. `currentAddress` may be linked to other addresses. `newAddress` must be unclaimed.
 
-// Web3
-accountRegistry = AccountRegistry.at("[address of registry contract]")
-hasBloomId = accountRegistry.addressBelongsToAccount.call(address)
-```
-## Account Registry Logic Public Functions
-*Account Registry Logic* provides a public interface for Bloom and users to create and control their Bloom Ids. Users can associate create and accept invites and associate additional addresses with their BloomId. As the Bloom protocol matures, this contract can be upgraded to enable new capabilities without needing to migrate the underlying *Account Registry* storage contract.
-### createInvite
-Creates an invitation by a user that can be accepted by a user who receives a shared secret from the invite creator. The shared secret is the private key associated with a one-time-use Ethereum key pair. 
-The sender generates a new key pair and signs their Bloom Id address with the private key. The sender then shares the private key with the recipient.
-#### Interface
-```
-function createInvite(bytes _sig) public onlyUser
-```
-#### Example
-```
-//Web3 Example code for creating an invite
-registryLogic = AccountRegistryLogic.at("[address of registry logic contract]")
-
-// This signAddress function exists in the repo!
-const { signAddress } = require("./src/signAddress");
-const ethereumjsWallet = require("ethereumjs-wallet");
-
-// Generate the private key using the ethereumjs-wallet library
-// NOTE: This does not mean we are making a new ethereum account, we are
-// just using these tools in order to make a private key.
-const signingKeypair = ethereumjsWallet.generate();
-const signingPrivateKey = signingKeypair.getPrivateKey();
-
-// Sign the address associated with our Bloom account using the
-// new signing private key
-const inviteSignature = signAddress({
-  address: senderAddress,
-  privKey: signingPrivateKey
-});
-
-// Submit this signature to the contract
-registryLogic.createInvite(inviteSignature);
-// Share the signingPrivateKey with the recipient off-chain
-```
-### acceptInvite
-Accepts an invitation by a new user
-The recipient of the invitation proves they received the invitation rom the sender by signing their address with the one-time-use private key. They submit this signature to `acceptInvite`. The contract verifies the key pair has not been used by any other user, then creates a new account for the user.
-#### Interface
-```
-function acceptInvite(bytes _sig) public onlyNonUser
-```
-#### Example
-```
-//Web3 Example code for accepting an invite
-registryLogic = AccountRegistryLogic.at("[address of registry logic contract]")
-
-const { signAddress } = require("./src/signAddress");
-// receive signingPrivateKey from sender off-chain
-
-// Sign the address associated with a nuw user account using the
-// new signing private key
-const inviteSignature = signAddress({
-  address: recipientAddress,
-  privKey: signingPrivateKey
-});
-
-// Submit this signature to the contract
-registryLogic.acceptInvite(inviteSignature);
-```
-### addAddressToAccount
-Associates an additional address with a BloomId.
-To associate a new address with a BloomId, both wallets must sign a message containing the address of the other wallet and a nonce. 
+A user can submit this transaction from their own address or it can be submitted by a third party on their behalf.
 #### Interface
 ```
   /**
@@ -249,20 +134,21 @@ To associate a new address with a BloomId, both wallets must sign a message cont
    * @param _senderSig Signed message from new address confirming intention by the sender
    * @param _nonce Random hex string used when generating sigs to make them one time use
    */
-  function addAddressToAccount(
+  function linkAddresses(
+    address _currentAddress,
+    bytes _currentAddressSig,
     address _newAddress,
     bytes _newAddressSig,
-    bytes _senderSig,
     bytes32 _nonce
-    ) public onlyUser;
+    ) public;
 ```
 #### Example
 ```
-// Solidity - N/A - this function is not intended to be called internally or by another contract
-
 // Add Address Signature Format
 const getFormattedTypedDataAddAddress = (
-  sender: string,
+  contractAddress: string,
+  chainId: number,
+  addressToAdd: string,
   nonce: string,
 ): IFormattedTypedData => {
   return {
@@ -270,127 +156,118 @@ const getFormattedTypedDataAddAddress = (
       EIP712Domain: [
           { name: 'name', type: 'string' },
           { name: 'version', type: 'string' },
+          { name: 'chainId', type: 'uint256' },
+          { name: 'verifyingContract', type: 'address' },
       ],
       AddAddress: [
-        { name: 'sender', type: 'address'},
+        { name: 'addressToAdd', type: 'address'},
         { name: 'nonce', type: 'bytes32'},
       ]
     },
     primaryType: 'AddAddress',
     domain: {
-      name: 'Bloom',
-      version: '1',
+      name: 'Bloom Account Registry',
+      version: '2',
+      chainId: chainId,
+      verifyingContract: contractAddress,
     },
     message: {
-      sender: sender,
+      addressToAdd: addressToAdd,
       nonce: nonce
     }
   }
 }
 
-
 //Web3 pseudocode
-registryLogic = AccountRegistryLogic.at("[address of registry logic contract]")
+registryLogic = AccountRegistryLogic.at("0x123...")
 nonce = soliditySha3(uuid())
 
-newAddressSig = ethSigUtil.signTypedData(
-  newWallet.privateKey,
-  {data: getFormattedTypedDataAddAddress(
-    currentAddress,
-    nonce
-  )}
-)
+newAddressLinkSig = ethSigUtil.signTypedData(unclaimedPrivkey, {
+  data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, alice, nonce)
+})
 
-senderSig = ethSigUtil.signTypedData(
-  currentWallet.privateKey,
-  {data: getFormattedTypedDataAddAddress(
-    newAddress,
-    nonce
-  )}
-)
+currentAddressLinkSig = ethSigUtil.signTypedData(alicePrivkey, {
+  data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimed, nonce)
+})
 
-registryLogic.addAddressToAccount(newAddress, newAddressSig, senderSig, nonce, {from: currentAddress})
+registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, {from: anyone})
 ```
-## Account Registry Logic Admin Functions
-Bloom has administrative privileges to create & modify accounts, submit delegated transactions for users and configure the external contracts. This administrative control is beneficial in the early days of the protocol. As the protocol matures Bloom’s administrative rights will diminish.
-### AddAddressToAccountFor
-Users can delegate certain protocol actions to the Bloom admin in order to have Bloom pays the transaction costs. A user can generate the required signatures to add multiple addresses then sends them to Bloom who submits the transaction on the user’s behalf.
-The nonce is included in the signature to make these signatures single-use. The contract maintains a mapping of used signatures.
-`mapping (bytes32 => bool) public usedSignatures;`
-If a user adds an address to their account, then later removes it, Bloom can not re-add the address without a new signature authorizing the action from the user. This design pattern is widely used across Bloom’s contracts.
 
+### unlinkAddress
+Remove an address from a link to end the relationship between the specified address and other addresses which map to the same linkId. An address can unlink itself from a link or it can unlink any other linked address.
 
+A user can submit this transaction from their own address or it can be submitted by a third party on their behalf.
 #### Interface
 ```
-  /**
-   * @notice Add an address to an existing id on behalf of a user to pay the gas costs   * @param _newAddress Address to add to account
-   * @param _newAddressSig Signed message from new address confirming ownership by the sender
-   * @param _senderSig Signed message from new address confirming intention by the sender
-   * @param _nonce Random hex string used when generating sigs to make them one time use
-   * @param _newAddress Address to add to account
-   * @param _sender User requesting this action
-   */
-  function addAddressToAccountFor(
-    address _newAddress,
-    bytes _newAddressSig,
-    bytes _senderSig,
-    address _sender,
-    bytes32 _nonce
-    ) public onlyRegistryAdmin
+  function unlinkAddress(
+    address _senderAddress,
+    address _addressToRemove,
+    bytes32 _nonce,
+    bytes _unlinkSignature
+  ) public;
 ```
 #### Example
 ```
-// Solidity - N/A - this function is not intended to be called internally or by another contract
+const getFormattedTypedDataRemoveAddress = (
+  contractAddress: string,
+  chainId: number,
+  addressToRemove: string,
+  nonce: string,
+): IFormattedTypedData => {
+  return {
+    types: {
+      EIP712Domain: [
+          { name: 'name', type: 'string' },
+          { name: 'version', type: 'string' },
+          { name: 'chainId', type: 'uint256' },
+          { name: 'verifyingContract', type: 'address' },
+      ],
+      RemoveAddress: [
+        { name: 'addressToRemove', type: 'address'},
+        { name: 'nonce', type: 'bytes32'},
+      ]
+    },
+    primaryType: 'RemoveAddress',
+    domain: {
+      name: 'Bloom Account Registry',
+      version: '2',
+      chainId: chainId,
+      verifyingContract: contractAddress,
+    },
+    message: {
+      addressToRemove: addressToRemove,
+      nonce: nonce
+    }
+  }
+}
 
-//Web3 pseudocode
-registryLogic = AccountRegistryLogic.at("[address of registry logic contract]")
+//Web3 pseudocode to unlink a linked address
+registryLogic = AccountRegistryLogic.at("0x123...")
 nonce = soliditySha3(uuid())
-newAddressSig = ethSigUtil.signTypedData(
-  newWallet.privateKey,
-  {data: getFormattedTypedDataAddAddress(
-    currentAddress,
-    nonce
-  )}
-)
-senderSig = ethSigUtil.signTypedData(
-  currentWallet.privateKey,
-  {data: getFormattedTypedDataAddAddress(
-    newAddress,
-    nonce
-  )}
-)
-registryLogic.addAddressToAccountFor(newAddress, 1, newAddressSig, senderSig, sender, nonce, {from: Bloom})
-```
-### removeAddressFromAccountFor
-Remove an address from a BloomId. This action is currently restricted to be performed by the Bloom admin. In future versions of this contract, users will have more control over adding, removing and modifying the addresses associated with their account.
-#### Interface
-```
-  function removeAddressFromAccountFor(address _addressToRemove) public onlyRegistryAdmin {
-```
-#### Example
-```
-// Solidity - N/A - this function is not intended to be called internally or by another contract
 
-//Web3 pseudocode
-registryLogic = AccountRegistryLogic.at("[address of registry logic contract]")
-registryLogic.removeAddressFromAccountFor(addressToRemove, {from: Bloom})
+await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice })
+await registryLogic.unlinkAddress(
+  alice,
+  unclaimed,
+  nonce,
+  ethSigUtil.signTypedData(alicePrivkey, {
+    data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, unclaimed, nonce)
+  }),
+  { from: alice }
+)
+
+//Web3 pseudocode to unlink self
+await registryLogic.unlinkAddress(
+  alice,
+  alice,
+  nonce,
+  ethSigUtil.signTypedData(alicePrivkey, {
+    data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, alice, nonce)
+  }),
+  { from: alice }
+)
+
 ```
-### Configure External Contracts
-Bloom can configure the external contracts associated with *Account Registry Logic* in order to upgrade components as standards change and the protocol matures.
-## Events
-*Account Registry Logic* emits events when the user accounts are created or modified and when the contract configuration changes.
-```
-  event AccountCreated(uint256 indexed accountId, address indexed newUser);
-  event InviteCreated(address indexed inviter, address indexed inviteAddress);
-  event InviteAccepted(address recipient, address indexed inviteAddress);
-  event AddressAdded(uint256 indexed accountId, address indexed newAddress);
-  event AddressRemoved(uint256 indexed accountId, address indexed oldAddress);
-  event RegistryAdminChanged(address oldRegistryAdmin, address newRegistryAdmin);
-  event SigningLogicChanged(address oldSigningLogic, address newSigningLogic);
-  event AccountRegistryChanged(address oldRegistry, address newRegistry);
-```
-## Future Development
-Some actions made possible by the *Account Registry* contract are not yet implemented in the *Account Registry Logic* contract. The contracts are designed so *Account Registry Logic* can be upgraded without needing to migrate all users to a new storage contract. 
 
 # Signing Logic
 Bloom relies on the `signTypedData` proposal described in EIP712 for many protocol interactions including allowing users to delegate transactions to Bloom to pay transaction costs. These proposals can be subject to breaking changes so in order to be flexible, Bloom has isolated the logic related to generating and recovering `signTypedData` signatures to a standalone *SigningLogic* contract. 
