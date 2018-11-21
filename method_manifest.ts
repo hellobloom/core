@@ -130,48 +130,6 @@ export const AccountRegistryLogic: IContractMethodManifest = {
         }
       }
     },
-    validateLinkSignature: {
-      args_arr: ["_addressA", "_addressB", "_nonce", "_linkSignature"],
-      args: {
-        _addressA: {
-          type: "address",
-          index: 0
-        },
-        _addressB: {
-          type: "address",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _linkSignature: {
-          type: "bytes",
-          index: 3
-        }
-      }
-    },
-    validateUnlinkSignature: {
-      args_arr: ["_senderAddress", "_addressToRemove", "_nonce", "_unlinkSignature"],
-      args: {
-        _senderAddress: {
-          type: "address",
-          index: 0
-        },
-        _addressToRemove: {
-          type: "address",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _unlinkSignature: {
-          type: "bytes",
-          index: 3
-        }
-      }
-    },
     migrateLink: {
       args_arr: ["_currentAddress", "_newAddress"],
       args: {

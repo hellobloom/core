@@ -67,26 +67,40 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
   let differentNonceHash: string
 
   beforeEach(async () => {
-    registryLogic = await AccountRegistryLogic.new(initializer);
+    registryLogic = await AccountRegistryLogic.new(initializer)
     registryLogicAddress = registryLogic.address
-    const nonce = uuid();
-    const differentNonce = uuid();
-    nonceHash = bufferToHex(hashData(nonce));
-    differentNonceHash = bufferToHex(hashData(differentNonce));
+    const nonce = uuid()
+    const differentNonce = uuid()
+    nonceHash = bufferToHex(hashData(nonce))
+    differentNonceHash = bufferToHex(hashData(differentNonce))
 
     newAddressLinkSig = ethSigUtil.signTypedData(unclaimedPrivkey, {
       data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, alice, nonceHash)
-    });
+    })
 
     currentAddressLinkSig = ethSigUtil.signTypedData(alicePrivkey, {
       data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimed, nonceHash)
-    });
+    })
   })
-
 
   describe("Linking Accounts", async () => {
     it("Allows a user to add an unclaimed address to their account", async () => {
       await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
+    })
+
+    it("Allows a user to add multiple unclaimed addresses to their account", async () => {
+      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: alice }).should.be.fulfilled
+      await registryLogic.linkAddresses(
+        alice,
+        ethSigUtil.signTypedData(alicePrivkey, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimedB, differentNonceHash) }),
+        unclaimedB,
+        ethSigUtil.signTypedData(unclaimedPrivkeyB, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, alice, differentNonceHash) }),
+        differentNonceHash,
+        { from: alice }
+      ).should.be.fulfilled
+      ;(await registryLogic.linkIds(alice)).should.be.bignumber.equal(1)
+      ;(await registryLogic.linkIds(unclaimed)).should.be.bignumber.equal(1)
+      ;(await registryLogic.linkIds(unclaimedB)).should.be.bignumber.equal(1)
     })
 
     it("Allows anyone to submit the link tx", async () => {
@@ -316,22 +330,22 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
   })
   describe("Migrating links during initialization", async () => {
     it("allows the initializer to write links without validation during initialization", async () => {
-      await registryLogic.migrateLink(alice, unclaimed,{ from: initializer }).should.be.fulfilled
+      await registryLogic.migrateLink(alice, unclaimed, { from: initializer }).should.be.fulfilled
     })
     it("does not allow anyone else to write links during initialization", async () => {
-      await registryLogic.migrateLink(alice, unclaimed,{ from: bob }).should.be.rejectedWith(EVMThrow)
+      await registryLogic.migrateLink(alice, unclaimed, { from: bob }).should.be.rejectedWith(EVMThrow)
     })
     it("does not allow claimed account to be linked during migration", async () => {
-      await registryLogic.migrateLink(alice, unclaimed,{ from: initializer }).should.be.fulfilled
-      await registryLogic.migrateLink(bob, unclaimed,{ from: initializer }).should.be.rejectedWith(EVMThrow)
+      await registryLogic.migrateLink(alice, unclaimed, { from: initializer }).should.be.fulfilled
+      await registryLogic.migrateLink(bob, unclaimed, { from: initializer }).should.be.rejectedWith(EVMThrow)
     })
     it("does not allow initializer to migrate links after initialization", async () => {
       await registryLogic.endInitialization({ from: initializer }).should.be.fulfilled
-      await registryLogic.migrateLink(alice, unclaimed,{ from: initializer }).should.be.rejectedWith(EVMThrow)
+      await registryLogic.migrateLink(alice, unclaimed, { from: initializer }).should.be.rejectedWith(EVMThrow)
     })
     it("does not allow anyone else to write links after initialization", async () => {
       await registryLogic.endInitialization({ from: initializer }).should.be.fulfilled
-      await registryLogic.migrateLink(alice, unclaimed,{ from: bob }).should.be.rejectedWith(EVMThrow)
+      await registryLogic.migrateLink(alice, unclaimed, { from: bob }).should.be.rejectedWith(EVMThrow)
     })
     interface AdditionEventArgs {
       currentAddress: string
@@ -354,5 +368,4 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       matchingLog.args.linkId.should.bignumber.equal(1)
     })
   })
-
 })

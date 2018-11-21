@@ -44,10 +44,12 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
     ) public {
       // Confirm newAddress is not linked to another account
       require(linkIds[_newAddress] == 0);
-      // Confirm new address is signed by current address
+      // Confirm new address is signed by current address and is unused
       validateLinkSignature(_currentAddress, _newAddress, _nonce, _currentAddressSig);
-      // Confirm current address is signed by new address
+      usedSignatures[keccak256(abi.encodePacked(_currentAddressSig))] = true;
+      // Confirm current address is signed by new address and is unused
       validateLinkSignature(_newAddress, _currentAddress, _nonce, _newAddressSig);
+      usedSignatures[keccak256(abi.encodePacked(_newAddressSig))] = true;
 
       // Get linkId of current address if exists. Otherwise use incremented linkCounter
       if (linkIds[_currentAddress] == 0) {
@@ -64,8 +66,9 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
     bytes32 _nonce,
     bytes _unlinkSignature
   ) public {
-    // Confirm unlink request is signed by sender
+    // Confirm unlink request is signed by sender and is unused
     validateUnlinkSignature(_senderAddress, _addressToRemove, _nonce, _unlinkSignature);
+    usedSignatures[keccak256(abi.encodePacked(_unlinkSignature))] = true;
     linkIds[_addressToRemove] = 0;
 
     emit AddressUnlinked(_senderAddress, _addressToRemove);
@@ -83,10 +86,9 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
     address _addressB,
     bytes32 _nonce,
     bytes _linkSignature
-  ) public {
+  ) internal {
 
     require(!usedSignatures[keccak256(abi.encodePacked(_linkSignature))], "Signature not unique");
-    usedSignatures[keccak256(abi.encodePacked(_linkSignature))] = true;
 
     require(_addressA == recoverSigner(
       generateAddAddressSchemaHash(
@@ -107,14 +109,13 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
     address _addressToRemove,
     bytes32 _nonce,
     bytes _unlinkSignature
-  ) public {
+  ) internal {
 
     // require that address to remove is currently linked to senderAddress
     require(linkIds[_addressToRemove] != 0, "Address does not have active link");
     require(linkIds[_addressToRemove] == linkIds[_senderAddress], "Addresses not linked to each other");
 
     require(!usedSignatures[keccak256(abi.encodePacked(_unlinkSignature))], "Signature not unique");
-    usedSignatures[keccak256(abi.encodePacked(_unlinkSignature))] = true;
 
     require(_senderAddress == recoverSigner(
       generateRemoveAddressSchemaHash(

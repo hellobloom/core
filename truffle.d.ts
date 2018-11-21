@@ -170,38 +170,6 @@ export interface AccountRegistryLogicInstance extends ContractInstance {
       options?: TransactionOptions
     ): Promise<number>
   }
-  validateLinkSignature: {
-    (addressA: Address, addressB: Address, nonce: string, linkSignature: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(addressA: Address, addressB: Address, nonce: string, linkSignature: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(addressA: Address, addressB: Address, nonce: string, linkSignature: string, options?: TransactionOptions): Promise<string>
-    estimateGas(addressA: Address, addressB: Address, nonce: string, linkSignature: string, options?: TransactionOptions): Promise<number>
-  }
-  validateUnlinkSignature: {
-    (senderAddress: Address, addressToRemove: Address, nonce: string, unlinkSignature: string, options?: TransactionOptions): Promise<
-      Web3.TransactionReceipt
-    >
-    call(
-      senderAddress: Address,
-      addressToRemove: Address,
-      nonce: string,
-      unlinkSignature: string,
-      options?: TransactionOptions
-    ): Promise<Web3.TransactionReceipt>
-    sendTransaction(
-      senderAddress: Address,
-      addressToRemove: Address,
-      nonce: string,
-      unlinkSignature: string,
-      options?: TransactionOptions
-    ): Promise<string>
-    estimateGas(
-      senderAddress: Address,
-      addressToRemove: Address,
-      nonce: string,
-      unlinkSignature: string,
-      options?: TransactionOptions
-    ): Promise<number>
-  }
   migrateLink: {
     (currentAddress: Address, newAddress: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
     call(currentAddress: Address, newAddress: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
