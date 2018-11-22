@@ -43,7 +43,7 @@ contract AttestationLogic is Initializable, SigningLogic{
    * @param _paymentNonce Nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
    * @param _requesterSig Signature authorizing payment from requester to attester
    * @param _dataHash Hash of data being attested and nonce
-   * param _requestNonce Nonce in sig signed by subject so it can't be replayed
+   * @param _requestNonce Nonce in sig signed by subject so it can't be replayed
    * @param _subjectSig Signed authorization from subject with attestation agreement
    */
   function attest(
@@ -92,7 +92,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes _requesterSig,
     bytes32 _dataHash,
     bytes32 _requestNonce,
-    bytes _subjectSig, // Sig of subject with requester, attester, dataHash, requestNonce
+    bytes _subjectSig, // Sig of subject with dataHash and requestNonce
     bytes _delegationSig
   ) public {
     // Reconstruct attestation delegation message

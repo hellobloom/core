@@ -134,8 +134,7 @@ contract TokenEscrowMarketplace is SigningLogic {
   }
 
   /**
-   * @notice Release tokens back to payer's available balance if lockup expires
-   * @dev Token balance retreived by accountId. Can be different address from the one that deposited tokens
+   * @notice Release tokens back to payer's available balance
    * @param _payer User retreiving tokens from escrow
    * @param _amount Tokens to retreive from escrow
    */

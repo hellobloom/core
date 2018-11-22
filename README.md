@@ -14,7 +14,7 @@ Bloom relies on the signTypedData proposal described in EIP712 for many protocol
 
 **Attestations**
 
-One of the core components of Bloom protocol is Identity Attestations. The attestations contracts enable users to securely associate verified identity information with their BloomID in order to strengthen their profile.
+One of the core components of Bloom protocol is Attestations. The attestation contract enables users to build a collection of verified information they can use to sign up for third party services.
 
 **Accreditation**
 
@@ -22,7 +22,7 @@ Bloom maintains a whitelist of accredited data verifiers via an Accreditation Re
 
 **Token Escrow** 
 
-Users can lock up BLT in the Token Escrow contract. Once locked up users can send micropayments to other users by signing payment authorizations.
+Users can lock up BLT in the Token Escrow contract. Once locked up users can send micropayments to other users by signing payment authorizations. Payments are redeemed by completing attestations.
 
 **Voting**
 
@@ -144,7 +144,6 @@ A user can submit this transaction from their own address or it can be submitted
 ```
 #### Example
 ```
-// Add Address Signature Format
 const getFormattedTypedDataAddAddress = (
   contractAddress: string,
   chainId: number,
@@ -180,7 +179,7 @@ const getFormattedTypedDataAddAddress = (
 
 //Web3 pseudocode
 registryLogic = AccountRegistryLogic.at("0x123...")
-nonce = soliditySha3(uuid())
+nonce = sha3(uuid())
 
 newAddressLinkSig = ethSigUtil.signTypedData(unclaimedPrivkey, {
   data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, alice, nonce)
@@ -194,13 +193,11 @@ registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressL
 ```
 
 ### unlinkAddress
-Remove an address from a link to end the relationship between the specified address and other addresses which map to the same linkId. An address can unlink itself from a link or it can unlink any other linked address.
+Remove an address from a link relationship to another address. An address can only be unlinked if authorized by the a message signed by the associated private key. A user can submit this transaction from their own address or it can be submitted by a third party on their behalf.
 
-A user can submit this transaction from their own address or it can be submitted by a third party on their behalf.
 #### Interface
 ```
   function unlinkAddress(
-    address _senderAddress,
     address _addressToRemove,
     bytes32 _nonce,
     bytes _unlinkSignature
@@ -243,36 +240,23 @@ const getFormattedTypedDataRemoveAddress = (
 
 //Web3 pseudocode to unlink a linked address
 registryLogic = AccountRegistryLogic.at("0x123...")
-nonce = soliditySha3(uuid())
+nonce = sha3(uuid())
 
-await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice })
+await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonceHash, { from: bob })
+const unlinkSig = ethSigUtil.signTypedData(unclaimedPrivkey, {
+  data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, unclaimed, nonceHash)
+})
 await registryLogic.unlinkAddress(
-  alice,
   unclaimed,
-  nonce,
-  ethSigUtil.signTypedData(alicePrivkey, {
-    data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, unclaimed, nonce)
-  }),
-  { from: alice }
-)
-
-//Web3 pseudocode to unlink self
-await registryLogic.unlinkAddress(
-  alice,
-  alice,
-  nonce,
-  ethSigUtil.signTypedData(alicePrivkey, {
-    data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, alice, nonce)
-  }),
-  { from: alice }
+  nonceHash,
+  unlinkSig,
+  { from: bob }
 )
 
 ```
 
 # Signing Logic
-Bloom relies on the `signTypedData` proposal described in EIP712 for many protocol interactions including allowing users to delegate transactions to Bloom to pay transaction costs. These proposals can be subject to breaking changes so in order to be flexible, Bloom has isolated the logic related to generating and recovering `signTypedData` signatures to a standalone *SigningLogic* contract. 
-
-**SigningLogic** `0xd51D87B9F6886f0Ce792D062E49003d1ACEB6BEf`
+Bloom relies on the `signTypedData` proposal described in EIP712 for many protocol interactions including allowing users to delegate transactions to Bloom to pay transaction costs. SigningLogic implements all of the EIP712 schemas for the Bloom Protocol contracts. It also implements utility functions to manage signatures and recover signers. SigningLogic is inherited by the other Bloom Protocol contracts.
 
 ## recoverSigner
 Recover Signer returns the address of the user who signed a message.
@@ -285,7 +269,7 @@ Recover Signer returns the address of the user who signed a message.
 Each signature contains a domain specification so the user understands how their signature will be used. The domain specifies the dApp name, version, chain Id and the contract intended to use the signatures.
 ```
   bytes32 constant EIP712DOMAIN_TYPEHASH = keccak256(
-    "EIP712Domain(string name,string version)"
+    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
   );
 
   bytes32 DOMAIN_SEPARATOR = hash(EIP712Domain({
@@ -296,6 +280,8 @@ Each signature contains a domain specification so the user understands how their
   struct EIP712Domain {
       string  name;
       string  version;
+      uint256 chainId;
+      address verifyingContract;
   }
 
   function hash(EIP712Domain eip712Domain) internal pure returns (bytes32) {
@@ -303,10 +289,33 @@ Each signature contains a domain specification so the user understands how their
       EIP712DOMAIN_TYPEHASH,
       keccak256(bytes(eip712Domain.name)),
       keccak256(bytes(eip712Domain.version)),
+      eip712Domain.chainId,
+      eip712Domain.verifyingContract
     ));
+  }
+
+  constructor (string name, string version, uint256 chainId) public {
+    DOMAIN_SEPARATOR = hash(EIP712Domain({
+      name: name,
+      version: version,
+      chainId: chainId,
+      verifyingContract: this
+    }));
   }
 ```
 
+## Burning Signatures
+Each signature containing an authorization for a delegated Bloom Protocol action is single use. The schema contains a nonce to make each signature unique even if the intended actionis the same. SigningLogic maintains a list of signatures that have been used and reverts if a signature is submitted more than once.
+
+```
+  mapping (bytes32 => bool) public usedSignatures;
+
+  function burnSignature(bytes _signature) internal {
+    bytes32 _signatureHash = keccak256(abi.encodePacked(_signature));
+    require(!usedSignatures[_signatureHash], "Signature not unique");
+    usedSignatures[_signatureHash] = true;
+  }
+```
 
 ## SignTypedData Schemas
 In order to recover the signer of a `signTypedData` signature, the contract must know the message that was signed. SigningLogic provides functions to generate the digest for every `signTypedData` action in the Bloom dApp.
@@ -348,8 +357,10 @@ In order to recover the signer of a `signTypedData` signature, the contract must
 
 ### Web3 Example
 ```
-export const getFormattedTypedDataAddAddress = (
-  sender: string,
+const getFormattedTypedDataAddAddress = (
+  contractAddress: string,
+  chainId: number,
+  addressToAdd: string,
   nonce: string,
 ): IFormattedTypedData => {
   return {
@@ -357,200 +368,66 @@ export const getFormattedTypedDataAddAddress = (
       EIP712Domain: [
           { name: 'name', type: 'string' },
           { name: 'version', type: 'string' },
+          { name: 'chainId', type: 'uint256' },
+          { name: 'verifyingContract', type: 'address' },
       ],
       AddAddress: [
-        { name: 'sender', type: 'address'},
+        { name: 'addressToAdd', type: 'address'},
         { name: 'nonce', type: 'bytes32'},
       ]
     },
     primaryType: 'AddAddress',
     domain: {
-      name: 'Bloom',
-      version: '1',
+      name: 'Bloom Account Registry',
+      version: '2',
+      chainId: chainId,
+      verifyingContract: contractAddress,
     },
     message: {
-      sender: sender,
+      addressToAdd: addressToAdd,
       nonce: nonce
     }
   }
 }
 
-newAddressSig = ethSigUtil.signTypedData(
-  newWallet.privateKey,
-  {data: getFormattedTypedDataAddAddress(
-    currentAddress,
-    nonce
-  )}
-)
-senderSig = ethSigUtil.signTypedData(
-  currentWallet.privateKey,
-  {data: getFormattedTypedDataAddAddress(
-    newAddress,
-    nonce
-  )}
-)
+//Web3 pseudocode
+registryLogic = AccountRegistryLogic.at("0x123...")
+nonce = sha3(uuid())
+
+newAddressLinkSig = ethSigUtil.signTypedData(unclaimedPrivkey, {
+  data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, alice, nonce)
+})
+
+currentAddressLinkSig = ethSigUtil.signTypedData(alicePrivkey, {
+  data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimed, nonce)
+})
 ```
 
-# Attestation Repo
-*Attestation Repo* implements the data structures to store attestations and stakes, as well a the low-level read/ write functions. The functions are not publicly accessible. *Attestation Logic* implements the public functions which access the functions in *Attestation Repo* and emits events to store the data associated with an attestation. An attestation written to the *Attestation Repo* indicates that a data verifier has positively verified the information contained in dataHash (stored in the attestation event).
-
-The Attestation struct also contains staking information. A stake is written to the attestation struct indicating a user has locked up tokens for a specified amount of time in order to vouch for the validity of an attestation. During the stake period, *Attestation Repo* is the owner of the tokens. The user withdraws their staked tokens via *Attestation Logic*
-
-
-## Attestation Data Structures
-Attestations are stored as a mapping from BloomId to an array of attestation structs.
-```
-  struct Attestation {
-    uint256 attesterId;
-    uint256 completedAt;
-    uint256 stakeValue;
-    uint256 expiresAt;
-  }
-  mapping(uint256 => Attestation[]) public attestations;
-```
-### AttesterId
-Each entity participating in the process must have a Bloom Id in the *Account Registry* contract. The BloomId for the attester is stored in the attestation.
-### SubjectId
-The SubjectId is the key to the attestation. It does not need to be duplicated in the attestation struct.
-### CompletedAt
-The block timestamp from when the attestation was submitted is stored in the attestation.
-### StakeValue
-If an attestation has a non-zero stakeValue, the attester has collateralized tokens to vouch for the validity of the attestation. The stake can be revoked at any time and the tokens will be returned to the attester. There is currently no token penalty for revoking a stake early but it might negatively affect a user's Bloom Score.
-### ExpiresAt
-The block timestamp when the stake is to be considered expired. After the stake expires, the attester can withdraw their staked tokens.
-
-## Attestation Repo Public Functions
-### readAttestation
-The only publicly available function in Attestation Repo is a getter to look up attestations by subjectId and attestationId. ReadAttestation only reveals the attestation data stored in the contract. The attestation event contains the data, trait types and other metadata that is not critical to the contract logic.
-#### Interface
-```
-  function readAttestation(uint256 _subjectId, uint256 _attestationId) external view returns (
-    uint256 _attesterId,
-    uint256 _completedAt,
-    uint256 _stakeValue,
-    uint256 _expiresAt
-  );
-```
-#### Example
-```
-// Solidity
-
-  uint256 _attesterId;
-  uint256 _completedAt;
-  uint256 _stakeValue;
-  uint256 _expiresAt;
-
-  ( _attesterId,
-    _completedAt,
-    _stakeValue,
-    _expiresAt
-  ) = attestationRepo.readAttestation(
-    _subjectId,
-    _attestationId
-  );
-
-// Web3 Pseudocode
-  accountRegistry = AccountRegistry.at("[address of registry contract]")
-  userId = accountRegistry.accountIdForAddress.call(address)
-  attestationRepo = AttestationRepo.at("[address of attestation repo contract]")
-  attestationId = 0 | 1 | 2 ... (increments for each attestation)
-
-  const recoveredAttestation = await attestationRepo.readAttestation.call(userId, 0)
-
-  const [
-    attesterId,
-    completedAt,
-    stakeValue,
-    expiresAt
-  ] = recoveredAttestation;
-```
-## Attestation Repo Restricted Functions
-The ability to write a new attestation or revoke an attestation is restricted to the *Attestation Logic* contract.
-### writeAttestation
-Append a new attestation for a user and returns the attestationId.
-#### Interface
-```
-  function writeAttestation(
-    uint256 _subjectId,
-    uint256 _attesterId,
-    uint256 _timestamp,
-    uint256 _stakeValue,
-    uint256 _expiresAt
-    ) external onlyAttestationLogic returns (uint256);
-```
-### revokeAttestation
-Nullify the fields of an attestation so it may not be referenced as an active attestation. Leaves a hole in the attestations array. New attestations are appended after the nullified attestation.
-#### Interface
-```
-  function revokeAttestation(uint256 _subjectId, uint256 _attestationId) external onlyAttestationLogic;
-```
-### writeStake
-Modify the stake fields of an attestation. Currently this is used to zero out a stakeValue when tokens are reclaimed. In the future this could also be used to stake an existing attestation
-Append a new attestation for a user and returns the attestationId.
-#### Interface
-```
-  function writeStake(
-    uint256 _subjectId,
-    uint256 _attestationId,
-    uint256 _stakeValue,
-    uint256 _expiresAt
-    ) external onlyAttestationLogic;
-```
-### transferTokensToStaker
-During an active stake, *AttestationRepo* is the token holder of the collateralized tokens. Upon completion, *AttestationLogic* can request tokens to be transferred back to the staker.
-#### Interface
-```
-  function transferTokensToStaker(
-    address _staker,
-    uint256 _value
-    ) external onlyAttestationLogic;
-```
 # Attestation Logic
+AttestationLogic allows attesters to receive payment for completing authorizations when requested by a third party and only when authorized by the subject. Requesters, attesters and subjects coordinate off-chain to verify identity information. Attesters publish their decision on chain by either 'attesting' the information or 'contesting' it. Either way they receive payment from the requester's escrow account. Users can also revoke attestations through the AttestationLogic contract by emitting a revoke event referencing the revocation links contained in the attestation data tree.
+
 ## Event Based Storage For Attestations
 Event based storage is preferable to EVM state storage for variables not critical to the contract logic in order to save a significant amount of gas. Events are just as permanent as contract storage, they just cannot be referenced from within a transaction. Attestation data such as dataHash and requesterId are not critical to the logic of the contract. However they are critical to the Bloom Protocol. They are stored by emitting an event at the time of an attestation.
 ```
   event TraitAttested(
-    uint256 attestationId,
-    uint256 subjectId,
-    uint256 attesterId,
-    uint256 requesterId,
-    bytes32 dataHash,
-    uint256 stakeValue,
-    uint256 expiresAt
+    address subject,
+    address attester,
+    address requester,
+    bytes32 dataHash
     );
 ```
+
 ### DataHash
-Attestations may reference a single type of identity data or a group of data. The dataHash stores a hash of the data that was shared with the attester.  The plaintext data itself is never stored on the blockchain. The data is formatted as follows:
-```
-[
- { 
-  type: 'phone',
-  data: '15551112323',
-  nonce: '47b6cc5f-e961-4b9f-a675-6fafed394823'
- },
- {
-  type: 'ssn',
-  data: '012-34-5678',
-  nonce: '328493defaf6-576a-f9b4-169e-f5cc6b75'
- },
- {
-  type: 'attestation-types',
-  data: 'phone, ssn',
-  nonce: '328493defaf6-576a-f9b4-169e-f5cc6b75'
- }
-]
-```
-Each component of the data is used to build a merkle tree. The root hash of the tree is the dataHash
+Attestations may reference a single type of identity data or a group of data. The dataHash stores the root of the attestation data Merkle tree.  The plaintext data itself is never stored on the blockchain. See the [attestations-lib](https://github.com/hellobloom/attestations-lib) for more information on how the dataHash is formed.
 
 If a 3rd party requests a Bloom user to reveal the data that was submitted as part of an attestation, the user can choose to reveal none, some or all of the data by sending the 3rd party the merkle proof and selected plaintext data.
 
 ### RequesterId, AttesterId & SubjectId
 The entity requesting the attestation may be different from the user who is the subject of the attestation. Some 3rd party may be interested in a user having their name, phone number and address verified prior to offering them some service.
 
-Each entity participating in the process must have a Bloom Id in the *Account Registry* contract. The BloomId for the requester and attester are stored in the attestation.
-
 ## Attestation Logic Public Functions
-*Attestation Logic Logic* provides a public interface for Bloom and users to submit attestations to the *Attestation Repo*, revoke previous attestations, submit/ revoke stakes and reclaim tokens from expired stakes. As the Bloom protocol matures, this contract can be upgraded to enable new capabilities without needing to migrate the underlying storage contracts.
+*Attestation Logic* provides a public interface for Bloom and users to submit attestations, receive payment and revoke previous attestations.
+
 ### attest
 The attester calls attest to submit an attestation and receive payment from the requester.
 A simplified view of the attestation process is:
@@ -564,7 +441,7 @@ A simplified view of the attestation process is:
 #### Interface
 ```
   /**
-   * @notice Function for attester to submit attestation from their own account
+   * @notice Function for attester to submit attestation from their own account) 
    * @dev Wrapper for attestForUser using msg.sender
    * @param _subject User this attestation is about
    * @param _requester User requesting and paying for this attestation in BLT
@@ -583,68 +460,52 @@ A simplified view of the attestation process is:
     bytes _requesterSig,
     bytes32 _dataHash,
     bytes32 _requestNonce,
-    bytes _subjectSig,
-  ) public
+    bytes _subjectSig
+  ) public;
 ```
+
 #### Example
 ```
-	const attestationLogic = AttestationLogic.at("[attestation logic address]")
-  // paymentNonce and requestNonce are random hex strings
-  const signedAttestationAgreement = signAttestationRequest(
-    subjectAddress,
-    attesterAddress,
-    requesterAddress,
-    combinedDataHash,
-    requestNonce,
-    subjectPrivKey
-  )
-  const tokenReleaseSig = signTokenRelease(
-    requesterAddress,
-    attesterAddress,
-    new BigNumber(web3.toWei(2, "ether")).toString(10), // ether used as a unit for conversion
-    paymentNonce,
-    requesterPrivKey
-  )
-	
-	attestationLogic.attest(
-    subjectAddress,
-    requesterAddress,
-    new BigNumber(web3.toWei(2, "ether")),
-    paymentNonce,
-    tokenReleaseSig,
-    combinedDataHash,
-    requestNonce,
-    signedAttestationAgreement,
-    {from: attesterAddress}
-  )
+	const attestationLogic = AttestationLogic.at("0x132...")
+
+  const subjectSig = ethSigUtil.signTypedData(alicePrivkey, {
+    data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, combinedDataHash, nonce)
+  })
+  const tokenPaymentSig = ethSigUtil.signTypedData(davidPrivkey, {
+    data: getFormattedTypedDataPayTokens(
+      tokenEscrowMarketplaceAddress,
+      1,
+      david,
+      bob,
+      new BigNumber(1e17).toString(10),
+      nonce
+    )
+  })
+
+  await attestationLogic.attest(alice, david, new BigNumber(1e17), paymentNonce, tokenPaymentSig, dataHash, requestNonce, subjectSig, {
+    from: bob)
 ```
 
 ### revokeAttestation
-The subject, attester or contract admin can revoke attestations. Revoking an attestation simply means nulling the fields of the attestation so when the current state of the contract is queried, it is not considered active. In future versions of this contract, revoking attestations may have additional restrictions.
+An attestation can be revoked by submitting a `revokeAttestation` transaction containing the revocationLink string embeeded in the attestation data tree.
 #### Interface
 ```
   /**
-   * @notice Revoke an attestation by the subject, attester or the admin
-   * @param _subjectId user this attestation is about
-   * @param _attestationId Id of the attestation to revoke
+   * @notice Revoke an attestation
+   * @dev Link is included in dataHash and cannot be directly connected to a BloomID
+   * @param _link bytes string embedded in dataHash to link revocation
    */
   function revokeAttestation(
-    uint256 _subjectId,
-    uint256 _attestationId
+    bytes32 _link
     ) public;
 ```
 #### Example
 ```
-  accountRegistry = AccountRegistry.at("[address of registry contract]")
-  userId = accountRegistry.accountIdForAddress.call(address)
-  attestationLogic = AttestationLogic.at("[address of attestation logic contract]")
-  attestationId = 0 | 1 | 2 ... (increments for each attestation)
+  const revokeLink = "0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
 
-  attestationLogic.revokeAttestation(
-    subjectId, 
-    attestationId,
-    {from: subject | attester | owner}
-    )
+  await attestationLogic.revokeAttestation(revokeLink, {
+    from: bob
+  })
 ```
 
 ### contest
@@ -653,7 +514,7 @@ The attester calls contest to redeem payment for a failed attestation without le
 ```
   /**
    * @notice Function for attester to reject an attestation and receive payment 
-   *  without associating the negative attestation with the subject's bloomId
+   *  without associating the negative attestation with the subject
    * @param _requester User requesting and paying for this attestation in BLT
    * @param _reward Payment to attester from requester in BLT
    * @param _paymentNonce Nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
@@ -668,212 +529,35 @@ The attester calls contest to redeem payment for a failed attestation without le
 ```
 #### Example
 ```
-  const attestationLogic = AttestationLogic.at("[attestation logic address]")
-  // paymentNonce and requestNonce are random hex strings
-  const signedAttestationAgreement = signAttestationRequest(
-    subjectAddress,
-    attesterAddress,
-    requesterAddress,
-    combinedDataHash,
-    requestNonce,
-    subjectPrivKey
-  )
-  const tokenReleaseSig = signTokenRelease(
-    requesterAddress,
-    attesterAddress,
-    new BigNumber(web3.toWei(2, "ether")).toString(10), // ether used as a unit for conversion
+	const attestationLogic = AttestationLogic.at("0x132...")
+
+  const subjectSig = ethSigUtil.signTypedData(alicePrivkey, {
+    data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, combinedDataHash, nonce)
+  })
+  const tokenPaymentSig = ethSigUtil.signTypedData(davidPrivkey, {
+    data: getFormattedTypedDataPayTokens(
+      tokenEscrowMarketplaceAddress,
+      1,
+      david,
+      bob,
+      new BigNumber(1e17).toString(10),
+      paymentNonce
+    )
+  })
+
+  await attestationLogic.contest(
+    david,
+    new BigNumber(1e17),
     paymentNonce,
-    requesterPrivKey
-  )
-	
-	attestationLogic.contest(
-    requesterAddress,
-    new BigNumber(web3.toWei(2, "ether")),
-    paymentNonce,
-    tokenReleaseSig,
+    tokenPaymentSig,
     {from: attesterAddress}
   )
 ```
 
-### stake
-A user can submit a staked attestation in which they lock up BLT for a specified amount of time in order to vouch for the validity of an attestation. Currently staked attestations are used for peer staking in which someone can vouch for a friend's creditworthiness.
-#### Interface
-```
-  /**
-   * @notice Submit an attestation and transfer tokens to a collateral contract from the staker
-   *  for the specified amount of time
-   * @param _subject User who is subject of attestation and of stake
-   * @param _value BLT to lock up in collateral contract
-   * @param _paymentNonce Nonce in PaymentSig to add randomness to payment authorization
-   * @param _paymentSig Signature from staker authorizing tokens to be released to collateral contract
-   * @param _dataHash Hash of data being attested and nonce
-   * param _requestNonce Nonce in sig signed by subject so it can't be replayed
-   * @param _subjectSig Signed authorization from subject with attestation agreement
-   * @param _stakeDuration Time until stake will be complete, max 1 year
-   */
-  function stake(
-    address _subject,
-    uint256 _value,
-    bytes32 _paymentNonce,
-    bytes _paymentSig,
-    bytes32 _dataHash,
-    bytes32 _requestNonce,
-    bytes _subjectSig,
-    uint256 _stakeDuration
-  ) public;
-```
-#### Example
-```
-  const attestationLogic = AttestationLogic.at("[attestation logic address]")
-  // paymentNonce and requestNonce are random hex strings
-  const signedAttestationAgreement = signAttestationRequest(
-    subjectAddress,
-    stakerAddress,
-    stakerAddress,
-    combinedDataHash,
-    requestNonce,
-    subjectPrivKey
-  )
-
-  const tokenReleaseSig = signTokenRelease(
-    stakerAddress,
-    attestationRepoAddress,
-    new BigNumber(web3.toWei(2, "ether")).toString(10), // ether used as a unit for conversion
-    paymentNonce,
-    stakerPrivKey
-  )
-
-  const stakeDuration = 60 * 60 * 24 * 90 // 90 days
-
-  attestationLogic.stake(
-    subjectAddress,
-    new BigNumber(web3.toWei(2, "ether")),
-    paymentNonce,
-    tokenReleaseSig,
-    combinedDataHash,
-    requestNonce,
-    signedAttestationAgreement,
-    stakeDuration,
-    {from: attesterAddress}
-  )
-```
-
-### reclaimStakedTokens
-After a staking period has ended, a user can reclaim their tokens by calling reclaimStakedTokens.
-#### Interface
-```
-  /**
-   * @notice Reclaim staked tokens for an expired stake
-   * @param _subjectId User who is subject of attestation and of stake
-   * @param _attestationId Id of attestation in attestationRepo
-   */
-  function reclaimStakedTokens(
-    uint256 _attestationId,
-    uint256 _subjectId
-    ) public;
-```
-#### Example
-```
-  const attestationLogic = AttestationLogic.at("[attestation logic address]")
-  // paymentNonce and requestNonce are random hex strings
-  const signedAttestationAgreement = signAttestationRequest(
-    subjectAddress,
-    stakerAddress,
-    stakerAddress,
-    combinedDataHash,
-    requestNonce,
-    subjectPrivKey
-  )
-
-  const tokenReleaseSig = signTokenRelease(
-    stakerAddress,
-    attestationRepoAddress,
-    new BigNumber(web3.toWei(2, "ether")).toString(10), // ether used as a unit for conversion
-    paymentNonce,
-    stakerPrivKey
-  )
-
-  const stakeDuration = 60 * 60 * 24 * 90 // 90 days
-
-  attestationLogic.stake(
-    subjectAddress,
-    new BigNumber(web3.toWei(2, "ether")),
-    paymentNonce,
-    tokenReleaseSig,
-    combinedDataHash,
-    requestNonce,
-    signedAttestationAgreement,
-    stakeDuration,
-    {from: attesterAddress}
-  )
-  
-  // 90 days pass
-
-  attestationLogic.reclaimStakedTokens(attestationId, subjectId)
-```
-
-### revokeStake
-During a staking period, a staker can revoke their stake and reclaim all of their tokens at any time. There is currently no penalty for revoking a stake early.
-#### Interface
-```
-  /**
-   * @notice End a stake early and reclaim tokens
-   * @param _subjectId User who is subject of attestation and of stake
-   * @param _attestationId Id of attestation in attestationRepo
-   */
-  function revokeStake(
-    uint256 _attestationId,
-    uint256 _subjectId
-    ) public;
-```
-#### Example
-```
-  const attestationLogic = AttestationLogic.at("[attestation logic address]")
-  // paymentNonce and requestNonce are random hex strings
-  const signedAttestationAgreement = signAttestationRequest(
-    subjectAddress,
-    stakerAddress,
-    stakerAddress,
-    combinedDataHash,
-    requestNonce,
-    subjectPrivKey
-  )
-
-  const tokenReleaseSig = signTokenRelease(
-    stakerAddress,
-    attestationRepoAddress,
-    new BigNumber(web3.toWei(2, "ether")).toString(10), // ether used as a unit for conversion
-    paymentNonce,
-    stakerPrivKey
-  )
-
-  const stakeDuration = 60 * 60 * 24 * 90 // 90 days
-
-  attestationLogic.stake(
-    subjectAddress,
-    new BigNumber(web3.toWei(2, "ether")),
-    paymentNonce,
-    tokenReleaseSig,
-    combinedDataHash,
-    [3],
-    requestNonce,
-    signedAttestationAgreement,
-    stakeDuration,
-    {from: attesterAddress}
-  )
-  
-  // any time before stake period ends
-
-  attestationLogic.revokeStake(attestationId, subjectId)
-```
-
-## Attestation Logic Admin Functions
-Bloom has administrative privileges to submit delegated transactions for user and configure the external contracts. 
+## Attestation Logic Delegated Transactions
+Anyone can collect valid attestation signatures and submit the transaction on behalf of the attester in order to pay transaction fees.
 
 ### attestFor
-Users can delegate certain protocol actions to the Bloom admin in order to have Bloom pays the transaction costs, as described in *Signing Logic*. An attester can collect all the signatures and data necessary for an attestation, sign them, then send the transaction information to Bloom to submit to the contract.
-The nonces are included in the signature to make these signatures single-use. The contract maintains a mapping of used signatures.
-`mapping (bytes32 => bool) public usedSignatures;`
 
 #### Interface
 ```
@@ -886,9 +570,9 @@ The nonces are included in the signature to make these signatures single-use. Th
     bytes _requesterSig,
     bytes32 _dataHash,
     bytes32 _requestNonce,
-    bytes _subjectSig,
+    bytes _subjectSig, // Sig of subject with dataHash and requestNonce
     bytes _delegationSig
-  ) public onlyOwner
+  ) public;
 ```
 #### Signing Logic
 ```
@@ -950,7 +634,7 @@ The nonces are included in the signature to make these signatures single-use. Th
     bytes32 _paymentNonce,
     bytes _requesterSig,
     bytes _delegationSig
-  ) public onlyOwner;
+  ) public;
 ```
 #### Signing Logic
 ```
@@ -990,157 +674,41 @@ The nonces are included in the signature to make these signatures single-use. Th
   }
 ```
 
-### stakeFor
+### Migration
+The deployer can specify an `initializer` address which has the privileges to write attestations to this contract without signature authorization during a data migration period. This privilege is revoked once initialization ends.
+
 #### Interface
 ```
-  function stakeFor(
+  /**
+   * @notice Submit attestation completed prior to deployment of this contract
+   * @dev Gives initializer privileges to write attestations during the initialization period without signatures
+   * @param _requester user requesting this attestation be completed 
+   * @param _attester user completing the attestation
+   * @param _subject user this attestation is about
+   * @param _dataHash hash of data being attested
+   */
+  function migrateAttestation(
+    address _requester,
+    address _attester,
     address _subject,
-    address _staker,
-    uint256 _value,
-    bytes32 _paymentNonce,
-    bytes _paymentSig,
-    bytes32 _dataHash,
-    bytes32 _requestNonce,
-    bytes _subjectSig,
-    uint256 _stakeDuration,
-    bytes _delegationSig
-  ) public onlyOwner;
-```
-#### Signing Logic
-```
-  bytes32 constant STAKE_FOR_TYPEHASH = keccak256(
-    "StakeFor(address subject,uint256 value,bytes32 paymentNonce,bytes32 dataHash,bytes32 requestNonce,uint256 stakeDuration)"
-  );
-  struct StakeFor {
-      address subject;
-      uint256 value;
-      bytes32 paymentNonce;
-      bytes32 dataHash;
-      bytes32 requestNonce;
-      uint256 stakeDuration;
-  }
-
-  function hash(StakeFor request) internal pure returns (bytes32) {
-    return keccak256(abi.encode(
-      STAKE_FOR_TYPEHASH,
-      request.subject,
-      request.value,
-      request.paymentNonce,
-      request.dataHash,
-      request.requestNonce,
-      request.stakeDuration
-    ));
-  }
-  function generateStakeForDelegationSchemaHash(
-    address _subject,
-    uint256 _value,
-    bytes32 _paymentNonce,
-    bytes32 _dataHash,
-    bytes32 _requestNonce,
-    uint256 _stakeDuration
-  ) external view returns (bytes32) {
-    return keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        DOMAIN_SEPARATOR,
-        hash(StakeFor(
-          _subject,
-          _value,
-          _paymentNonce,
-          _dataHash,
-          _requestNonce,
-          _stakeDuration
-        ))
-      )
-      );
-  }
-```
-
-### revokeStakeFor
-#### Interface
-```
-  function revokeStakeFor(
-    uint256 _subjectId,
-    address _staker,
-    uint256 _attestationId,
-    bytes _delegationSig
-  ) public onlyOwner;
-```
-#### Signing Logic
-```
-  bytes32 constant REVOKE_STAKE_FOR_TYPEHASH = keccak256(
-    "RevokeStakeFor(uint256 subjectId,uint256 attestationId)"
-  );
-  struct RevokeStakeFor {
-      uint256 subjectId;
-      uint256 attestationId;
-  }
-
-  function hash(RevokeStakeFor request) internal pure returns (bytes32) {
-    return keccak256(abi.encode(
-      REVOKE_STAKE_FOR_TYPEHASH,
-      request.subjectId,
-      request.attestationId
-    ));
-  }
-  function generateRevokeStakeForDelegationSchemaHash(
-    uint256 _subjectId,
-    uint256 _attestationId
-  ) external view returns (bytes32) {
-    return keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        DOMAIN_SEPARATOR,
-        hash(RevokeStakeFor(
-          _subjectId,
-          _attestationId
-        ))
-      )
-      );
-  }
-```
-
-### Configure External Contracts
-Bloom can configure the external contracts associated with *Attestation Logic* in order to upgrade components as standards change and the protocol matures. The configurable external contracts include:
-	* Account Registry
-	* Attestation Repo
-	* Signing Logic
-	* Token Escrow Marketplace
-## Events
-*Attestation Logic* emits events when attestations are completed when the contract configuration changes.
-```
-  event TraitAttested(
-    uint256 attestationId,
-    uint256 subjectId,
-    uint256 attesterId,
-    uint256 requesterId,
-    bytes32 dataHash,
-    uint256 stakeValue,
-    uint256 expiresAt
-    );
-  event AttestationRejected(uint256 indexed attesterId, uint256 indexed requesterId);
-  event AttestationRevoked(uint256 indexed subjectId, uint256 attestationId, uint256 indexed revokerId);
-  event StakeSubmitted(uint256 indexed subjectId, uint256 indexed stakerId, uint256 attestationId, uint256 expiresAt);
-  event StakedTokensReclaimed(uint256 indexed stakerId, uint256 value);
-  event AccountRegistryChanged(address oldRegistry, address newRegistry);
-  event AttestationRepoChanged(address oldAttestationRepo, address newAttestationRepo);
-  event SigningLogicChanged(address oldSigningLogic, address newSigningLogic);
-  event TokenEscrowMarketplaceChanged(address oldTokenEscrowMarketplace, address newTokenEscrowMarketplace);
-  event AdminChanged(address oldAdmin, address newAdmin);
+    bytes32 _dataHash
+  ) public onlyDuringInitialization;
 ```
 
 # Token Escrow Marketplace
-TokenEscrowMarketplace is an ERC20 payment channel that enables users to send BLT by exchanging signatures off-chain. Users approve the contract address to transfer BLT on their behalf using the standard `ERC20.approve` function. After approval, either the user or the contract admin initiates the transfer of BLT into the contract. BLT balances are stored in the contract by accountId. The accountIds are managed by the *Account Registry* contract.
-Once in the contract, users can send payments via signed message to another user. The signature transfers BLT from lockup to the recipient's wallet. Users can withdraw funds at any time. Or the admin can release them on the owner's behalf.
-Only the *Attestation Logic* contract is authorized to release funds using a payment signature upon completion of a job.
+TokenEscrowMarketplace is an ERC20 escrow contract that enables users to send BLT by exchanging signatures off-chain. Users approve the contract address to transfer BLT on their behalf using the standard `ERC20.approve` function. After approval, either the user or the contract admin initiates the transfer of BLT into the contract. BLT balances are stored in the contract by address. Users should store BLT with the same address they will use to request and pay for attestations.
+
+Once in the contract, users can send payments via signed message to another user. The signature transfers BLT from lockup to the recipient's wallet. Users can withdraw unused funds at any time.
+
+Only the *Attestation Logic* contract is authorized to release funds to a third party using a payment signature upon completion of a job.
 
 
 ## Token Escrow Marketplace Data Structures
-Each user has their spendable token balance stored within the marketplace contract, `tokenEscrow`. Users can retrieve these tokens at any point by calling `withdrawTokens` from an address associated with their BloomId, or requesting the contract admin to withdraw the tokens on their behalf.
+Each user has their spendable token balance stored within the marketplace contract, `tokenEscrow`. Users can retrieve these tokens at any point by calling `releaseTokensFromEscrow` or signing the intention to withdraw and having a third party submit the transaction on their behalf.
 ```
-mapping(uint256 => uint256) public tokenEscrow.
+mapping(address => uint256) public tokenEscrow.
 ```
-## Token Escrow Marketplace Public Functions
+## Token Escrow Marketplace Functions
 *Token Escrow Marketplace* provides a public interface for users to manage the BLT they pay or receive to participate in the Identity Attestation process. Users may deposit and withdraw tokens. Bloom may also perform these actions on a user’s behalf in order to pay the transaction costs. All actions require a signature from the user authorizing the action.
 ### moveTokensToEscrowLockup
 Move tokens from the user to `tokenEscrow` . Must be preceeded by an ERC20 Approve function authorizing the transfer of tokens into the contract.
@@ -1152,10 +720,7 @@ Move tokens from the user to `tokenEscrow` . Must be preceeded by an ERC20 Appro
 ```
 const tokenEscrowMarketplace = TokenEscrowMarketplace.at([Marketplace contract address])
 token.approve(tokenEscrowMarketplace.address, new BigNumber("100e18"));
-tokenEscrowMarketplace.moveTokensToEscrowLockup(
-  new BigNumber("100e18"),
-  {from: Bloom Id address}
-)
+tokenEscrowMarketplace.moveTokensToEscrowLockup(new BigNumber("100e18"))
 ```
 ### releaseTokensFromEscrow
 Transfer tokens back to user.
@@ -1166,36 +731,30 @@ Transfer tokens back to user.
 #### Example
 ```
 const tokenEscrowMarketplace = TokenEscrowMarketplace.at([Marketplace contract address])
-tokenEscrowMarketplace.releaseTokensFromEscrow(
-  new BigNumber("10e18"),
-  {from: Bloom Id address}
+tokenEscrowMarketplace.releaseTokensFromEscrow(new BigNumber("10e18"))
 ```
 
 ## Token Escrow Marketplace Payment
-A Bloom user who has locked up tokens in `tokenEscrow` may send a signed payment authorization signature to another Bloom user. This signatures is submitted to *Attestation Logic* upon completion of an attestation job. If the attestation is successfully written to *Attestation Repo*, the tokens are released from `tokenEscrow` and transfered to the recipient. Only the specified *Attestation Logic* contract can move locked up tokens from `tokenEscrow` to a recipient’s `tokenBalances`. 
+A Bloom user who has locked up tokens in `tokenEscrow` may send a signed payment authorization signature to another Bloom user. This signatures is submitted to *Attestation Logic* upon completion of an attestation job. If the attestation is successfully written to *Attestation Repo*, the tokens are released from `tokenEscrow` and transfered to the recipient. Only the specified *Attestation Logic* contract can transfer locked up tokens from `tokenEscrow` to a recipient. 
 See the `attest` example to see how the payment signature is formed and submitted.
 
-## Token Escrow Marketplace Admin Functions
+## Token Escrow Marketplace Delegated Functions
 Users can delegate certain *Token Escrow Marketplace* actions to the Bloom admin in order to avoid paying transaction costs. The Bloom admin can also configure the external contracts associated with the marketplace contract.
 ### moveTokensToEscrowLockupFor
 Deposit tokens on behalf of a user.
 This action requires a specific one-time-use signature from a user authorizing the tokens to be locked up.
-The nonce in the signature to make these signatures single-use. The contract maintains a mapping of used signatures.
-`mapping (bytes32 => bool) public usedSignatures;`
 #### Interface
 ```
   /**
    * @notice Lockup tokens for set time period on behalf of user. Must be preceded by deposit into contract
    * @param _sender User locking up their tokens
    * @param _amount Tokens to lock up
-   * @param _lockupDuration Time until tokens will be withdrawable. Max 1 year
    * @param _nonce Random hex string used when generating sigs to make them one time use
    * @param _delegationSig Signed hash of these input parameters so admin can submit this on behalf of a user
    */
   function moveTokensToEscrowLockupFor(
     address _sender,
     uint256 _amount,
-    uint256 _lockupDuration,
     bytes32 _nonce,
     bytes _delegationSig
     ) public onlyMarketplaceAdmin
@@ -1243,41 +802,31 @@ Release tokens from `tokenEscrow` and transfer back to the owner.
 #### Interface
 ```
   /**
-   * @notice Release tokens back to payer's available balance if lockup expires
-   * @dev Token balance retreived by accountId. Can be different address from the one that deposited tokens
-   * @param _payer User retreiving tokens from escrow
-   * @param _amount Tokens to retreive from escrow
+   * @notice Withdraw tokens from escrow back to requester
+   * @dev Authorized by a signTypedData signature by sender
+   *  Sigs can only be used once. They contain a unique nonce
+   *  So an action can be repeated, with a different signature
+   * @param _sender User locking up their tokens
+   * @param _amount Tokens to lock up
+   * @param _nonce Unique Id so signatures can't be replayed
+   * @param _delegationSig Signed hash of these input parameters so an admin can submit this on behalf of a user
    */
-  function releaseTokensFromEscrowFor(address _payer, uint256 _amount) public onlyMarketplaceAdmin
+  function releaseTokensFromEscrowFor(
+    address _sender,
+    uint256 _amount,
+    bytes32 _nonce,
+    bytes _delegationSig
+    ) public;
 ```
-### Configure External Contracts
-Bloom can configure the external contracts associated with *Token Escrow Marketplace* in order to upgrade components as standards change and the protocol matures. The configurable external contracts include:
-	* Account Registry
-	* Attestation Logic
-	* Signing Logic
-## Events
-*Token Escrow Marketplace* emits events when tokens are deposits, withdrawn or moved within the marketplace. Events are also emitted when the contract configuration changes
-```
-  event TokenMarketplaceWithdrawal(uint256 subject, uint256 amount);
-  event TokenMarketplaceEscrowPayment(uint256 escrowPayer, address escrowPayee, uint256 amount);
-  event TokenMarketplaceDeposit(uint256 escrowPayer, uint256 amount);
-  event SigningLogicChanged(address oldSigningLogic, address newSigningLogic);
-  event AttestationLogicChanged(address oldAttestationLogic, address newAttestationLogic);
-  event AccountRegistryChanged(address oldRegistry, address newRegistry);
-  event MarketplaceAdminChanged(address oldMarketplaceAdmin, address newMarketplaceAdmin);
-```
+
 
 # Poll
 Bloom’s protocol heavily relies on community voting to make important protocol decisions. Anyone can create a Poll in the Bloom network by interacting with the VotingCenter contract. You don’t have to have a Bloom account to *create* a poll, but the dApp will likely filter the polls it displays to include polls created by community members.
-Votes are associated with Bloom Ids. If a user has multiple addresses associated with their Bloom Id, their total BLT balance across all addresses will be used to tally their influence.
+Votes are associated with addresses. If a user has multiple addresses linked together, their total BLT balance across all addresses will be used to tally their influence.
 If Alice wanted to create a very simple poll within the Bloom network, it might look like this:
 ```
 // This module exists in the repo!
 const ipfsUtils = require(“./src/ipfs”);
-
-// Related contracts
-accountRegistry = AccountRegistry.at("[address of registry contract]")
-signingLogic = SigningLogic.at("[address of signing logic contract"])
 
 // Create a connection to IFPS
 const IPFS = require(“ipfs-mini”);
@@ -1294,18 +843,20 @@ const poll = {
   choices: [“Vanilla”, “Chocolate”, “Strawberry”]
 };
 
+const chainId = 1; // mainnet
+
 // Write the data to IPFS
 ipfs.addJSON(poll, (err, ipfsMultihash) => {
   if (err) throw err;
 
   // On success, create the poll via the voting center
   votingCenter.createPoll(
+    "Ice cream poll",
+    chainid,
     ipfsUtils.toHex(ipfsMultihash),
     poll.choices.length,
     +new Date() / 1000 + 60 * 5, // start in 5 minutes
-    +new Date() / 1000 + 60 * 60 * 24 * 7 // end the poll in 1 week,
-    accountRegistry.address,
-    signingLogic.address
+    +new Date() / 1000 + 60 * 60 * 24 * 7 // end the poll in 1 week
   );
 });
 ```
