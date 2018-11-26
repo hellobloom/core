@@ -50,7 +50,6 @@ format_typings() {
 }
 
 update_typings() {
-  compile_typings --contracts | format_typings > contracts.d.ts
   compile_typings --contracts --truffle | format_typings > truffle.d.ts
   compile_method_manifest | format_typings > method_manifest.ts
 }

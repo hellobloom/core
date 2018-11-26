@@ -1,775 +1,552 @@
-import * as Web3 from "web3";
-import * as BigNumber from "bignumber.js";
-import * as ethereumjsWallet from "ethereumjs-wallet";
-const ethSigUtil = require("eth-sig-util");
-import { bufferToHex } from "ethereumjs-util";
-const uuid = require('uuidv4')
-import {AttestationTypeID, HashingLogic} from '@bloomprotocol/attestations-lib'
+import * as Web3 from "web3"
+import * as BigNumber from "bignumber.js"
+import * as ethereumjsWallet from "ethereumjs-wallet"
+const ethSigUtil = require("eth-sig-util")
+import { bufferToHex } from "ethereumjs-util"
+const uuid = require("uuidv4")
+import { AttestationTypeID, HashingLogic } from "@bloomprotocol/attestations-lib"
 
-import { EVMThrow } from "./helpers/EVMThrow";
-import { should } from "./test_setup";
-import {
-  SigningLogicLegacyInstance,
-  AttestationRepoInstance,
-  AttestationLogicInstance,
-  TokenEscrowMarketplaceInstance,
-  AccountRegistryInstance,
-} from "../contracts";
+import { EVMThrow } from "./helpers/EVMThrow"
+import { should } from "./test_setup"
+import { AttestationLogicInstance, TokenEscrowMarketplaceInstance, MockBLTInstance } from "../truffle"
 
-import { MockBLTInstance } from "./../contracts";
-import { latestBlockTime } from "./helpers/blockInfo";
-import * as ipfs from "./../src/ipfs";
+import { latestBlockTime } from "./helpers/blockInfo"
+import * as ipfs from "./../src/ipfs"
 import {
-  getFormattedTypedDataAttestationRequest, 
-  getFormattedTypedDataReleaseTokens, 
-  getFormattedTypedDataAttestFor, 
-  getFormattedTypedDataContestFor, 
+  getFormattedTypedDataAttestationRequest,
+  getFormattedTypedDataPayTokens,
+  getFormattedTypedDataAttestFor,
+  getFormattedTypedDataContestFor,
   getFormattedTypedDataRevokeAttestationFor
-} from "./helpers/signingLogicLegacy";
-import { generateSigNonce } from "../src/signData";
+} from "./helpers/signingLogic"
+import { generateSigNonce } from "../src/signData"
 
-const SigningLogic = artifacts.require("SigningLogicLegacy");
-const AttestationRepo = artifacts.require("AttestationRepo");
-const TokenEscrowMarketplace = artifacts.require("TokenEscrowMarketplace");
-const AttestationLogic = artifacts.require("AttestationLogic");
-const AccountRegistry = artifacts.require("AccountRegistry");
-const MockBLT = artifacts.require("MockBLT");
+const TokenEscrowMarketplace = artifacts.require("TokenEscrowMarketplace")
+const AttestationLogic = artifacts.require("AttestationLogic")
+const MockBLT = artifacts.require("MockBLT")
 
-contract("AttestationLogic", function(
-  [alice, bob, carl, david, ellen, mockOwner, mockAdmin, differentMockAdmin]
-) {
-  let token: MockBLTInstance;
-  let registry: AccountRegistryInstance;
-  let attestationLogic: AttestationLogicInstance;
-  let attestationRepo: AttestationRepoInstance;
-  let signingLogic: SigningLogicLegacyInstance;
-  let tokenEscrowMarketplace: TokenEscrowMarketplaceInstance;
+contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializer]) {
+  let token: MockBLTInstance
+  let attestationLogic: AttestationLogicInstance
+  let attestationLogicAddress: string
+  let tokenEscrowMarketplace: TokenEscrowMarketplaceInstance
+  let tokenEscrowMarketplaceAddress: string
 
-  const aliceWallet = ethereumjsWallet.fromPrivateKey(
-    new Buffer(
-      "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3",
-      "hex"
-    )
-  );
-  const alicePrivkey = aliceWallet.getPrivateKey();
+  const aliceWallet = ethereumjsWallet.fromPrivateKey(new Buffer("c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3", "hex"))
+  const alicePrivkey = aliceWallet.getPrivateKey()
 
-  const bobWallet = ethereumjsWallet.fromPrivateKey(
-    new Buffer(
-      "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
-      "hex"
-    )
-  );
-  const bobPrivkey = bobWallet.getPrivateKey();
+  const bobWallet = ethereumjsWallet.fromPrivateKey(new Buffer("ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f", "hex"))
+  const bobPrivkey = bobWallet.getPrivateKey()
 
-  const davidWallet = ethereumjsWallet.fromPrivateKey(
-    new Buffer(
-      "c88b703fb08cbea894b6aeff5a544fb92e78a18e19814cd85da83b71f772aa6c",
-      "hex"
-    )
-  );
-  const davidPrivkey = davidWallet.getPrivateKey();
-
-  let aliceId: BigNumber.BigNumber;
-  let bobId: BigNumber.BigNumber;
-  let davidId: BigNumber.BigNumber;
-  let mockAdminId: BigNumber.BigNumber;
+  const davidWallet = ethereumjsWallet.fromPrivateKey(new Buffer("c88b703fb08cbea894b6aeff5a544fb92e78a18e19814cd85da83b71f772aa6c", "hex"))
+  const davidPrivkey = davidWallet.getPrivateKey()
 
   // Sanity check
   if (alice != aliceWallet.getAddressString()) {
-    throw new Error("Mnemonic used for truffle tests out of sync?");
+    throw new Error("Mnemonic used for truffle tests out of sync?")
   }
 
   // Sanity check
   if (bob != bobWallet.getAddressString()) {
-    throw new Error("Mnemonic used for truffle tests out of sync?");
+    throw new Error("Mnemonic used for truffle tests out of sync?")
   }
 
   // Sanity check
   if (david != davidWallet.getAddressString()) {
-    throw new Error("Mnemonic used for truffle tests out of sync?");
+    throw new Error("Mnemonic used for truffle tests out of sync?")
   }
 
   const phoneData: HashingLogic.IAttestationData = {
-    type: 'phone',
-    provider: 'Bloom',
+    type: "phone",
+    provider: "Bloom",
     data: "12223334444",
     nonce: uuid(),
-    version: '1.0.0'
-  };
+    version: "1.0.0"
+  }
 
   const emailData: HashingLogic.IAttestationData = {
-    type: 'email',
-    provider: 'Bloom',
+    type: "email",
+    provider: "Bloom",
     data: "abc@google.com",
     nonce: uuid(),
-    version: '1.0.0'
-  };
+    version: "1.0.0"
+  }
 
   const phoneOnlyMerkleTree = HashingLogic.getMerkleTree([phoneData])
   const emailOnlyMerkleTree = HashingLogic.getMerkleTree([emailData])
 
-  const phoneDataHash = bufferToHex(phoneOnlyMerkleTree.getRoot());
-  const emailDataHash = bufferToHex(emailOnlyMerkleTree.getRoot());
+  const phoneDataHash = bufferToHex(phoneOnlyMerkleTree.getRoot())
+  const emailDataHash = bufferToHex(emailOnlyMerkleTree.getRoot())
 
   const merkleTree = HashingLogic.getMerkleTree([phoneData, emailData])
   const combinedDataHash = bufferToHex(merkleTree.getRoot())
 
-  const nonce = generateSigNonce()
-  const differentNonce = generateSigNonce()
+  let nonce: string
+  let differentNonce: string
+
+  let subjectSig: string
+  let tokenPaymentSig: string
+  let unrelatedSignature: string
+  let attesterDelegationSig: string
+  let contesterDelegationSig: string
+
+  let attestDefaults: {
+    subject: string
+    attester: string
+    requester: string
+    reward: BigNumber.BigNumber
+    requesterSig: string
+    dataHash: string
+    requestNonce: string
+    subjectSig: string
+    from: string
+  }
+
+  let attest = async (props: Partial<typeof attestDefaults> = attestDefaults) => {
+    let { subject, attester, requester, reward, requesterSig, dataHash, requestNonce, subjectSig, from } = {
+      ...attestDefaults,
+      ...props
+    }
+
+    return attestationLogic.attest(subject, requester, reward, requesterSig, dataHash, requestNonce, subjectSig, {
+      from
+    })
+  }
+  let contestDefaults: {
+    attester: string
+    requester: string
+    reward: BigNumber.BigNumber
+    paymentNonce: string
+    requesterSig: string
+    from: string
+  }
+
+  let contest = async (props: Partial<typeof contestDefaults> = contestDefaults) => {
+    let { attester, requester, reward, paymentNonce, requesterSig, from } = {
+      ...contestDefaults,
+      ...props
+    }
+
+    return attestationLogic.contest(requester, reward, paymentNonce, requesterSig, {
+      from
+    })
+  }
 
   // Send more test eth to alice so it doesn't run out during test
-  web3.eth.sendTransaction({to: alice, from: bob, value: web3.toWei(50, 'ether')})
+  web3.eth.sendTransaction({ to: alice, from: bob, value: web3.toWei(50, "ether") })
 
   beforeEach(async () => {
-    signingLogic = await SigningLogic.new();
-    registry = await AccountRegistry.new(alice)
-    token = await MockBLT.new();
+    token = await MockBLT.new()
 
-    attestationRepo = await AttestationRepo.new(token.address, "0x0");
+    attestationLogic = await AttestationLogic.new(initializer, "0x0")
+    attestationLogicAddress = attestationLogic.address
 
-    attestationLogic = await AttestationLogic.new(
-      registry.address,
-      attestationRepo.address,
-      signingLogic.address,
-      "0x0",
-    );
+    tokenEscrowMarketplace = await TokenEscrowMarketplace.new(token.address, attestationLogic.address)
+    tokenEscrowMarketplaceAddress = tokenEscrowMarketplace.address
 
-    tokenEscrowMarketplace = await TokenEscrowMarketplace.new(
-      token.address,
-      registry.address,
-      signingLogic.address,
-      attestationLogic.address,
-    );
-
-    await attestationRepo.setAttestationLogic(attestationLogic.address);
-    await attestationLogic.setTokenEscrowMarketplace(tokenEscrowMarketplace.address);
-    await attestationLogic.transferOwnership(mockOwner)
-    await attestationLogic.setAdmin(mockAdmin, {from: mockOwner})
+    await attestationLogic.setTokenEscrowMarketplace(tokenEscrowMarketplaceAddress, { from: initializer })
 
     await Promise.all([
       // token.gift(alice),
       token.gift(david, new BigNumber("1e18")),
-      token.gift(david, new BigNumber("1e18")),
-      registry.createNewAccount(alice),
-      registry.createNewAccount(bob),
-      registry.createNewAccount(david),
-      registry.createNewAccount(mockAdmin)
-    ]);
-    [aliceId, bobId, davidId, mockAdminId] = await Promise.all([
-      registry.accountIdForAddress.call(alice),
-      registry.accountIdForAddress.call(bob),
-      registry.accountIdForAddress.call(david),
-      registry.accountIdForAddress.call(mockAdmin)
-    ]);
+      token.gift(david, new BigNumber("1e18"))
+    ])
 
-    await token.approve(tokenEscrowMarketplace.address, new BigNumber("2e18"), {
-        from: david
-      })
+    await token.approve(tokenEscrowMarketplaceAddress, new BigNumber("2e18"), {
+      from: david
+    })
 
-    await tokenEscrowMarketplace.moveTokensToEscrowLockup(
-      new BigNumber("2e18"),
-      {from: david})
+    await tokenEscrowMarketplace.moveTokensToEscrowLockup(new BigNumber("2e18"), { from: david })
 
-  });
+    nonce = generateSigNonce()
+    differentNonce = generateSigNonce()
 
-  const subjectSig = ethSigUtil.signTypedDataLegacy(
-    alicePrivkey,
-    {data: getFormattedTypedDataAttestationRequest(
-      alice,
-      bob,
-      david,
-      combinedDataHash,
-      nonce,
-    )}
-  );
+    subjectSig = ethSigUtil.signTypedData(alicePrivkey, {
+      data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, combinedDataHash, nonce)
+    })
 
-  const tokenReleaseSig = ethSigUtil.signTypedDataLegacy(
-    davidPrivkey,
-    {data: getFormattedTypedDataReleaseTokens(
-      david,
-      bob,
-      new BigNumber(web3.toWei(1, "ether")).toString(10),
-      nonce,
-    )}
-  );
+    tokenPaymentSig = ethSigUtil.signTypedData(davidPrivkey, {
+      data: getFormattedTypedDataPayTokens(
+        tokenEscrowMarketplaceAddress,
+        1,
+        david,
+        bob,
+        new BigNumber(web3.toWei(1, "ether")).toString(10),
+        nonce
+      )
+    })
 
-  const unrelatedSignature = ethSigUtil.signTypedDataLegacy(
-    ethereumjsWallet.generate().getPrivateKey(),
-    {data: getFormattedTypedDataAttestationRequest(
-      alice,
-      bob,
-      david,
-      combinedDataHash,
-      nonce,
-    )}
-  );
+    unrelatedSignature = ethSigUtil.signTypedData(ethereumjsWallet.generate().getPrivateKey(), {
+      data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, combinedDataHash, nonce)
+    })
 
-  const attesterDelegationSig = ethSigUtil.signTypedDataLegacy(
-    bobPrivkey,
-    {data: getFormattedTypedDataAttestFor(
-      alice,
-      david,
-      new BigNumber(web3.toWei(1, "ether")).toString(10),
-      nonce,
-      combinedDataHash,
-      nonce,
-    )}
-  );
+    attesterDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+      data: getFormattedTypedDataAttestFor(
+        attestationLogicAddress,
+        1,
+        alice,
+        david,
+        new BigNumber(web3.toWei(1, "ether")).toString(10),
+        combinedDataHash,
+        nonce
+      )
+    })
 
-  const contesterDelegationSig = ethSigUtil.signTypedDataLegacy(
-    bobPrivkey,
-    {data: getFormattedTypedDataContestFor(
-      david,
-      new BigNumber(web3.toWei(1, "ether")).toString(10),
-      nonce,
-    )}
-  );
+    contesterDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+      data: getFormattedTypedDataContestFor(attestationLogicAddress, 1, david, new BigNumber(web3.toWei(1, "ether")).toString(10), nonce)
+    })
 
-  // await increaseTime(60 * 60 * 24 * 364);
-  context("submitting attestations", () => {
-
-    const attestDefaults = {
+    attestDefaults = {
       subject: alice,
       attester: bob,
       requester: david,
       reward: new BigNumber(web3.toWei(1, "ether")),
-      paymentNonce: nonce,
-      requesterSig: tokenReleaseSig,
+      requesterSig: tokenPaymentSig,
       dataHash: combinedDataHash,
       requestNonce: nonce,
       subjectSig: subjectSig,
       from: bob
-    };
-
-    const attest = async (
-      props: Partial<typeof attestDefaults> = attestDefaults
-    ) => {
-      let {
-        subject,
-        attester,
-        requester,
-        reward,
-        paymentNonce,
-        requesterSig,
-        dataHash,
-        requestNonce,
-        subjectSig,
-        from
-      } = {
+    }
+    attest = async (props: Partial<typeof attestDefaults> = attestDefaults) => {
+      let { subject, attester, requester, reward, requesterSig, dataHash, requestNonce, subjectSig, from } = {
         ...attestDefaults,
         ...props
-      };
+      }
 
-      return attestationLogic.attest(
-        subject,
-        requester,
-        reward,
-        paymentNonce,
-        requesterSig,
-        dataHash,
-        requestNonce,
-        subjectSig,
-        {
-          from
-        }
-      );
-    };
+      return attestationLogic.attest(subject, requester, reward, requesterSig, dataHash, requestNonce, subjectSig, {
+        from
+      })
+    }
+    contestDefaults = {
+      attester: bob,
+      requester: david,
+      reward: new BigNumber(web3.toWei(1, "ether")),
+      paymentNonce: nonce,
+      requesterSig: tokenPaymentSig,
+      from: bob
+    }
+
+    contest = async (props: Partial<typeof contestDefaults> = contestDefaults) => {
+      let { attester, requester, reward, paymentNonce, requesterSig, from } = {
+        ...contestDefaults,
+        ...props
+      }
+
+      return attestationLogic.contest(requester, reward, paymentNonce, requesterSig, {
+        from
+      })
+    }
+  })
+
+  // await increaseTime(60 * 60 * 24 * 364);
+  context("submitting attestations", () => {
+    interface WriteEventArgs {
+      subject: string
+      attester: string
+      requester: string
+      dataHash: string
+    }
 
     it("accepts a valid attestation", async () => {
-      await attest().should.be.fulfilled;
-    });
+      await attest().should.be.fulfilled
+    })
 
     it("accepts a valid attestation with 0 reward", async () => {
       await attest({
         reward: new BigNumber(0),
-        requesterSig: ethSigUtil.signTypedDataLegacy(
-          davidPrivkey,
-          {data: getFormattedTypedDataReleaseTokens(
-            david,
-            bob,
-            new BigNumber(0).toString(10),
-            nonce,
-          )}
-        )
-      }).should.be.fulfilled;
-    });
+        requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
+          data: getFormattedTypedDataPayTokens(tokenEscrowMarketplaceAddress, 1, david, bob, new BigNumber(0).toString(10), nonce)
+        })
+      }).should.be.fulfilled
+    })
 
     it("Fails if sent by different attester", async () => {
-      await attest({from: alice}).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("fails if no account for subject", async () => {
-      const unrelatedWallet = ethereumjsWallet.generate()
-      await attest({
-        subject: carl,
-        subjectSig: ethSigUtil.signTypedDataLegacy(
-          unrelatedWallet.getPrivateKey(),
-          {data: getFormattedTypedDataAttestationRequest(
-            unrelatedWallet.getAddressString(),
-              attestDefaults.attester,
-              attestDefaults.requester,
-              attestDefaults.dataHash,
-              attestDefaults.requestNonce,
-          )}
-        )
-      }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    interface WriteEventArgs {
-      attestationId: BigNumber.BigNumber;
-      subjectId: BigNumber.BigNumber;
-      attesterId: BigNumber.BigNumber;
-      requesterId: BigNumber.BigNumber;
-      dataHash: string;
-      stakeValue: BigNumber.BigNumber;
-      expiresAt: BigNumber.BigNumber;
-    }
+      await attest({ from: alice }).should.be.rejectedWith(EVMThrow)
+    })
 
     it("emits an event when attestation is written", async () => {
-      const { logs } = ((await attest()
-      ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
-        WriteEventArgs
-      >;
+      const { logs } = ((await attest()) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<WriteEventArgs>
 
-      const matchingLog = logs.find(
-        log => log.event === "TraitAttested"
-      );
+      const matchingLog = logs.find(log => log.event === "TraitAttested")
 
-      should.exist(matchingLog);
-      if (!matchingLog) return;
+      should.exist(matchingLog)
+      if (!matchingLog) return
 
-      matchingLog.args.attestationId.should.be.bignumber.equal(0);
-      matchingLog.args.subjectId.should.be.bignumber.equal(aliceId);
-      matchingLog.args.attesterId.should.be.bignumber.equal(bobId);
-      matchingLog.args.requesterId.should.be.bignumber.equal(davidId);
-      matchingLog.args.dataHash.should.be.equal(attestDefaults.dataHash);
-      matchingLog.args.stakeValue.should.be.bignumber.equal(0);
-      matchingLog.args.expiresAt.should.be.bignumber.equal(0);
-    });
-
+      matchingLog.args.subject.should.be.equal(alice)
+      matchingLog.args.attester.should.be.equal(bob)
+      matchingLog.args.requester.should.be.equal(david)
+      matchingLog.args.dataHash.should.be.equal(attestDefaults.dataHash)
+    })
 
     it("accepts a valid second attestation with different nonce", async () => {
-      await attest().should.be.fulfilled;
+      await attest().should.be.fulfilled
       await attest({
-          paymentNonce: differentNonce,
-          requesterSig: ethSigUtil.signTypedDataLegacy(
-            davidPrivkey,
-            {data: getFormattedTypedDataReleaseTokens(
-              david,
-              bob,
-              new BigNumber(web3.toWei(1, "ether")).toString(10),
-              differentNonce,
-            )}
-          ),
-          requestNonce: differentNonce,
-        subjectSig: ethSigUtil.signTypedDataLegacy(
-            alicePrivkey,
-            {data: getFormattedTypedDataAttestationRequest(
-              alice,
-              bob,
-              david,
-              combinedDataHash,
-              differentNonce,
-            )}
-        )
-      }).should.be.fulfilled;
-    });
-
-
-    it("releases tokens from escrow to the verifier and leaves some leftover", async () => {
-      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
-      requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18");
-
-      (await token.balanceOf(bob)).should.be.bignumber.equal(
-        "0"
-      );
-
-      await attest();
-
-      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
-      requesterEscrowBalanceAfter.should.be.bignumber.equal("1e18");
-      (await token.balanceOf(bob)).should.be.bignumber.equal(
-        "1e18"
-      );
-    });
-
-    it("releases all tokens from escrow to the verifier", async () => {
-      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
-      requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18");
-
-      (await token.balanceOf(bob)).should.be.bignumber.equal(
-        "0"
-      );
-
-      await attest(
-        {
-          reward: new BigNumber(web3.toWei(2, "ether")),
-          requesterSig: ethSigUtil.signTypedDataLegacy(
-            davidPrivkey,
-            {data: getFormattedTypedDataReleaseTokens(
-              david,
-              bob,
-              new BigNumber(web3.toWei(2, "ether")).toString(10),
-              nonce,
-            )}
-          ),
-        }
-      );
-
-      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
-      requesterEscrowBalanceAfter.should.be.bignumber.equal("0");
-      (await token.balanceOf(bob)).should.be.bignumber.equal(
-        "2e18"
-      );
-    });
-
-    it("writes the attestation to the contract", async () => {
-      await attest();
-
-
-      const recoveredAttestation = await attestationRepo.readAttestation.call(
-        aliceId,
-        0
-      )
-
-      const [
-        attesterId,
-        completedAt,
-        stakeValue,
-        expiresAt
-      ] = recoveredAttestation;
-
-      attesterId.should.be.bignumber.equal(bobId);
-      completedAt.should.be.bignumber.equal(latestBlockTime());
-      stakeValue.should.be.bignumber.equal(0)
-      expiresAt.should.be.bignumber.equal(0)
-
-    });
-
-    it("writes a second attestation for same data with different nonce", async () => {
-      await attest();
-      await attest({
-          paymentNonce: differentNonce,
-          requesterSig: ethSigUtil.signTypedDataLegacy(
-            davidPrivkey,
-            {data: getFormattedTypedDataReleaseTokens(
-              david,
-              bob,
-              new BigNumber(web3.toWei(1, "ether")).toString(10),
-              differentNonce,
-            )}
-          ),
-          requestNonce: differentNonce,
-          subjectSig: ethSigUtil.signTypedDataLegacy(
-              alicePrivkey,
-              {data: getFormattedTypedDataAttestationRequest(
-                alice,
-                bob,
-                david,
-                attestDefaults.dataHash,
-                differentNonce,
-              )}
+        requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
+          data: getFormattedTypedDataPayTokens(
+            tokenEscrowMarketplaceAddress,
+            1,
+            david,
+            bob,
+            new BigNumber(web3.toWei(1, "ether")).toString(10),
+            differentNonce
           )
-      }).should.be.fulfilled;
+        }),
+        requestNonce: differentNonce,
+        subjectSig: ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, combinedDataHash, differentNonce)
+        })
+      }).should.be.fulfilled
+    })
 
-      const recoveredAttestation = await attestationRepo.readAttestation.call(
-        aliceId,
-        1
-      )
+    it("pays tokens from escrow to the verifier and leaves some leftover", async () => {
+      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(david)
+      requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18")
+      ;(await token.balanceOf(bob)).should.be.bignumber.equal("0")
 
-      const [
-        attesterId,
-        completedAt,
-        stakeValue,
-        expiresAt
-      ] = recoveredAttestation;
+      await attest()
 
-      attesterId.should.be.bignumber.equal(bobId);
-      completedAt.should.be.bignumber.equal(latestBlockTime());
-      stakeValue.should.be.bignumber.equal(0)
-      expiresAt.should.be.bignumber.equal(0)
+      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(david)
+      requesterEscrowBalanceAfter.should.be.bignumber.equal("1e18")
+      ;(await token.balanceOf(bob)).should.be.bignumber.equal("1e18")
+    })
 
-    });
+    it("pays all tokens from escrow to the verifier", async () => {
+      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(david)
+      requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18")
+      ;(await token.balanceOf(bob)).should.be.bignumber.equal("0")
+
+      await attest({
+        reward: new BigNumber(web3.toWei(2, "ether")),
+        requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
+          data: getFormattedTypedDataPayTokens(
+            tokenEscrowMarketplaceAddress,
+            1,
+            david,
+            bob,
+            new BigNumber(web3.toWei(2, "ether")).toString(10),
+            nonce
+          )
+        })
+      })
+
+      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(david)
+      requesterEscrowBalanceAfter.should.be.bignumber.equal("0")
+      ;(await token.balanceOf(bob)).should.be.bignumber.equal("2e18")
+    })
+
+    it("submits a second attestation for same data with different nonce", async () => {
+      await attest()
+      await attest({
+        requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
+          data: getFormattedTypedDataPayTokens(
+            tokenEscrowMarketplaceAddress,
+            1,
+            david,
+            bob,
+            new BigNumber(web3.toWei(1, "ether")).toString(10),
+            differentNonce
+          )
+        }),
+        requestNonce: differentNonce,
+        subjectSig: ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataAttestationRequest(attestationLogicAddress, 1, attestDefaults.dataHash, differentNonce)
+        })
+      }).should.be.fulfilled
+    })
 
     it("rejects attestations that aren't sent from the attester specified in the request", async () => {
-      await attest({ from: carl }).should.be.rejectedWith(EVMThrow);
-    });
+      await attest({ from: carl }).should.be.rejectedWith(EVMThrow)
+    })
 
     it("rejects attestations with for an invalid subject", async () => {
-      await attest({ subject: carl }).should.be.rejectedWith(EVMThrow);
-    });
-    
+      await attest({ subject: carl }).should.be.rejectedWith(EVMThrow)
+    })
+
     it("rejects attestations with for an invalid requester", async () => {
-      await attest({ requester: carl }).should.be.rejectedWith(EVMThrow);
-    });
+      await attest({ requester: carl }).should.be.rejectedWith(EVMThrow)
+    })
 
     it("rejects attestations with for an invalid reward", async () => {
-      await attest({ reward: new BigNumber(web3.toWei(2, "ether")) }).should.be.rejectedWith(EVMThrow);
-    });
+      await attest({ reward: new BigNumber(web3.toWei(2, "ether")) }).should.be.rejectedWith(EVMThrow)
+    })
 
     it("rejects attestations with for an invalid data hash", async () => {
-      await attest({ dataHash: emailDataHash}).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects attestations with for an invalid payment nonce", async () => {
-      await attest({ paymentNonce: differentNonce}).should.be.rejectedWith(EVMThrow);
-    });
+      await attest({ dataHash: emailDataHash }).should.be.rejectedWith(EVMThrow)
+    })
 
     it("rejects attestations with for an invalid request nonce", async () => {
-      await attest({ requestNonce: differentNonce}).should.be.rejectedWith(EVMThrow);
-    });
+      await attest({ requestNonce: differentNonce }).should.be.rejectedWith(EVMThrow)
+    })
 
     it("rejects attestations if at attestation has already been submitted", async () => {
-      await attest().should.be.fulfilled;
-      await attest().should.be.rejectedWith(EVMThrow);
-    });
-  });
+      await attest().should.be.fulfilled
+      await attest().should.be.rejectedWith(EVMThrow)
+    })
+  })
 
   context("Rejecting attestation", () => {
-
-    const contestDefaults = {
-      attester: bob,
-      requester: david,
-      reward: new BigNumber(web3.toWei(1, "ether")),
-      paymentNonce: nonce,
-      requesterSig: tokenReleaseSig,
-      from: bob
-    };
-
-    const contest = async (
-      props: Partial<typeof contestDefaults> = contestDefaults
-    ) => {
-      let {
-        attester,
-        requester,
-        reward,
-        paymentNonce,
-        requesterSig,
-        from
-      } = {
-        ...contestDefaults,
-        ...props
-      };
-
-      return attestationLogic.contest(
-        requester,
-        reward,
-        paymentNonce,
-        requesterSig,
-        {
-          from
-        }
-      );
-    };
-
     it("accepts a valid contestation", async () => {
-      await contest().should.be.fulfilled;
-    });
+      await contest().should.be.fulfilled
+    })
 
     interface rejectEventArgs {
-      attesterId: BigNumber.BigNumber;
-      requesterId: BigNumber.BigNumber;
+      attester: string
+      requester: string
     }
 
     it("emits an event when attestation is rejected", async () => {
-      const { logs } = ((await contest()
-      ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
-        rejectEventArgs
-      >;
+      const { logs } = ((await contest()) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<rejectEventArgs>
 
-      const matchingLog = logs.find(
-        log => log.event === "AttestationRejected"
-      );
+      const matchingLog = logs.find(log => log.event === "AttestationRejected")
 
-      should.exist(matchingLog);
-      if (!matchingLog) return;
+      should.exist(matchingLog)
+      if (!matchingLog) return
 
-      matchingLog.args.attesterId.should.be.bignumber.equal(bobId);
-      matchingLog.args.requesterId.should.be.bignumber.equal(davidId);
-    });
+      matchingLog.args.attester.should.be.equal(bob)
+      matchingLog.args.requester.should.be.equal(david)
+    })
 
-    it("releases tokens from escrow to the verifier and leaves some leftover", async () => {
-      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
-      requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18");
+    it("pays tokens from escrow to the verifier and leaves some leftover", async () => {
+      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(david)
+      requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18")
+      ;(await token.balanceOf(bob)).should.be.bignumber.equal("0")
 
-      (await token.balanceOf(bob)).should.be.bignumber.equal(
-        "0"
-      );
+      await contest()
 
-      await contest();
+      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(david)
+      requesterEscrowBalanceAfter.should.be.bignumber.equal("1e18")
+      ;(await token.balanceOf(bob)).should.be.bignumber.equal("1e18")
+    })
 
-      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
-      requesterEscrowBalanceAfter.should.be.bignumber.equal("1e18");
-      (await token.balanceOf(bob)).should.be.bignumber.equal(
-        "1e18"
-      );
-    });
+    it("pays all tokens from escrow to the verifier", async () => {
+      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(david)
+      requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18")
+      ;(await token.balanceOf(bob)).should.be.bignumber.equal("0")
 
-    it("releases all tokens from escrow to the verifier", async () => {
-      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
-      requesterEscrowBalanceBefore.should.be.bignumber.equal("2e18");
+      await contest({
+        reward: new BigNumber(web3.toWei(2, "ether")),
+        requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
+          data: getFormattedTypedDataPayTokens(
+            tokenEscrowMarketplaceAddress,
+            1,
+            david,
+            bob,
+            new BigNumber(web3.toWei(2, "ether")).toString(10),
+            nonce
+          )
+        })
+      })
 
-      (await token.balanceOf(bob)).should.be.bignumber.equal(
-        "0"
-      );
-
-      await contest(
-        {
-          reward: new BigNumber(web3.toWei(2, "ether")),
-          requesterSig: ethSigUtil.signTypedDataLegacy(
-            davidPrivkey,
-            {data: getFormattedTypedDataReleaseTokens(
-              david,
-              bob,
-              new BigNumber(web3.toWei(2, "ether")).toString(10),
-              nonce,
-            )}
-          ),
-        }
-      );
-
-      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(davidId)
-      requesterEscrowBalanceAfter.should.be.bignumber.equal("0");
-      (await token.balanceOf(bob)).should.be.bignumber.equal(
-        "2e18"
-      );
-    });
+      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(david)
+      requesterEscrowBalanceAfter.should.be.bignumber.equal("0")
+      ;(await token.balanceOf(bob)).should.be.bignumber.equal("2e18")
+    })
 
     it("Fails if attester does not match payment sig", async () => {
       await contest({
         from: alice
-      }).should.be.rejectedWith(EVMThrow);
-    });
-
-  });
+      }).should.be.rejectedWith(EVMThrow)
+    })
+  })
 
   context("delegating rejecting attestations", () => {
-    const contestForDefaults = {
-      attester: bob,
-      requester: david,
-      reward: new BigNumber(web3.toWei(1, "ether")),
-      paymentNonce: nonce,
-      requesterSig: tokenReleaseSig,
-      delegationSig: contesterDelegationSig,
-      from: mockAdmin
-    };
+    let contestForDefaults: {
+      attester: string
+      requester: string
+      reward: BigNumber.BigNumber
+      paymentNonce: string
+      requesterSig: string
+      delegationSig: string
+      from: string
+    }
 
-    const contestFor = async (
-      props: Partial<typeof contestForDefaults> = contestForDefaults
-    ) => {
-      let {
-        attester,
-        requester,
-        reward,
-        paymentNonce,
-        requesterSig,
-        delegationSig,
-        from
-      } = {
+    let contestFor = async (props: Partial<typeof contestForDefaults> = contestForDefaults) => {
+      let { attester, requester, reward, paymentNonce, requesterSig, delegationSig, from } = {
         ...contestForDefaults,
         ...props
-      };
+      }
 
-      return attestationLogic.contestFor(
-        attester,
-        requester,
-        reward,
-        paymentNonce,
-        requesterSig,
-        delegationSig,
-        {
-          from
+      return attestationLogic.contestFor(attester, requester, reward, paymentNonce, requesterSig, delegationSig, {
+        from
+      })
+    }
+    beforeEach(async () => {
+      contestForDefaults = {
+        attester: bob,
+        requester: david,
+        reward: new BigNumber(web3.toWei(1, "ether")),
+        paymentNonce: nonce,
+        requesterSig: tokenPaymentSig,
+        delegationSig: contesterDelegationSig,
+        from: carl
+      }
+
+      contestFor = async (props: Partial<typeof contestForDefaults> = contestForDefaults) => {
+        let { attester, requester, reward, paymentNonce, requesterSig, delegationSig, from } = {
+          ...contestForDefaults,
+          ...props
         }
-      );
-    };
+
+        return attestationLogic.contestFor(attester, requester, reward, paymentNonce, requesterSig, delegationSig, {
+          from
+        })
+      }
+    })
 
     it("accepts a valid delegated attestation rejection", async () => {
       await contestFor().should.be.fulfilled
-    });
-
-    it("rejects an attestation rejection if not sent from admin", async () => {
-      await contestFor(
-        {
-          from: ellen
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
+    })
 
     it("rejects an attestation rejection if the attester is wrong in the signature", async () => {
-      await contestFor(
-        {
-          attester: ellen
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
+      await contestFor({
+        attester: ellen
+      }).should.be.rejectedWith(EVMThrow)
+    })
 
     it("rejects an attestation rejection if the requester is wrong in the signature", async () => {
-      await contestFor(
-        {
-          requester: ellen
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
+      await contestFor({
+        requester: ellen
+      }).should.be.rejectedWith(EVMThrow)
+    })
 
     it("rejects an attestation rejection if the reward is wrong", async () => {
-      await contestFor(
-        {
-          reward: new BigNumber(web3.toWei(2, "ether"))
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
+      await contestFor({
+        reward: new BigNumber(web3.toWei(2, "ether"))
+      }).should.be.rejectedWith(EVMThrow)
+    })
 
     it("rejects an attestation rejection if the payment nonce is wrong", async () => {
-      await contestFor(
-        {
-          paymentNonce: differentNonce
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-  });
+      await contestFor({
+        paymentNonce: differentNonce
+      }).should.be.rejectedWith(EVMThrow)
+    })
+  })
 
   context("delegating attestations", () => {
-    const attestForDefaults = {
-      subject: alice,
-      attester: bob,
-      requester: david,
-      reward: new BigNumber(web3.toWei(1, "ether")),
-      paymentNonce: nonce,
-      requesterSig: tokenReleaseSig,
-      dataHash: combinedDataHash,
-      requestNonce: nonce,
-      subjectSig: subjectSig,
-      delegationSig: attesterDelegationSig,
-      from: mockAdmin
-    };
+    let attestForDefaults: {
+      subject: string
+      attester: string
+      requester: string
+      reward: BigNumber.BigNumber
+      requesterSig: string
+      dataHash: string
+      requestNonce: string
+      subjectSig: string
+      delegationSig: string
+      from: string
+    }
 
-    const attestFor = async (
-      props: Partial<typeof attestForDefaults> = attestForDefaults
-    ) => {
-      let {
-        subject,
-        attester,
-        requester,
-        reward,
-        paymentNonce,
-        requesterSig,
-        dataHash,
-        requestNonce,
-        subjectSig,
-        delegationSig,
-        from
-      } = {
+    let attestFor = async (props: Partial<typeof attestForDefaults> = attestForDefaults) => {
+      let { subject, attester, requester, reward, requesterSig, dataHash, requestNonce, subjectSig, delegationSig, from } = {
         ...attestForDefaults,
         ...props
-      };
+      }
 
       return attestationLogic.attestFor(
         subject,
         attester,
         requester,
         reward,
-        paymentNonce,
         requesterSig,
         dataHash,
         requestNonce,
@@ -778,379 +555,257 @@ contract("AttestationLogic", function(
         {
           from
         }
-      );
-    };
+      )
+    }
+
+    beforeEach(async () => {
+      attestForDefaults = {
+        subject: alice,
+        attester: bob,
+        requester: david,
+        reward: new BigNumber(web3.toWei(1, "ether")),
+        requesterSig: tokenPaymentSig,
+        dataHash: combinedDataHash,
+        requestNonce: nonce,
+        subjectSig: subjectSig,
+        delegationSig: attesterDelegationSig,
+        from: carl
+      }
+
+      attestFor = async (props: Partial<typeof attestForDefaults> = attestForDefaults) => {
+        let { subject, attester, requester, reward, requesterSig, dataHash, requestNonce, subjectSig, delegationSig, from } = {
+          ...attestForDefaults,
+          ...props
+        }
+
+        return attestationLogic.attestFor(
+          subject,
+          attester,
+          requester,
+          reward,
+          requesterSig,
+          dataHash,
+          requestNonce,
+          subjectSig,
+          delegationSig,
+          {
+            from
+          }
+        )
+      }
+    })
 
     it("accepts a valid delegated attestation", async () => {
       await attestFor().should.be.fulfilled
-    });
-
-    it("rejects an attestation if not sent from admin", async () => {
-      await attestFor(
-        {
-          from: ellen
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects an attestation if the subject is wrong in the signature", async () => {
-      await attestFor(
-        {
-          subject: ellen
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects an attestation if the attester is wrong in the signature", async () => {
-      await attestFor(
-        {
-          attester: ellen
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects an attestation if the requester is wrong in the signature", async () => {
-      await attestFor(
-        {
-          requester: ellen
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects an attestation if the reward is wrong", async () => {
-      await attestFor(
-        {
-          reward: new BigNumber(web3.toWei(2, "ether"))
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects an attestation if the payment nonce is wrong", async () => {
-      await attestFor(
-        {
-          paymentNonce: differentNonce
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects an attestation if the data hash is wrong", async () => {
-      await attestFor(
-        {
-          dataHash: emailDataHash
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    it("rejects an attestation if the request nonce is wrong", async () => {
-      await attestFor(
-        {
-          requestNonce: differentNonce
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-  });
-
-  context("revoking attestations", () => {
-
-    const revokeLink = '0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
-
-    it("Allows attester to revoke an attestation", async () => {
-      await attestationLogic.revokeAttestation(
-        revokeLink,
-        {
-          from: bob
-        }
-      ).should.be.fulfilled;
-    });
-
-    it("Does not allow someone without a BloomID to submit a revocation", async () => {
-      await attestationLogic.revokeAttestation(
-        revokeLink,
-        {
-          from: carl
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
-
-    interface RevokeEventArgs {
-      link: string;
-      attesterId: BigNumber.BigNumber;
-    }
-
-    it("emits an event when attestation is revoked", async () => {
-      const { logs } = ((
-        await attestationLogic.revokeAttestation(
-          revokeLink,
-          {
-            from: mockAdmin
-          })
-      ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
-        RevokeEventArgs
-      >;
-
-      const matchingLog = logs.find(
-        log => log.event === "AttestationRevoked"
-      );
-
-      should.exist(matchingLog);
-      if (!matchingLog) return;
-
-      matchingLog.args.link.should.be.equal(revokeLink);
-      matchingLog.args.attesterId.should.be.bignumber.equal(mockAdminId);
-    });
-
-  });
-
-  context("delegated revoking attestations", () => {
-
-    const revokeLink = '0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
-    const differentRevokeLink = '0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
-    const revokeAttestationDelegationSig = ethSigUtil.signTypedDataLegacy(
-      bobPrivkey,
-      {data: getFormattedTypedDataRevokeAttestationFor(
-        revokeLink,
-      )}
-    )
-
-    const recoveredETHAddress: string = ethSigUtil.recoverTypedSignatureLegacy({
-      data: getFormattedTypedDataRevokeAttestationFor(
-        revokeLink,
-      ),
-      sig: revokeAttestationDelegationSig,
     })
 
+    it("rejects an attestation if the subject is wrong in the signature", async () => {
+      await attestFor({
+        subject: ellen
+      }).should.be.rejectedWith(EVMThrow)
+    })
 
-    it("Allows admin to revoke an attestation on behalf of an attester", async () => {
-      await attestationLogic.revokeAttestationFor(
-        revokeLink,
-        bob,
-        revokeAttestationDelegationSig,
-        {
-          from: mockAdmin
-        }
-      ).should.be.fulfilled;
-    });
+    it("rejects an attestation if the attester is wrong in the signature", async () => {
+      await attestFor({
+        attester: ellen
+      }).should.be.rejectedWith(EVMThrow)
+    })
 
-    it("does not allow anyone else to revoke an attestation on behalf of an attester", async () => {
-      await attestationLogic.revokeAttestationFor(
-        revokeLink,
-        bob,
-        revokeAttestationDelegationSig,
-        {
-          from: alice
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
+    it("rejects an attestation if the requester is wrong in the signature", async () => {
+      await attestFor({
+        requester: ellen
+      }).should.be.rejectedWith(EVMThrow)
+    })
 
-    it("Fails is link is wrong", async () => {
-      await attestationLogic.revokeAttestationFor(
-        differentRevokeLink,
-        bob,
-        revokeAttestationDelegationSig,
-        {
-          from: mockAdmin
-        }
-      ).should.be.rejectedWith(EVMThrow);
-    });
+    it("rejects an attestation if the reward is wrong", async () => {
+      await attestFor({
+        reward: new BigNumber(web3.toWei(2, "ether"))
+      }).should.be.rejectedWith(EVMThrow)
+    })
+
+    it("rejects an attestation if the data hash is wrong", async () => {
+      await attestFor({
+        dataHash: emailDataHash
+      }).should.be.rejectedWith(EVMThrow)
+    })
+
+    it("rejects an attestation if the request nonce is wrong", async () => {
+      await attestFor({
+        requestNonce: differentNonce
+      }).should.be.rejectedWith(EVMThrow)
+    })
+  })
+
+  context("revoking attestations", () => {
+    const revokeLink = "0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
+
+    it("Allows attester to revoke an attestation", async () => {
+      await attestationLogic.revokeAttestation(revokeLink, {
+        from: bob
+      }).should.be.fulfilled
+    })
 
     interface RevokeEventArgs {
-      link: string;
-      attesterId: BigNumber.BigNumber;
+      link: string
+      attester: string
     }
 
     it("emits an event when attestation is revoked", async () => {
-      const { logs } = ((
-        await attestationLogic.revokeAttestationFor(
-          revokeLink,
-          bob,
-          revokeAttestationDelegationSig,
-          {
-            from: mockAdmin
-          })
-      ) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
-        RevokeEventArgs
-      >;
+      const { logs } = ((await attestationLogic.revokeAttestation(revokeLink, {
+        from: bob
+      })) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<RevokeEventArgs>
 
-      const matchingLog = logs.find(
-        log => log.event === "AttestationRevoked"
-      );
+      const matchingLog = logs.find(log => log.event === "AttestationRevoked")
 
-      should.exist(matchingLog);
-      if (!matchingLog) return;
+      should.exist(matchingLog)
+      if (!matchingLog) return
 
-      matchingLog.args.link.should.be.equal(revokeLink);
-      matchingLog.args.attesterId.should.be.bignumber.equal(bobId);
-    });
+      matchingLog.args.link.should.be.equal(revokeLink)
+      matchingLog.args.attester.should.be.equal(bob)
+    })
+  })
 
-  });
+  context("delegated revoking attestations", () => {
+    const revokeLink = "0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
+    const differentRevokeLink = "0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
+    let revokeAttestationDelegationSig: string
 
-  describe("configuring the account registry", async () => {
-    let differentAccountRegistry: AccountRegistryInstance;
-    let accountRegistryAddressBefore: string;
+    it("Allows anyone to revoke an attestation on behalf of an attester with a valid sig", async () => {
+      revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
+      })
+      await attestationLogic.revokeAttestationFor(revokeLink, bob, revokeAttestationDelegationSig, {
+        from: carl
+      }).should.be.fulfilled
+    })
 
-    beforeEach(async () => {
-      differentAccountRegistry = await AccountRegistry.new(
-        "0x0"
-      );
-      accountRegistryAddressBefore = await attestationLogic.registry.call();
-    });
-
-    it("allows the owner to change the account registry", async () => {
-      await attestationLogic.setAccountRegistry(
-        differentAccountRegistry.address,
-        {from: mockOwner}
-      );
-      const accountRegistryAddressAfter = await attestationLogic.registry();
-
-      accountRegistryAddressBefore.should.be.equal(registry.address);
-      accountRegistryAddressAfter.should.be.equal(
-        differentAccountRegistry.address
-      );
-    });
-
-    it("doesn't allow anyone else to change the account registry", async () => {
+    it("Fails is link is wrong", async () => {
+      revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
+      })
       await attestationLogic
-        .setAccountRegistry(differentAccountRegistry.address, {
-          from: bob
+        .revokeAttestationFor(differentRevokeLink, bob, revokeAttestationDelegationSig, {
+          from: carl
         })
-        .should.be.rejectedWith(EVMThrow);
-      const accountRegistryAddressAfter = await attestationLogic.registry();
+        .should.be.rejectedWith(EVMThrow)
+    })
 
-      accountRegistryAddressBefore.should.be.equal(registry.address);
-      accountRegistryAddressAfter.should.be.equal(registry.address);
-    });
-  });
+    it("Does not allow sig to be replayed", async () => {
+      revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
+      })
+      await attestationLogic.revokeAttestationFor(revokeLink, bob, revokeAttestationDelegationSig, {
+        from: carl
+      }).should.be.fulfilled
+      await attestationLogic.revokeAttestationFor(revokeLink, bob, revokeAttestationDelegationSig, {
+        from: carl
+      }).should.be.rejectedWith(EVMThrow)
+    })
 
-  describe("configuring the signing logic", async () => {
-    let differentSigningLogic: SigningLogicLegacyInstance;
-    let signingLogicAddressBefore: string;
+    interface RevokeEventArgs {
+      link: string
+      attester: string
+    }
 
-    beforeEach(async () => {
-      differentSigningLogic = await SigningLogic.new();
-      signingLogicAddressBefore = await attestationLogic.signingLogic.call();
-    });
+    it("emits an event when attestation is revoked via delegated sig", async () => {
+      revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
+      })
+      const { logs } = ((await attestationLogic.revokeAttestationFor(revokeLink, bob, revokeAttestationDelegationSig, {
+        from: carl
+      })) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<RevokeEventArgs>
 
-    it("allows the owner to change the signing logic", async () => {
-      await attestationLogic.setSigningLogic(differentSigningLogic.address, {from: mockOwner});
-      const signingLogicAddressAfter = await attestationLogic.signingLogic();
+      const matchingLog = logs.find(log => log.event === "AttestationRevoked")
 
-      signingLogicAddressBefore.should.be.equal(signingLogic.address);
-      signingLogicAddressAfter.should.be.equal(differentSigningLogic.address);
-    });
+      should.exist(matchingLog)
+      if (!matchingLog) return
 
-    it("doesn't allow anyone else to change the signing logic", async () => {
-      await attestationLogic
-        .setSigningLogic(differentSigningLogic.address, {
-          from: bob
-        })
-        .should.be.rejectedWith(EVMThrow);
-      const signingLogicAddressAfter = await attestationLogic.signingLogic();
+      console.log(matchingLog.args)
 
-      signingLogicAddressBefore.should.be.equal(signingLogic.address);
-      signingLogicAddressAfter.should.be.equal(signingLogic.address);
-    });
-  });
+      matchingLog.args.link.should.be.equal(revokeLink)
+      matchingLog.args.attester.should.be.equal(bob)
+    })
+  })
 
   describe("configuring the Token Escrow Marketplace", async () => {
-    let differentTokenEscrowMarketplace: TokenEscrowMarketplaceInstance;
-    let TokenEscrowMarketplaceAddressBefore: string;
+    let differentTokenEscrowMarketplace: TokenEscrowMarketplaceInstance
+    let TokenEscrowMarketplaceAddressBefore: string
 
     beforeEach(async () => {
-      differentTokenEscrowMarketplace = await TokenEscrowMarketplace.new(
-        token.address,
-        registry.address,
-        signingLogic.address,
-        attestationLogic.address
-      );
-      TokenEscrowMarketplaceAddressBefore = await attestationLogic.tokenEscrowMarketplace.call();
-    });
+      differentTokenEscrowMarketplace = await TokenEscrowMarketplace.new(token.address, attestationLogic.address)
+      TokenEscrowMarketplaceAddressBefore = await attestationLogic.tokenEscrowMarketplace.call()
+    })
 
-    it("allows the owner to change the marketplace", async () => {
-      await attestationLogic.setTokenEscrowMarketplace(differentTokenEscrowMarketplace.address, {from: mockOwner});
-      const TokenEscrowMarketplaceAddressAfter = await attestationLogic.tokenEscrowMarketplace();
+    it("allows the initializer to change the marketplace during initialization", async () => {
+      await attestationLogic.setTokenEscrowMarketplace(differentTokenEscrowMarketplace.address, { from: initializer })
+      const TokenEscrowMarketplaceAddressAfter = await attestationLogic.tokenEscrowMarketplace()
 
-      TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplace.address);
-      TokenEscrowMarketplaceAddressAfter.should.be.equal(differentTokenEscrowMarketplace.address);
-    });
+      TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplaceAddress)
+      TokenEscrowMarketplaceAddressAfter.should.be.equal(differentTokenEscrowMarketplace.address)
+    })
 
     it("doesn't allow anyone else to change the marketplace", async () => {
       await attestationLogic
         .setTokenEscrowMarketplace(differentTokenEscrowMarketplace.address, {
           from: bob
         })
-        .should.be.rejectedWith(EVMThrow);
-      const TokenEscrowMarketplaceAddressAfter = await attestationLogic.tokenEscrowMarketplace();
+        .should.be.rejectedWith(EVMThrow)
+      const TokenEscrowMarketplaceAddressAfter = await attestationLogic.tokenEscrowMarketplace()
 
-      TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplace.address);
-      TokenEscrowMarketplaceAddressAfter.should.be.equal(tokenEscrowMarketplace.address);
-    });
-  });
+      TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplaceAddress)
+      TokenEscrowMarketplaceAddressAfter.should.be.equal(tokenEscrowMarketplaceAddress)
+    })
 
-  describe("configuring the Attestation Repo", async () => {
-    let differentAttestationRepo: AttestationRepoInstance;
-    let attestationRepoAddressBefore: string;
-
-    beforeEach(async () => {
-      differentAttestationRepo = await AttestationRepo.new(
-        token.address,
-        attestationLogic.address,
-      );
-      attestationRepoAddressBefore = await attestationLogic.attestationRepo.call();
-    });
-
-    it("allows the owner to change the Attestation Repo", async () => {
-      await attestationLogic.setAttestationRepo(
-        differentAttestationRepo.address, {
-          from: mockOwner
-        }
-      );
-      const attestationRepoAddressAfter = await attestationLogic.attestationRepo();
-
-      attestationRepoAddressBefore.should.be.equal(attestationRepo.address);
-      attestationRepoAddressAfter.should.be.equal(
-        differentAttestationRepo.address
-      );
-    });
-
-    it("doesn't allow anyone else to change the Attestation Repo", async () => {
+    it("doesn't initializer to change the marketplace after initialization ends", async () => {
+      await attestationLogic.endInitialization({ from: initializer }).should.be.fulfilled
       await attestationLogic
-        .setAttestationRepo(differentAttestationRepo.address, {
-          from: bob
+        .setTokenEscrowMarketplace(differentTokenEscrowMarketplace.address, {
+          from: initializer
         })
-        .should.be.rejectedWith(EVMThrow);
-      const attestationRepoAddressAfter = await attestationLogic.attestationRepo();
+        .should.be.rejectedWith(EVMThrow)
+      const TokenEscrowMarketplaceAddressAfter = await attestationLogic.tokenEscrowMarketplace()
 
-      attestationRepoAddressBefore.should.be.equal(attestationRepo.address);
-      attestationRepoAddressAfter.should.be.equal(attestationRepo.address);
-    });
-  });
+      TokenEscrowMarketplaceAddressBefore.should.be.equal(tokenEscrowMarketplaceAddress)
+      TokenEscrowMarketplaceAddressAfter.should.be.equal(tokenEscrowMarketplaceAddress)
+    })
+  })
 
-  describe("Configuring the admin", async () => {
-    let adminBefore: string;
+  describe("Migrating attestations during initialization", async () => {
+    it("allows the initializer to write attestations without validation during initialization", async () => {
+      await attestationLogic.migrateAttestation(bob, david, alice, combinedDataHash, { from: initializer }).should.be.fulfilled
+    })
+    it("does not allow anyone else to write attestations during initialization", async () => {
+      await attestationLogic.migrateAttestation(bob, david, alice, combinedDataHash, { from: bob }).should.be.rejectedWith(EVMThrow)
+    })
+    it("does not allow initializer to migrate attestations after initialization", async () => {
+      await attestationLogic.endInitialization({ from: initializer }).should.be.fulfilled
+      await attestationLogic.migrateAttestation(bob, david, alice, combinedDataHash, { from: initializer }).should.be.rejectedWith(EVMThrow)
+    })
+    it("does not allow anyone else to write attestations after initialization", async () => {
+      await attestationLogic.endInitialization({ from: initializer }).should.be.fulfilled
+      await attestationLogic.migrateAttestation(bob, david, alice, combinedDataHash, { from: bob }).should.be.rejectedWith(EVMThrow)
+    })
+    interface WriteEventArgs {
+      subject: string
+      attester: string
+      requester: string
+      dataHash: string
+    }
 
-    beforeEach(async () => {
-      adminBefore = await attestationLogic.admin.call();
-    });
+    it("emits an event when attestation is migrated", async () => {
+      const { logs } = ((await attestationLogic.migrateAttestation(david, bob, alice, combinedDataHash, {
+        from: initializer
+      })) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<WriteEventArgs>
 
-    it("allows the owner to change the admin", async () => {
-      await attestationLogic.setAdmin(differentMockAdmin, {from: mockOwner});
-      const adminAfter = await attestationLogic.admin();
+      const matchingLog = logs.find(log => log.event === "TraitAttested")
 
-      adminBefore.should.be.equal(mockAdmin);
-      adminAfter.should.be.equal(differentMockAdmin);
-    });
+      should.exist(matchingLog)
+      if (!matchingLog) return
 
-    it("doesn't allow anyone else to change the admin", async () => {
-      await attestationLogic
-        .setAdmin(differentMockAdmin, {
-          from: bob
-        })
-        .should.be.rejectedWith(EVMThrow);
-      const adminAfter = await attestationLogic.admin();
-
-      adminBefore.should.be.equal(mockAdmin);
-      adminAfter.should.be.equal(mockAdmin);
-    });
-  });
-});
+      matchingLog.args.subject.should.be.equal(alice)
+      matchingLog.args.attester.should.be.equal(bob)
+      matchingLog.args.requester.should.be.equal(david)
+      matchingLog.args.dataHash.should.be.equal(combinedDataHash)
+    })
+  })
+})

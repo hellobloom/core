@@ -1,7 +1,6 @@
 pragma solidity 0.4.24;
 
 import "./ECRecovery.sol";
-import "./SigningLogicInterface.sol";
 
 /**
  * @title SigningLogic is an upgradeable contract implementing signature recovery from typed data signatures
@@ -10,13 +9,10 @@ import "./SigningLogicInterface.sol";
  *  The other contracts have functions that allow this contract to be swapped out
  *  They will continue to work as long as this contract implements at least the functions in SigningLogicInterface
  */
-contract SigningLogicLegacy is SigningLogicInterface{
+contract SigningLogicLegacy {
 
   bytes32 constant ATTESTATION_REQUEST_TYPEHASH = keccak256(
       abi.encodePacked(
-        "address subject",
-        "address attester",
-        "address requester",
         "bytes32 dataHash",
         "bytes32 nonce"
       )
@@ -24,7 +20,16 @@ contract SigningLogicLegacy is SigningLogicInterface{
 
   bytes32 constant ADD_ADDRESS_TYPEHASH = keccak256(
       abi.encodePacked(
-        "address sender",
+        "string action",
+        "address addressToAdd",
+        "bytes32 nonce"
+      )
+  );
+
+  bytes32 constant REMOVE_ADDRESS_TYPEHASH = keccak256(
+      abi.encodePacked(
+        "string action",
+        "address addressToRemove",
         "bytes32 nonce"
       )
   );
@@ -106,9 +111,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
   );
 
   struct AttestationRequest {
-      address subject;
-      address attester;
-      address requester;
       bytes32 dataHash;
       bytes32 nonce;
   }
@@ -119,9 +121,6 @@ contract SigningLogicLegacy is SigningLogicInterface{
         ATTESTATION_REQUEST_TYPEHASH,
         keccak256(
           abi.encodePacked(
-            request.subject,
-            request.attester,
-            request.requester,
             request.dataHash,
             request.nonce
           )
@@ -130,7 +129,7 @@ contract SigningLogicLegacy is SigningLogicInterface{
   }
 
   struct AddAddress {
-      address sender;
+      address addressToAdd;
       bytes32 nonce;
   }
 
@@ -140,7 +139,27 @@ contract SigningLogicLegacy is SigningLogicInterface{
         ADD_ADDRESS_TYPEHASH,
         keccak256(
           abi.encodePacked(
-            request.sender,
+            "addAddress",
+            request.addressToAdd,
+            request.nonce
+          )
+        )
+    ));
+  }
+
+  struct RemoveAddress {
+      address addressToRemove;
+      bytes32 nonce;
+  }
+
+  function hash(RemoveAddress request) internal pure returns (bytes32) {
+    return keccak256(
+      abi.encodePacked(
+        REMOVE_ADDRESS_TYPEHASH,
+        keccak256(
+          abi.encodePacked(
+            "removeAddress",
+            request.addressToRemove,
             request.nonce
           )
         )
@@ -325,17 +344,11 @@ contract SigningLogicLegacy is SigningLogicInterface{
   }
 
   function generateRequestAttestationSchemaHash(
-    address _subject,
-    address _attester,
-    address _requester,
     bytes32 _dataHash,
     bytes32 _nonce
   ) external view returns (bytes32) {
     return hash(
       AttestationRequest(
-        _subject,
-        _attester,
-        _requester,
         _dataHash,
         _nonce
       )
@@ -343,12 +356,23 @@ contract SigningLogicLegacy is SigningLogicInterface{
   }
 
   function generateAddAddressSchemaHash(
-    address _senderAddress,
+    address _addressToAdd,
     bytes32 _nonce
   ) external view returns (bytes32) {
     return hash(
       AddAddress(
-        _senderAddress,
+        _addressToAdd,
+        _nonce
+      )
+    );
+  }
+  function generateRemoveAddressSchemaHash(
+    address _addressToRemove,
+    bytes32 _nonce
+  ) external view returns (bytes32) {
+    return hash(
+      RemoveAddress(
+        _addressToRemove,
         _nonce
       )
     );

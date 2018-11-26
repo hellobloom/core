@@ -13,20 +13,12 @@ interface IContractMethodManifest {
     }
   }
 }
-export type TContractNames = keyof typeof EContractNames
-
 export enum EContractNames {
-  "AccountRegistry" = "AccountRegistry",
-  "AccountRegistryBatchAdmin" = "AccountRegistryBatchAdmin",
-  "AccountRegistryInterface" = "AccountRegistryInterface",
   "AccountRegistryLogic" = "AccountRegistryLogic",
   "AccreditationRepo" = "AccreditationRepo",
   "AirdropProxy" = "AirdropProxy",
   "ApproveAndCallFallBack" = "ApproveAndCallFallBack",
   "AttestationLogic" = "AttestationLogic",
-  "AttestationLogicUpgradeMode" = "AttestationLogicUpgradeMode",
-  "AttestationRepo" = "AttestationRepo",
-  "AttestationRepoInterface" = "AttestationRepoInterface",
   "BasicToken" = "BasicToken",
   "BLT" = "BLT",
   "Controlled" = "Controlled",
@@ -36,6 +28,7 @@ export enum EContractNames {
   "ERC20" = "ERC20",
   "ERC20Basic" = "ERC20Basic",
   "HasNoEther" = "HasNoEther",
+  "Initializable" = "Initializable",
   "Math" = "Math",
   "MetaCoin" = "MetaCoin",
   "Migrations" = "Migrations",
@@ -49,7 +42,6 @@ export enum EContractNames {
   "SafeERC20" = "SafeERC20",
   "SafeMath" = "SafeMath",
   "SigningLogic" = "SigningLogic",
-  "SigningLogicInterface" = "SigningLogicInterface",
   "SigningLogicLegacy" = "SigningLogicLegacy",
   "StandardToken" = "StandardToken",
   "TokenController" = "TokenController",
@@ -57,202 +49,19 @@ export enum EContractNames {
   "VotingCenter" = "VotingCenter"
 }
 
-export const AccountRegistry: IContractMethodManifest = {
-  methods: {
-    accountRegistryLogic: {
-      args_arr: [],
-      args: {}
-    },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    accountByAddress: {
-      args_arr: ["anonymous_0"],
-      args: {
-        anonymous_0: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-
-    setRegistryLogic: {
-      args_arr: ["_newRegistryLogic"],
-      args: {
-        _newRegistryLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    accountIdForAddress: {
-      args_arr: ["_address"],
-      args: {
-        _address: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    addressBelongsToAccount: {
-      args_arr: ["_address"],
-      args: {
-        _address: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    createNewAccount: {
-      args_arr: ["_newUser"],
-      args: {
-        _newUser: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    addAddressToAccount: {
-      args_arr: ["_newAddress", "_sender"],
-      args: {
-        _newAddress: {
-          type: "address",
-          index: 0
-        },
-        _sender: {
-          type: "address",
-          index: 1
-        }
-      }
-    },
-    removeAddressFromAccount: {
-      args_arr: ["_addressToRemove"],
-      args: {
-        _addressToRemove: {
-          type: "address",
-          index: 0
-        }
-      }
-    }
-  }
-}
-
-export const AccountRegistryBatchAdmin: IContractMethodManifest = {
-  methods: {
-    registryAdmin: {
-      args_arr: [],
-      args: {}
-    },
-    registry: {
-      args_arr: [],
-      args: {}
-    },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    logic: {
-      args_arr: [],
-      args: {}
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-
-    setRegistryAdmin: {
-      args_arr: ["_newRegistryAdmin"],
-      args: {
-        _newRegistryAdmin: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    batchCreateAccount: {
-      args_arr: ["_newUsers"],
-      args: {
-        _newUsers: {
-          type: "address[]",
-          index: 0
-        }
-      }
-    }
-  }
-}
-
-export const AccountRegistryInterface: IContractMethodManifest = {
-  methods: {
-    accountIdForAddress: {
-      args_arr: ["_address"],
-      args: {
-        _address: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    addressBelongsToAccount: {
-      args_arr: ["_address"],
-      args: {
-        _address: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    createNewAccount: {
-      args_arr: ["_newUser"],
-      args: {
-        _newUser: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    addAddressToAccount: {
-      args_arr: ["_newAddress", "_sender"],
-      args: {
-        _newAddress: {
-          type: "address",
-          index: 0
-        },
-        _sender: {
-          type: "address",
-          index: 1
-        }
-      }
-    },
-    removeAddressFromAccount: {
-      args_arr: ["_addressToRemove"],
-      args: {
-        _addressToRemove: {
-          type: "address",
-          index: 0
-        }
-      }
-    }
-  }
-}
+export type TContractNames = keyof typeof EContractNames
 
 export const AccountRegistryLogic: IContractMethodManifest = {
   methods: {
-    pendingInvites: {
+    initializing: {
+      args_arr: [],
+      args: {}
+    },
+    initializer: {
+      args_arr: [],
+      args: {}
+    },
+    linkIds: {
       args_arr: ["anonymous_0"],
       args: {
         anonymous_0: {
@@ -261,30 +70,9 @@ export const AccountRegistryLogic: IContractMethodManifest = {
         }
       }
     },
-    signingLogic: {
+    endInitialization: {
       args_arr: [],
       args: {}
-    },
-    registryAdmin: {
-      args_arr: [],
-      args: {}
-    },
-    registry: {
-      args_arr: [],
-      args: {}
-    },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
-          type: "address",
-          index: 0
-        }
-      }
     },
     usedSignatures: {
       args_arr: ["anonymous_0"],
@@ -296,77 +84,23 @@ export const AccountRegistryLogic: IContractMethodManifest = {
       }
     },
 
-    setSigningLogic: {
-      args_arr: ["_newSigningLogic"],
+    linkAddresses: {
+      args_arr: ["_currentAddress", "_currentAddressSig", "_newAddress", "_newAddressSig", "_nonce"],
       args: {
-        _newSigningLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setRegistryAdmin: {
-      args_arr: ["_newRegistryAdmin"],
-      args: {
-        _newRegistryAdmin: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setAccountRegistry: {
-      args_arr: ["_newRegistry"],
-      args: {
-        _newRegistry: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    createInvite: {
-      args_arr: ["_sig"],
-      args: {
-        _sig: {
-          type: "bytes",
-          index: 0
-        }
-      }
-    },
-    acceptInvite: {
-      args_arr: ["_sig"],
-      args: {
-        _sig: {
-          type: "bytes",
-          index: 0
-        }
-      }
-    },
-    createAccount: {
-      args_arr: ["_newUser"],
-      args: {
-        _newUser: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    addAddressToAccountFor: {
-      args_arr: ["_newAddress", "_newAddressSig", "_senderSig", "_sender", "_nonce"],
-      args: {
-        _newAddress: {
+        _currentAddress: {
           type: "address",
           index: 0
         },
-        _newAddressSig: {
+        _currentAddressSig: {
           type: "bytes",
           index: 1
         },
-        _senderSig: {
-          type: "bytes",
+        _newAddress: {
+          type: "address",
           index: 2
         },
-        _sender: {
-          type: "address",
+        _newAddressSig: {
+          type: "bytes",
           index: 3
         },
         _nonce: {
@@ -375,33 +109,33 @@ export const AccountRegistryLogic: IContractMethodManifest = {
         }
       }
     },
-    addAddressToAccount: {
-      args_arr: ["_newAddress", "_newAddressSig", "_senderSig", "_nonce"],
-      args: {
-        _newAddress: {
-          type: "address",
-          index: 0
-        },
-        _newAddressSig: {
-          type: "bytes",
-          index: 1
-        },
-        _senderSig: {
-          type: "bytes",
-          index: 2
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 3
-        }
-      }
-    },
-    removeAddressFromAccountFor: {
-      args_arr: ["_addressToRemove"],
+    unlinkAddress: {
+      args_arr: ["_addressToRemove", "_nonce", "_unlinkSignature"],
       args: {
         _addressToRemove: {
           type: "address",
           index: 0
+        },
+        _nonce: {
+          type: "bytes32",
+          index: 1
+        },
+        _unlinkSignature: {
+          type: "bytes",
+          index: 2
+        }
+      }
+    },
+    migrateLink: {
+      args_arr: ["_currentAddress", "_newAddress"],
+      args: {
+        _currentAddress: {
+          type: "address",
+          index: 0
+        },
+        _newAddress: {
+          type: "address",
+          index: 1
         }
       }
     }
@@ -583,11 +317,7 @@ export const ApproveAndCallFallBack: IContractMethodManifest = {
 
 export const AttestationLogic: IContractMethodManifest = {
   methods: {
-    attestationRepo: {
-      args_arr: [],
-      args: {}
-    },
-    signingLogic: {
+    initializing: {
       args_arr: [],
       args: {}
     },
@@ -595,24 +325,11 @@ export const AttestationLogic: IContractMethodManifest = {
       args_arr: [],
       args: {}
     },
-    registry: {
+    initializer: {
       args_arr: [],
       args: {}
     },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    admin: {
+    endInitialization: {
       args_arr: [],
       args: {}
     },
@@ -627,7 +344,7 @@ export const AttestationLogic: IContractMethodManifest = {
     },
 
     attest: {
-      args_arr: ["_subject", "_requester", "_reward", "_paymentNonce", "_requesterSig", "_dataHash", "_requestNonce", "_subjectSig"],
+      args_arr: ["_subject", "_requester", "_reward", "_requesterSig", "_dataHash", "_requestNonce", "_subjectSig"],
       args: {
         _subject: {
           type: "address",
@@ -641,41 +358,26 @@ export const AttestationLogic: IContractMethodManifest = {
           type: "uint256",
           index: 2
         },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 3
-        },
         _requesterSig: {
           type: "bytes",
-          index: 4
+          index: 3
         },
         _dataHash: {
           type: "bytes32",
-          index: 5
+          index: 4
         },
         _requestNonce: {
           type: "bytes32",
-          index: 6
+          index: 5
         },
         _subjectSig: {
           type: "bytes",
-          index: 7
+          index: 6
         }
       }
     },
     attestFor: {
-      args_arr: [
-        "_subject",
-        "_attester",
-        "_requester",
-        "_reward",
-        "_paymentNonce",
-        "_requesterSig",
-        "_dataHash",
-        "_requestNonce",
-        "_subjectSig",
-        "_delegationSig"
-      ],
+      args_arr: ["_subject", "_attester", "_requester", "_reward", "_requesterSig", "_dataHash", "_requestNonce", "_subjectSig", "_delegationSig"],
       args: {
         _subject: {
           type: "address",
@@ -693,34 +395,30 @@ export const AttestationLogic: IContractMethodManifest = {
           type: "uint256",
           index: 3
         },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 4
-        },
         _requesterSig: {
           type: "bytes",
-          index: 5
+          index: 4
         },
         _dataHash: {
           type: "bytes32",
-          index: 6
+          index: 5
         },
         _requestNonce: {
           type: "bytes32",
-          index: 7
+          index: 6
         },
         _subjectSig: {
           type: "bytes",
-          index: 8
+          index: 7
         },
         _delegationSig: {
           type: "bytes",
-          index: 9
+          index: 8
         }
       }
     },
     contest: {
-      args_arr: ["_requester", "_reward", "_paymentNonce", "_requesterSig"],
+      args_arr: ["_requester", "_reward", "_requestNonce", "_requesterSig"],
       args: {
         _requester: {
           type: "address",
@@ -730,7 +428,7 @@ export const AttestationLogic: IContractMethodManifest = {
           type: "uint256",
           index: 1
         },
-        _paymentNonce: {
+        _requestNonce: {
           type: "bytes32",
           index: 2
         },
@@ -741,7 +439,7 @@ export const AttestationLogic: IContractMethodManifest = {
       }
     },
     contestFor: {
-      args_arr: ["_attester", "_requester", "_reward", "_paymentNonce", "_requesterSig", "_delegationSig"],
+      args_arr: ["_attester", "_requester", "_reward", "_requestNonce", "_requesterSig", "_delegationSig"],
       args: {
         _attester: {
           type: "address",
@@ -755,7 +453,7 @@ export const AttestationLogic: IContractMethodManifest = {
           type: "uint256",
           index: 2
         },
-        _paymentNonce: {
+        _requestNonce: {
           type: "bytes32",
           index: 3
         },
@@ -769,10 +467,10 @@ export const AttestationLogic: IContractMethodManifest = {
         }
       }
     },
-    validateSubjectSig: {
-      args_arr: ["_subject", "_attester", "_requester", "_dataHash", "_requestNonce", "_subjectSig"],
+    migrateAttestation: {
+      args_arr: ["_requester", "_attester", "_subject", "_dataHash"],
       args: {
-        _subject: {
+        _requester: {
           type: "address",
           index: 0
         },
@@ -780,21 +478,13 @@ export const AttestationLogic: IContractMethodManifest = {
           type: "address",
           index: 1
         },
-        _requester: {
+        _subject: {
           type: "address",
           index: 2
         },
         _dataHash: {
           type: "bytes32",
           index: 3
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 4
-        },
-        _subjectSig: {
-          type: "bytes",
-          index: 5
         }
       }
     },
@@ -824,502 +514,12 @@ export const AttestationLogic: IContractMethodManifest = {
         }
       }
     },
-    stake: {
-      args_arr: ["_subject", "_value", "_paymentNonce", "_paymentSig", "_dataHash", "_requestNonce", "_subjectSig", "_stakeDuration"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _value: {
-          type: "uint256",
-          index: 1
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _paymentSig: {
-          type: "bytes",
-          index: 3
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 4
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 5
-        },
-        _subjectSig: {
-          type: "bytes",
-          index: 6
-        },
-        _stakeDuration: {
-          type: "uint256",
-          index: 7
-        }
-      }
-    },
-    stakeFor: {
-      args_arr: [
-        "_subject",
-        "_staker",
-        "_value",
-        "_paymentNonce",
-        "_paymentSig",
-        "_dataHash",
-        "_requestNonce",
-        "_subjectSig",
-        "_stakeDuration",
-        "_delegationSig"
-      ],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _staker: {
-          type: "address",
-          index: 1
-        },
-        _value: {
-          type: "uint256",
-          index: 2
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 3
-        },
-        _paymentSig: {
-          type: "bytes",
-          index: 4
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 5
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 6
-        },
-        _subjectSig: {
-          type: "bytes",
-          index: 7
-        },
-        _stakeDuration: {
-          type: "uint256",
-          index: 8
-        },
-        _delegationSig: {
-          type: "bytes",
-          index: 9
-        }
-      }
-    },
-    reclaimStakedTokens: {
-      args_arr: ["_attestationId", "_subjectId"],
-      args: {
-        _attestationId: {
-          type: "uint256",
-          index: 0
-        },
-        _subjectId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    reclaimStakedTokensFor: {
-      args_arr: ["_subjectId", "_staker", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _staker: {
-          type: "address",
-          index: 1
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 2
-        }
-      }
-    },
-    revokeStake: {
-      args_arr: ["_subjectId", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    revokeStakeFor: {
-      args_arr: ["_subjectId", "_staker", "_attestationId", "_delegationSig"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _staker: {
-          type: "address",
-          index: 1
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 2
-        },
-        _delegationSig: {
-          type: "bytes",
-          index: 3
-        }
-      }
-    },
-    setAdmin: {
-      args_arr: ["_newAdmin"],
-      args: {
-        _newAdmin: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setAccountRegistry: {
-      args_arr: ["_newRegistry"],
-      args: {
-        _newRegistry: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setSigningLogic: {
-      args_arr: ["_newSigningLogic"],
-      args: {
-        _newSigningLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setAttestationRepo: {
-      args_arr: ["_newAttestationRepo"],
-      args: {
-        _newAttestationRepo: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
     setTokenEscrowMarketplace: {
       args_arr: ["_newTokenEscrowMarketplace"],
       args: {
         _newTokenEscrowMarketplace: {
           type: "address",
           index: 0
-        }
-      }
-    }
-  }
-}
-
-export const AttestationLogicUpgradeMode: IContractMethodManifest = {
-  methods: {
-    attestationRepo: {
-      args_arr: [],
-      args: {}
-    },
-    registry: {
-      args_arr: [],
-      args: {}
-    },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-
-    proxyWriteAttestation: {
-      args_arr: ["_subject", "_attester", "_requester", "_dataHash", "_timestamp"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _attester: {
-          type: "address",
-          index: 1
-        },
-        _requester: {
-          type: "address",
-          index: 2
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 3
-        },
-        _timestamp: {
-          type: "uint256",
-          index: 4
-        }
-      }
-    }
-  }
-}
-
-export const AttestationRepo: IContractMethodManifest = {
-  methods: {
-    attestationLogic: {
-      args_arr: [],
-      args: {}
-    },
-    unpause: {
-      args_arr: [],
-      args: {}
-    },
-    paused: {
-      args_arr: [],
-      args: {}
-    },
-    pause: {
-      args_arr: [],
-      args: {}
-    },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    attestations: {
-      args_arr: ["anonymous_0", "anonymous_1"],
-      args: {
-        anonymous_0: {
-          type: "uint256",
-          index: 0
-        },
-        anonymous_1: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    token: {
-      args_arr: [],
-      args: {}
-    },
-
-    setAttestationLogic: {
-      args_arr: ["_newAttestationLogic"],
-      args: {
-        _newAttestationLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    writeAttestation: {
-      args_arr: ["_subjectId", "_attesterId", "_timestamp", "_stakeValue", "_expiresAt"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attesterId: {
-          type: "uint256",
-          index: 1
-        },
-        _timestamp: {
-          type: "uint256",
-          index: 2
-        },
-        _stakeValue: {
-          type: "uint256",
-          index: 3
-        },
-        _expiresAt: {
-          type: "uint256",
-          index: 4
-        }
-      }
-    },
-    readAttestation: {
-      args_arr: ["_subjectId", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    revokeAttestation: {
-      args_arr: ["_subjectId", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    writeStake: {
-      args_arr: ["_subjectId", "_attestationId", "_stakeValue", "_expiresAt"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        },
-        _stakeValue: {
-          type: "uint256",
-          index: 2
-        },
-        _expiresAt: {
-          type: "uint256",
-          index: 3
-        }
-      }
-    },
-    transferTokensToStaker: {
-      args_arr: ["_staker", "_value"],
-      args: {
-        _staker: {
-          type: "address",
-          index: 0
-        },
-        _value: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    }
-  }
-}
-
-export const AttestationRepoInterface: IContractMethodManifest = {
-  methods: {
-    writeAttestation: {
-      args_arr: ["_subjectId", "_attesterId", "_timestamp", "_stakeValue", "_expiresAt"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attesterId: {
-          type: "uint256",
-          index: 1
-        },
-        _timestamp: {
-          type: "uint256",
-          index: 2
-        },
-        _stakeValue: {
-          type: "uint256",
-          index: 3
-        },
-        _expiresAt: {
-          type: "uint256",
-          index: 4
-        }
-      }
-    },
-    setAttestationLogic: {
-      args_arr: ["_newAttestationLogic"],
-      args: {
-        _newAttestationLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    readAttestation: {
-      args_arr: ["_subjectId", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    revokeAttestation: {
-      args_arr: ["_subjectId", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    writeStake: {
-      args_arr: ["_subjectId", "_attestationId", "_stakeValue", "_expiresAt"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        },
-        _stakeValue: {
-          type: "uint256",
-          index: 2
-        },
-        _expiresAt: {
-          type: "uint256",
-          index: 3
-        }
-      }
-    },
-    transferTokensToStaker: {
-      args_arr: ["_staker", "_value"],
-      args: {
-        _staker: {
-          type: "address",
-          index: 0
-        },
-        _value: {
-          type: "uint256",
-          index: 1
         }
       }
     }
@@ -1921,6 +1121,24 @@ export const HasNoEther: IContractMethodManifest = {
     },
 
     reclaimEther: {
+      args_arr: [],
+      args: {}
+    }
+  }
+}
+
+export const Initializable: IContractMethodManifest = {
+  methods: {
+    initializing: {
+      args_arr: [],
+      args: {}
+    },
+    initializer: {
+      args_arr: [],
+      args: {}
+    },
+
+    endInitialization: {
       args_arr: [],
       args: {}
     }
@@ -2818,28 +2036,7 @@ export const Poll: IContractMethodManifest = {
       args_arr: [],
       args: {}
     },
-    signingLogic: {
-      args_arr: [],
-      args: {}
-    },
-    votes: {
-      args_arr: ["anonymous_0"],
-      args: {
-        anonymous_0: {
-          type: "uint256",
-          index: 0
-        }
-      }
-    },
     startTime: {
-      args_arr: [],
-      args: {}
-    },
-    registry: {
-      args_arr: [],
-      args: {}
-    },
-    pollAdmin: {
       args_arr: [],
       args: {}
     },
@@ -2908,422 +2105,12 @@ export const SafeMath: IContractMethodManifest = {
 
 export const SigningLogic: IContractMethodManifest = {
   methods: {
-    generateRequestAttestationSchemaHash: {
-      args_arr: ["_subject", "_attester", "_requester", "_dataHash", "_nonce"],
+    usedSignatures: {
+      args_arr: ["anonymous_0"],
       args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _attester: {
-          type: "address",
-          index: 1
-        },
-        _requester: {
-          type: "address",
-          index: 2
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 3
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 4
-        }
-      }
-    },
-    generateAddAddressSchemaHash: {
-      args_arr: ["_senderAddress", "_nonce"],
-      args: {
-        _senderAddress: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-    generateReleaseTokensSchemaHash: {
-      args_arr: ["_sender", "_receiver", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _receiver: {
-          type: "address",
-          index: 1
-        },
-        _amount: {
-          type: "uint256",
-          index: 2
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 3
-        }
-      }
-    },
-    generateAttestForDelegationSchemaHash: {
-      args_arr: ["_subject", "_requester", "_reward", "_paymentNonce", "_dataHash", "_requestNonce"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _requester: {
-          type: "address",
-          index: 1
-        },
-        _reward: {
-          type: "uint256",
-          index: 2
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 3
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 4
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 5
-        }
-      }
-    },
-    generateContestForDelegationSchemaHash: {
-      args_arr: ["_requester", "_reward", "_paymentNonce"],
-      args: {
-        _requester: {
-          type: "address",
-          index: 0
-        },
-        _reward: {
-          type: "uint256",
-          index: 1
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
-    },
-    generateStakeForDelegationSchemaHash: {
-      args_arr: ["_subject", "_value", "_paymentNonce", "_dataHash", "_requestNonce", "_stakeDuration"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _value: {
-          type: "uint256",
-          index: 1
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 3
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 4
-        },
-        _stakeDuration: {
-          type: "uint256",
-          index: 5
-        }
-      }
-    },
-    generateRevokeStakeForDelegationSchemaHash: {
-      args_arr: ["_subjectId", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    generateRevokeAttestationForDelegationSchemaHash: {
-      args_arr: ["_link"],
-      args: {
-        _link: {
+        anonymous_0: {
           type: "bytes32",
           index: 0
-        }
-      }
-    },
-    generateVoteForDelegationSchemaHash: {
-      args_arr: ["_choice", "_voter", "_nonce", "_poll"],
-      args: {
-        _choice: {
-          type: "uint16",
-          index: 0
-        },
-        _voter: {
-          type: "address",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _poll: {
-          type: "address",
-          index: 3
-        }
-      }
-    },
-    generateLockupTokensDelegationSchemaHash: {
-      args_arr: ["_sender", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _amount: {
-          type: "uint256",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
-    },
-    recoverSigner: {
-      args_arr: ["_hash", "_sig"],
-      args: {
-        _hash: {
-          type: "bytes32",
-          index: 0
-        },
-        _sig: {
-          type: "bytes",
-          index: 1
-        }
-      }
-    }
-  }
-}
-
-export const SigningLogicInterface: IContractMethodManifest = {
-  methods: {
-    recoverSigner: {
-      args_arr: ["_hash", "_sig"],
-      args: {
-        _hash: {
-          type: "bytes32",
-          index: 0
-        },
-        _sig: {
-          type: "bytes",
-          index: 1
-        }
-      }
-    },
-    generateRequestAttestationSchemaHash: {
-      args_arr: ["_subject", "_attester", "_requester", "_dataHash", "_nonce"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _attester: {
-          type: "address",
-          index: 1
-        },
-        _requester: {
-          type: "address",
-          index: 2
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 3
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 4
-        }
-      }
-    },
-    generateAttestForDelegationSchemaHash: {
-      args_arr: ["_subject", "_requester", "_reward", "_paymentNonce", "_dataHash", "_requestNonce"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _requester: {
-          type: "address",
-          index: 1
-        },
-        _reward: {
-          type: "uint256",
-          index: 2
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 3
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 4
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 5
-        }
-      }
-    },
-    generateContestForDelegationSchemaHash: {
-      args_arr: ["_requester", "_reward", "_paymentNonce"],
-      args: {
-        _requester: {
-          type: "address",
-          index: 0
-        },
-        _reward: {
-          type: "uint256",
-          index: 1
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 2
-        }
-      }
-    },
-    generateStakeForDelegationSchemaHash: {
-      args_arr: ["_subject", "_value", "_paymentNonce", "_dataHash", "_requestNonce", "_stakeDuration"],
-      args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _value: {
-          type: "uint256",
-          index: 1
-        },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _dataHash: {
-          type: "bytes32",
-          index: 3
-        },
-        _requestNonce: {
-          type: "bytes32",
-          index: 4
-        },
-        _stakeDuration: {
-          type: "uint256",
-          index: 5
-        }
-      }
-    },
-    generateRevokeStakeForDelegationSchemaHash: {
-      args_arr: ["_subjectId", "_attestationId"],
-      args: {
-        _subjectId: {
-          type: "uint256",
-          index: 0
-        },
-        _attestationId: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
-    generateRevokeAttestationForDelegationSchemaHash: {
-      args_arr: ["_link"],
-      args: {
-        _link: {
-          type: "bytes32",
-          index: 0
-        }
-      }
-    },
-    generateAddAddressSchemaHash: {
-      args_arr: ["_senderAddress", "_nonce"],
-      args: {
-        _senderAddress: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        }
-      }
-    },
-    generateVoteForDelegationSchemaHash: {
-      args_arr: ["_choice", "_voter", "_nonce", "_poll"],
-      args: {
-        _choice: {
-          type: "uint16",
-          index: 0
-        },
-        _voter: {
-          type: "address",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
-        },
-        _poll: {
-          type: "address",
-          index: 3
-        }
-      }
-    },
-    generateReleaseTokensSchemaHash: {
-      args_arr: ["_sender", "_receiver", "_amount", "_uuid"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _receiver: {
-          type: "address",
-          index: 1
-        },
-        _amount: {
-          type: "uint256",
-          index: 2
-        },
-        _uuid: {
-          type: "bytes32",
-          index: 3
-        }
-      }
-    },
-    generateLockupTokensDelegationSchemaHash: {
-      args_arr: ["_sender", "_amount", "_nonce"],
-      args: {
-        _sender: {
-          type: "address",
-          index: 0
-        },
-        _amount: {
-          type: "uint256",
-          index: 1
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 2
         }
       }
     }
@@ -3333,34 +2120,35 @@ export const SigningLogicInterface: IContractMethodManifest = {
 export const SigningLogicLegacy: IContractMethodManifest = {
   methods: {
     generateRequestAttestationSchemaHash: {
-      args_arr: ["_subject", "_attester", "_requester", "_dataHash", "_nonce"],
+      args_arr: ["_dataHash", "_nonce"],
       args: {
-        _subject: {
-          type: "address",
-          index: 0
-        },
-        _attester: {
-          type: "address",
-          index: 1
-        },
-        _requester: {
-          type: "address",
-          index: 2
-        },
         _dataHash: {
           type: "bytes32",
-          index: 3
+          index: 0
         },
         _nonce: {
           type: "bytes32",
-          index: 4
+          index: 1
         }
       }
     },
     generateAddAddressSchemaHash: {
-      args_arr: ["_senderAddress", "_nonce"],
+      args_arr: ["_addressToAdd", "_nonce"],
       args: {
-        _senderAddress: {
+        _addressToAdd: {
+          type: "address",
+          index: 0
+        },
+        _nonce: {
+          type: "bytes32",
+          index: 1
+        }
+      }
+    },
+    generateRemoveAddressSchemaHash: {
+      args_arr: ["_addressToRemove", "_nonce"],
+      args: {
+        _addressToRemove: {
           type: "address",
           index: 0
         },
@@ -3697,48 +2485,11 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
       args_arr: [],
       args: {}
     },
-    unpause: {
-      args_arr: [],
-      args: {}
-    },
-    signingLogic: {
-      args_arr: [],
-      args: {}
-    },
-    paused: {
-      args_arr: [],
-      args: {}
-    },
-    registry: {
-      args_arr: [],
-      args: {}
-    },
-    pause: {
-      args_arr: [],
-      args: {}
-    },
-    owner: {
-      args_arr: [],
-      args: {}
-    },
-    marketplaceAdmin: {
-      args_arr: [],
-      args: {}
-    },
-    transferOwnership: {
-      args_arr: ["newOwner"],
-      args: {
-        newOwner: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
     tokenEscrow: {
       args_arr: ["anonymous_0"],
       args: {
         anonymous_0: {
-          type: "uint256",
+          type: "address",
           index: 0
         }
       }
@@ -3757,42 +2508,6 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
       args: {}
     },
 
-    setMarketplaceAdmin: {
-      args_arr: ["_newMarketplaceAdmin"],
-      args: {
-        _newMarketplaceAdmin: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setSigningLogic: {
-      args_arr: ["_newSigningLogic"],
-      args: {
-        _newSigningLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setAttestationLogic: {
-      args_arr: ["_newAttestationLogic"],
-      args: {
-        _newAttestationLogic: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setAccountRegistry: {
-      args_arr: ["_newRegistry"],
-      args: {
-        _newRegistry: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
     moveTokensToEscrowLockupFor: {
       args_arr: ["_sender", "_amount", "_nonce", "_delegationSig"],
       args: {
@@ -3823,6 +2538,27 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
         }
       }
     },
+    releaseTokensFromEscrowFor: {
+      args_arr: ["_sender", "_amount", "_nonce", "_delegationSig"],
+      args: {
+        _sender: {
+          type: "address",
+          index: 0
+        },
+        _amount: {
+          type: "uint256",
+          index: 1
+        },
+        _nonce: {
+          type: "bytes32",
+          index: 2
+        },
+        _delegationSig: {
+          type: "bytes",
+          index: 3
+        }
+      }
+    },
     releaseTokensFromEscrow: {
       args_arr: ["_amount"],
       args: {
@@ -3832,21 +2568,8 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
         }
       }
     },
-    releaseTokensFromEscrowFor: {
-      args_arr: ["_payer", "_amount"],
-      args: {
-        _payer: {
-          type: "address",
-          index: 0
-        },
-        _amount: {
-          type: "uint256",
-          index: 1
-        }
-      }
-    },
     requestTokenPayment: {
-      args_arr: ["_payer", "_receiver", "_amount", "_nonce", "_releaseSig"],
+      args_arr: ["_payer", "_receiver", "_amount", "_nonce", "_paymentSig"],
       args: {
         _payer: {
           type: "address",
@@ -3864,7 +2587,7 @@ export const TokenEscrowMarketplace: IContractMethodManifest = {
           type: "bytes32",
           index: 3
         },
-        _releaseSig: {
+        _paymentSig: {
           type: "bytes",
           index: 4
         }
@@ -3886,35 +2609,31 @@ export const VotingCenter: IContractMethodManifest = {
     },
 
     createPoll: {
-      args_arr: ["_ipfsHash", "_numOptions", "_startTime", "_endTime", "_registry", "_signingLogic", "_pollAdmin"],
+      args_arr: ["_name", "_chainId", "_ipfsHash", "_numOptions", "_startTime", "_endTime"],
       args: {
+        _name: {
+          type: "string",
+          index: 0
+        },
+        _chainId: {
+          type: "uint256",
+          index: 1
+        },
         _ipfsHash: {
           type: "bytes",
-          index: 0
+          index: 2
         },
         _numOptions: {
           type: "uint16",
-          index: 1
+          index: 3
         },
         _startTime: {
           type: "uint256",
-          index: 2
+          index: 4
         },
         _endTime: {
           type: "uint256",
-          index: 3
-        },
-        _registry: {
-          type: "address",
-          index: 4
-        },
-        _signingLogic: {
-          type: "address",
           index: 5
-        },
-        _pollAdmin: {
-          type: "address",
-          index: 6
         }
       }
     },

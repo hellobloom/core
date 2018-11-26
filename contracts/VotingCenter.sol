@@ -1,8 +1,6 @@
 pragma solidity 0.4.24;
 
 import "./Poll.sol";
-import "./AccountRegistryInterface.sol";
-import "./SigningLogicInterface.sol";
 
 /*
  * @title Bloom voting center
@@ -25,23 +23,21 @@ contract VotingCenter {
    * @return The address of the new Poll
    */
   function createPoll(
+    string _name,
+    uint256 _chainId,
     bytes _ipfsHash,
     uint16 _numOptions,
     uint256 _startTime,
-    uint256 _endTime,
-    AccountRegistryInterface _registry,
-    SigningLogicInterface _signingLogic,
-    address _pollAdmin
+    uint256 _endTime
   ) public returns (address) {
     Poll newPoll = new Poll(
+      _name,
+      _chainId,
       _ipfsHash,
       _numOptions,
       _startTime,
       _endTime,
-      msg.sender,
-      _registry,
-      _signingLogic,
-      _pollAdmin
+      msg.sender
       );
     polls.push(newPoll);
 

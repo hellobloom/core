@@ -9,27 +9,33 @@ interface ITypedDataParam {
 }
 
 export const getFormattedTypedDataAttestationRequest= (
-  subject: string,
-  attester: string,
-  requester: string,
   dataHash: string,
   requestNonce: string,
 ): ITypedDataParam[] => {
   return [
-      {type: 'address', name: 'subject', value: subject},
-      {type: 'address', name: 'attester', value: attester},
-      {type: 'address', name: 'requester', value: requester},
       {type: 'bytes32', name: 'dataHash', value: dataHash},
       {type: 'bytes32', name: 'nonce', value: requestNonce},
   ]
 }
 
 export const getFormattedTypedDataAddAddress = (
-  sender: string,
+  addressToAdd: string,
   nonce: string,
 ): ITypedDataParam[] => {
   return [
-      {type: 'address', name: 'sender', value: sender},
+      {type: 'string', name: 'action', value: 'addAddress'},
+      {type: 'address', name: 'addressToAdd', value: addressToAdd},
+      {type: 'bytes32', name: 'nonce', value: nonce},
+  ]
+}
+
+export const getFormattedTypedDataRemoveAddress = (
+  addressToRemove: string,
+  nonce: string,
+): ITypedDataParam[] => {
+  return [
+      {type: 'string', name: 'action', value: 'removeAddress'},
+      {type: 'address', name: 'addressToRemove', value: addressToRemove},
       {type: 'bytes32', name: 'nonce', value: nonce},
   ]
 }
