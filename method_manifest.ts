@@ -344,7 +344,7 @@ export const AttestationLogic: IContractMethodManifest = {
     },
 
     attest: {
-      args_arr: ["_subject", "_requester", "_reward", "_paymentNonce", "_requesterSig", "_dataHash", "_requestNonce", "_subjectSig"],
+      args_arr: ["_subject", "_requester", "_reward", "_requesterSig", "_dataHash", "_requestNonce", "_subjectSig"],
       args: {
         _subject: {
           type: "address",
@@ -358,41 +358,26 @@ export const AttestationLogic: IContractMethodManifest = {
           type: "uint256",
           index: 2
         },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 3
-        },
         _requesterSig: {
           type: "bytes",
-          index: 4
+          index: 3
         },
         _dataHash: {
           type: "bytes32",
-          index: 5
+          index: 4
         },
         _requestNonce: {
           type: "bytes32",
-          index: 6
+          index: 5
         },
         _subjectSig: {
           type: "bytes",
-          index: 7
+          index: 6
         }
       }
     },
     attestFor: {
-      args_arr: [
-        "_subject",
-        "_attester",
-        "_requester",
-        "_reward",
-        "_paymentNonce",
-        "_requesterSig",
-        "_dataHash",
-        "_requestNonce",
-        "_subjectSig",
-        "_delegationSig"
-      ],
+      args_arr: ["_subject", "_attester", "_requester", "_reward", "_requesterSig", "_dataHash", "_requestNonce", "_subjectSig", "_delegationSig"],
       args: {
         _subject: {
           type: "address",
@@ -410,34 +395,30 @@ export const AttestationLogic: IContractMethodManifest = {
           type: "uint256",
           index: 3
         },
-        _paymentNonce: {
-          type: "bytes32",
-          index: 4
-        },
         _requesterSig: {
           type: "bytes",
-          index: 5
+          index: 4
         },
         _dataHash: {
           type: "bytes32",
-          index: 6
+          index: 5
         },
         _requestNonce: {
           type: "bytes32",
-          index: 7
+          index: 6
         },
         _subjectSig: {
           type: "bytes",
-          index: 8
+          index: 7
         },
         _delegationSig: {
           type: "bytes",
-          index: 9
+          index: 8
         }
       }
     },
     contest: {
-      args_arr: ["_requester", "_reward", "_paymentNonce", "_requesterSig"],
+      args_arr: ["_requester", "_reward", "_requestNonce", "_requesterSig"],
       args: {
         _requester: {
           type: "address",
@@ -447,7 +428,7 @@ export const AttestationLogic: IContractMethodManifest = {
           type: "uint256",
           index: 1
         },
-        _paymentNonce: {
+        _requestNonce: {
           type: "bytes32",
           index: 2
         },
@@ -458,7 +439,7 @@ export const AttestationLogic: IContractMethodManifest = {
       }
     },
     contestFor: {
-      args_arr: ["_attester", "_requester", "_reward", "_paymentNonce", "_requesterSig", "_delegationSig"],
+      args_arr: ["_attester", "_requester", "_reward", "_requestNonce", "_requesterSig", "_delegationSig"],
       args: {
         _attester: {
           type: "address",
@@ -472,7 +453,7 @@ export const AttestationLogic: IContractMethodManifest = {
           type: "uint256",
           index: 2
         },
-        _paymentNonce: {
+        _requestNonce: {
           type: "bytes32",
           index: 3
         },

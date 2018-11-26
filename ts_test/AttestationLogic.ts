@@ -95,7 +95,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
     attester: string
     requester: string
     reward: BigNumber.BigNumber
-    paymentNonce: string
     requesterSig: string
     dataHash: string
     requestNonce: string
@@ -104,12 +103,12 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
   }
 
   let attest = async (props: Partial<typeof attestDefaults> = attestDefaults) => {
-    let { subject, attester, requester, reward, paymentNonce, requesterSig, dataHash, requestNonce, subjectSig, from } = {
+    let { subject, attester, requester, reward, requesterSig, dataHash, requestNonce, subjectSig, from } = {
       ...attestDefaults,
       ...props
     }
 
-    return attestationLogic.attest(subject, requester, reward, paymentNonce, requesterSig, dataHash, requestNonce, subjectSig, {
+    return attestationLogic.attest(subject, requester, reward, requesterSig, dataHash, requestNonce, subjectSig, {
       from
     })
   }
@@ -188,7 +187,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
         alice,
         david,
         new BigNumber(web3.toWei(1, "ether")).toString(10),
-        nonce,
         combinedDataHash,
         nonce
       )
@@ -203,7 +201,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       attester: bob,
       requester: david,
       reward: new BigNumber(web3.toWei(1, "ether")),
-      paymentNonce: nonce,
       requesterSig: tokenPaymentSig,
       dataHash: combinedDataHash,
       requestNonce: nonce,
@@ -211,12 +208,12 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       from: bob
     }
     attest = async (props: Partial<typeof attestDefaults> = attestDefaults) => {
-      let { subject, attester, requester, reward, paymentNonce, requesterSig, dataHash, requestNonce, subjectSig, from } = {
+      let { subject, attester, requester, reward, requesterSig, dataHash, requestNonce, subjectSig, from } = {
         ...attestDefaults,
         ...props
       }
 
-      return attestationLogic.attest(subject, requester, reward, paymentNonce, requesterSig, dataHash, requestNonce, subjectSig, {
+      return attestationLogic.attest(subject, requester, reward, requesterSig, dataHash, requestNonce, subjectSig, {
         from
       })
     }
@@ -284,7 +281,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
     it("accepts a valid second attestation with different nonce", async () => {
       await attest().should.be.fulfilled
       await attest({
-        paymentNonce: differentNonce,
         requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
           data: getFormattedTypedDataPayTokens(
             tokenEscrowMarketplaceAddress,
@@ -341,7 +337,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
     it("submits a second attestation for same data with different nonce", async () => {
       await attest()
       await attest({
-        paymentNonce: differentNonce,
         requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
           data: getFormattedTypedDataPayTokens(
             tokenEscrowMarketplaceAddress,
@@ -377,10 +372,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
 
     it("rejects attestations with for an invalid data hash", async () => {
       await attest({ dataHash: emailDataHash }).should.be.rejectedWith(EVMThrow)
-    })
-
-    it("rejects attestations with for an invalid payment nonce", async () => {
-      await attest({ paymentNonce: differentNonce }).should.be.rejectedWith(EVMThrow)
     })
 
     it("rejects attestations with for an invalid request nonce", async () => {
@@ -537,7 +528,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       attester: string
       requester: string
       reward: BigNumber.BigNumber
-      paymentNonce: string
       requesterSig: string
       dataHash: string
       requestNonce: string
@@ -547,7 +537,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
     }
 
     let attestFor = async (props: Partial<typeof attestForDefaults> = attestForDefaults) => {
-      let { subject, attester, requester, reward, paymentNonce, requesterSig, dataHash, requestNonce, subjectSig, delegationSig, from } = {
+      let { subject, attester, requester, reward, requesterSig, dataHash, requestNonce, subjectSig, delegationSig, from } = {
         ...attestForDefaults,
         ...props
       }
@@ -557,7 +547,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
         attester,
         requester,
         reward,
-        paymentNonce,
         requesterSig,
         dataHash,
         requestNonce,
@@ -575,7 +564,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
         attester: bob,
         requester: david,
         reward: new BigNumber(web3.toWei(1, "ether")),
-        paymentNonce: nonce,
         requesterSig: tokenPaymentSig,
         dataHash: combinedDataHash,
         requestNonce: nonce,
@@ -585,7 +573,7 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
       }
 
       attestFor = async (props: Partial<typeof attestForDefaults> = attestForDefaults) => {
-        let { subject, attester, requester, reward, paymentNonce, requesterSig, dataHash, requestNonce, subjectSig, delegationSig, from } = {
+        let { subject, attester, requester, reward, requesterSig, dataHash, requestNonce, subjectSig, delegationSig, from } = {
           ...attestForDefaults,
           ...props
         }
@@ -595,7 +583,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
           attester,
           requester,
           reward,
-          paymentNonce,
           requesterSig,
           dataHash,
           requestNonce,
@@ -633,12 +620,6 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
     it("rejects an attestation if the reward is wrong", async () => {
       await attestFor({
         reward: new BigNumber(web3.toWei(2, "ether"))
-      }).should.be.rejectedWith(EVMThrow)
-    })
-
-    it("rejects an attestation if the payment nonce is wrong", async () => {
-      await attestFor({
-        paymentNonce: differentNonce
       }).should.be.rejectedWith(EVMThrow)
     })
 

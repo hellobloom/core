@@ -378,7 +378,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       subject: Address,
       requester: Address,
       reward: UInt,
-      paymentNonce: string,
       requesterSig: string,
       dataHash: string,
       requestNonce: string,
@@ -389,7 +388,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       subject: Address,
       requester: Address,
       reward: UInt,
-      paymentNonce: string,
       requesterSig: string,
       dataHash: string,
       requestNonce: string,
@@ -400,7 +398,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       subject: Address,
       requester: Address,
       reward: UInt,
-      paymentNonce: string,
       requesterSig: string,
       dataHash: string,
       requestNonce: string,
@@ -411,7 +408,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       subject: Address,
       requester: Address,
       reward: UInt,
-      paymentNonce: string,
       requesterSig: string,
       dataHash: string,
       requestNonce: string,
@@ -425,7 +421,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       reward: UInt,
-      paymentNonce: string,
       requesterSig: string,
       dataHash: string,
       requestNonce: string,
@@ -438,7 +433,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       reward: UInt,
-      paymentNonce: string,
       requesterSig: string,
       dataHash: string,
       requestNonce: string,
@@ -451,7 +445,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       reward: UInt,
-      paymentNonce: string,
       requesterSig: string,
       dataHash: string,
       requestNonce: string,
@@ -464,7 +457,6 @@ export interface AttestationLogicInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       reward: UInt,
-      paymentNonce: string,
       requesterSig: string,
       dataHash: string,
       requestNonce: string,
@@ -474,17 +466,17 @@ export interface AttestationLogicInstance extends ContractInstance {
     ): Promise<number>
   }
   contest: {
-    (requester: Address, reward: UInt, paymentNonce: string, requesterSig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    call(requester: Address, reward: UInt, paymentNonce: string, requesterSig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
-    sendTransaction(requester: Address, reward: UInt, paymentNonce: string, requesterSig: string, options?: TransactionOptions): Promise<string>
-    estimateGas(requester: Address, reward: UInt, paymentNonce: string, requesterSig: string, options?: TransactionOptions): Promise<number>
+    (requester: Address, reward: UInt, requestNonce: string, requesterSig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(requester: Address, reward: UInt, requestNonce: string, requesterSig: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(requester: Address, reward: UInt, requestNonce: string, requesterSig: string, options?: TransactionOptions): Promise<string>
+    estimateGas(requester: Address, reward: UInt, requestNonce: string, requesterSig: string, options?: TransactionOptions): Promise<number>
   }
   contestFor: {
     (
       attester: Address,
       requester: Address,
       reward: UInt,
-      paymentNonce: string,
+      requestNonce: string,
       requesterSig: string,
       delegationSig: string,
       options?: TransactionOptions
@@ -493,7 +485,7 @@ export interface AttestationLogicInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       reward: UInt,
-      paymentNonce: string,
+      requestNonce: string,
       requesterSig: string,
       delegationSig: string,
       options?: TransactionOptions
@@ -502,7 +494,7 @@ export interface AttestationLogicInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       reward: UInt,
-      paymentNonce: string,
+      requestNonce: string,
       requesterSig: string,
       delegationSig: string,
       options?: TransactionOptions
@@ -511,7 +503,7 @@ export interface AttestationLogicInstance extends ContractInstance {
       attester: Address,
       requester: Address,
       reward: UInt,
-      paymentNonce: string,
+      requestNonce: string,
       requesterSig: string,
       delegationSig: string,
       options?: TransactionOptions

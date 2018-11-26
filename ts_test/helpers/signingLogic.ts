@@ -166,7 +166,6 @@ export const getFormattedTypedDataAttestFor = (
   subject: string,
   requester: string,
   reward: string,
-  paymentNonce: string,
   dataHash: string,
   requestNonce: string,
 ): IFormattedTypedData => {
@@ -182,7 +181,6 @@ export const getFormattedTypedDataAttestFor = (
         { name: 'subject', type: 'address'},
         { name: 'requester', type: 'address'},
         { name: 'reward', type: 'uint256'},
-        { name: 'paymentNonce', type: 'bytes32'},
         { name: 'dataHash', type: 'bytes32'},
         { name: 'requestNonce', type: 'bytes32'},
       ]
@@ -198,7 +196,6 @@ export const getFormattedTypedDataAttestFor = (
       subject: subject,
       requester: requester,
       reward: reward,
-      paymentNonce: paymentNonce,
       dataHash: dataHash,
       requestNonce: requestNonce,
     }
@@ -210,7 +207,7 @@ export const getFormattedTypedDataContestFor = (
   chainId: number,
   requester: string,
   reward: string,
-  paymentNonce: string,
+  requestNonce: string,
 ): IFormattedTypedData => {
   return {
     types: {
@@ -223,7 +220,7 @@ export const getFormattedTypedDataContestFor = (
       ContestFor: [
         { name: 'requester', type: 'address'},
         { name: 'reward', type: 'uint256'},
-        { name: 'paymentNonce', type: 'bytes32'},
+        { name: 'requestNonce', type: 'bytes32'},
       ]
     },
     primaryType: 'ContestFor',
@@ -236,7 +233,7 @@ export const getFormattedTypedDataContestFor = (
     message: {
       requester: requester,
       reward: reward,
-      paymentNonce: paymentNonce,
+      requestNonce: requestNonce,
     }
   }
 }

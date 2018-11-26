@@ -44,11 +44,11 @@ contract SigningLogic {
   );
 
   bytes32 constant ATTEST_FOR_TYPEHASH = keccak256(
-    "AttestFor(address subject,address requester,uint256 reward,bytes32 paymentNonce,bytes32 dataHash,bytes32 requestNonce)"
+    "AttestFor(address subject,address requester,uint256 reward,bytes32 dataHash,bytes32 requestNonce)"
   );
 
   bytes32 constant CONTEST_FOR_TYPEHASH = keccak256(
-    "ContestFor(address requester,uint256 reward,bytes32 paymentNonce)"
+    "ContestFor(address requester,uint256 reward,bytes32 requestNonce)"
   );
 
   bytes32 constant REVOKE_ATTESTATION_FOR_TYPEHASH = keccak256(
@@ -151,7 +151,6 @@ contract SigningLogic {
       address subject;
       address requester;
       uint256 reward;
-      bytes32 paymentNonce;
       bytes32 dataHash;
       bytes32 requestNonce;
   }
@@ -162,7 +161,6 @@ contract SigningLogic {
       request.subject,
       request.requester,
       request.reward,
-      request.paymentNonce,
       request.dataHash,
       request.requestNonce
     ));
@@ -171,7 +169,7 @@ contract SigningLogic {
   struct ContestFor {
       address requester;
       uint256 reward;
-      bytes32 paymentNonce;
+      bytes32 requestNonce;
   }
 
   function hash(ContestFor request) internal pure returns (bytes32) {
@@ -179,7 +177,7 @@ contract SigningLogic {
       CONTEST_FOR_TYPEHASH,
       request.requester,
       request.reward,
-      request.paymentNonce
+      request.requestNonce
     ));
   }
 
@@ -313,7 +311,6 @@ contract SigningLogic {
     address _subject,
     address _requester,
     uint256 _reward,
-    bytes32 _paymentNonce,
     bytes32 _dataHash,
     bytes32 _requestNonce
   ) internal view returns (bytes32) {
@@ -325,7 +322,6 @@ contract SigningLogic {
           _subject,
           _requester,
           _reward,
-          _paymentNonce,
           _dataHash,
           _requestNonce
         ))
@@ -336,7 +332,7 @@ contract SigningLogic {
   function generateContestForDelegationSchemaHash(
     address _requester,
     uint256 _reward,
-    bytes32 _paymentNonce
+    bytes32 _requestNonce
   ) internal view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
@@ -345,7 +341,7 @@ contract SigningLogic {
         hash(ContestFor(
           _requester,
           _reward,
-          _paymentNonce
+          _requestNonce
         ))
       )
       );

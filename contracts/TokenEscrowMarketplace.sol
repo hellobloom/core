@@ -66,14 +66,37 @@ contract TokenEscrowMarketplace is SigningLogic {
     bytes32 _nonce,
     bytes _delegationSig
     ) public {
-      bytes32 _delegationDigest = generateLockupTokensDelegationSchemaHash(
+      validateLockupTokensSig(
+        _sender,
+        _amount,
+        _nonce,
+        _delegationSig
+      );
+      burnSignature(_delegationSig);
+      moveTokensToEscrowLockupForUser(_sender, _amount);
+  }
+
+  /**
+   * @notice Verify lockup signature is valid
+   * @param _sender User locking up their tokens
+   * @param _amount Tokens to lock up
+   * @param _nonce Unique Id so signatures can't be replayed
+   * @param _delegationSig Signed hash of these input parameters so an admin can submit this on behalf of a user
+   */
+  function validateLockupTokensSig(
+    address _sender,
+    uint256 _amount,
+    bytes32 _nonce,
+    bytes _delegationSig
+
+  ) internal view {
+    require(_sender == recoverSigner(
+      generateLockupTokensDelegationSchemaHash(
         _sender,
         _amount,
         _nonce
-      );
-      require(_sender == recoverSigner(_delegationDigest, _delegationSig));
-      burnSignature(_delegationSig);
-      moveTokensToEscrowLockupForUser(_sender, _amount);
+        ),
+        _delegationSig), 'Invalid LockupTokens Signature');
   }
 
   /**
@@ -103,8 +126,8 @@ contract TokenEscrowMarketplace is SigningLogic {
    * @dev Authorized by a signTypedData signature by sender
    *  Sigs can only be used once. They contain a unique nonce
    *  So an action can be repeated, with a different signature
-   * @param _sender User locking up their tokens
-   * @param _amount Tokens to lock up
+   * @param _sender User withdrawing their tokens
+   * @param _amount Tokens to withdraw
    * @param _nonce Unique Id so signatures can't be replayed
    * @param _delegationSig Signed hash of these input parameters so an admin can submit this on behalf of a user
    */
@@ -114,14 +137,37 @@ contract TokenEscrowMarketplace is SigningLogic {
     bytes32 _nonce,
     bytes _delegationSig
     ) public {
-      bytes32 _delegationDigest = generateReleaseTokensDelegationSchemaHash(
+      validateReleaseTokensSig(
+        _sender,
+        _amount,
+        _nonce,
+        _delegationSig
+      );
+      burnSignature(_delegationSig);
+      releaseTokensFromEscrowForUser(_sender, _amount);
+  }
+
+  /**
+   * @notice Verify lockup signature is valid
+   * @param _sender User withdrawing their tokens
+   * @param _amount Tokens to lock up
+   * @param _nonce Unique Id so signatures can't be replayed
+   * @param _delegationSig Signed hash of these input parameters so an admin can submit this on behalf of a user
+   */
+  function validateReleaseTokensSig(
+    address _sender,
+    uint256 _amount,
+    bytes32 _nonce,
+    bytes _delegationSig
+
+  ) internal view {
+    require(_sender == recoverSigner(
+      generateReleaseTokensDelegationSchemaHash(
         _sender,
         _amount,
         _nonce
-      );
-      require(_sender == recoverSigner(_delegationDigest, _delegationSig));
-      burnSignature(_delegationSig);
-      releaseTokensFromEscrowForUser(_sender, _amount);
+        ),
+        _delegationSig), 'Invalid ReleaseTokens Signature');
   }
 
   /**
@@ -176,6 +222,35 @@ contract TokenEscrowMarketplace is SigningLogic {
     bytes _paymentSig
     ) external onlyAttestationLogic {
 
+    validatePaymentSig(
+      _payer,
+      _receiver,
+      _amount,
+      _nonce,
+      _paymentSig
+    );
+    burnSignature(_paymentSig);
+
+    payTokensFromEscrow(_payer, _receiver, _amount);
+    emit TokenMarketplaceEscrowPayment(_payer, _receiver, _amount);
+  }
+
+  /**
+   * @notice Verify payment signature is valid
+   * @param _payer User paying tokens from escrow
+   * @param _receiver User receiving payment
+   * @param _amount Tokens being paid
+   * @param _nonce Unique Id for sig to make it one-time-use
+   * @param _paymentSig Signed parameters by payer authorizing payment
+   */
+  function validatePaymentSig(
+    address _payer,
+    address _receiver,
+    uint256 _amount,
+    bytes32 _nonce,
+    bytes _paymentSig
+
+  ) internal view {
     require(_payer == recoverSigner(
       generatePayTokensSchemaHash(
         _payer,
@@ -183,13 +258,7 @@ contract TokenEscrowMarketplace is SigningLogic {
         _amount,
         _nonce
         ),
-      _paymentSig),
-      "Invalid signer");
-
-    burnSignature(_paymentSig);
-
-    payTokensFromEscrow(_payer, _receiver, _amount);
-    emit TokenMarketplaceEscrowPayment(_payer, _receiver, _amount);
+        _paymentSig), 'Invalid Payment Signature');
   }
 
   /**

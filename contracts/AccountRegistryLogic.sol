@@ -57,6 +57,12 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
       emit AddressLinked(_currentAddress, _newAddress, linkIds[_currentAddress]);
   }
 
+  /**
+   * @notice Remove an address from a link relationship
+   * @param _addressToRemove Address to unlink from all other addresses
+   * @param _unlinkSignature Signed message from address currently associated with account confirming intention to unlink
+   * @param _nonce uuid used when generating sigs to make them one time use
+   */
   function unlinkAddress(
     address _addressToRemove,
     bytes32 _nonce,

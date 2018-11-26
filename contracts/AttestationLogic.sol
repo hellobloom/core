@@ -40,17 +40,15 @@ contract AttestationLogic is Initializable, SigningLogic{
    * @param _subject User this attestation is about
    * @param _requester User requesting and paying for this attestation in BLT
    * @param _reward Payment to attester from requester in BLT
-   * @param _paymentNonce Nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
    * @param _requesterSig Signature authorizing payment from requester to attester
    * @param _dataHash Hash of data being attested and nonce
-   * @param _requestNonce Nonce in sig signed by subject so it can't be replayed
+   * @param _requestNonce Nonce in sig signed by subject and requester so they can't be replayed
    * @param _subjectSig Signed authorization from subject with attestation agreement
    */
   function attest(
     address _subject,
     address _requester,
     uint256 _reward,
-    bytes32 _paymentNonce,
     bytes _requesterSig,
     bytes32 _dataHash,
     bytes32 _requestNonce,
@@ -61,7 +59,6 @@ contract AttestationLogic is Initializable, SigningLogic{
       msg.sender,
       _requester,
       _reward,
-      _paymentNonce,
       _requesterSig,
       _dataHash,
       _requestNonce,
@@ -76,10 +73,9 @@ contract AttestationLogic is Initializable, SigningLogic{
    * @param _attester user completing the attestation
    * @param _requester user requesting this attestation be completed and paying for it in BLT
    * @param _reward payment to attester from requester in BLT wei
-   * @param _paymentNonce nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
    * @param _requesterSig signature authorizing payment from requester to attester
    * @param _dataHash hash of data being attested and nonce
-   * @param _requestNonce nonce in sig signed by subject so it can't be replayed
+   * @param _requestNonce Nonce in sig signed by subject and requester so they can't be replayed
    * @param _subjectSig signed authorization from subject with attestation agreement
    * @param _delegationSig signature authorizing attestation on behalf of attester
    */
@@ -88,30 +84,20 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _attester,
     address _requester,
     uint256 _reward,
-    bytes32 _paymentNonce,
     bytes _requesterSig,
     bytes32 _dataHash,
     bytes32 _requestNonce,
     bytes _subjectSig, // Sig of subject with dataHash and requestNonce
     bytes _delegationSig
   ) public {
-    // Reconstruct attestation delegation message
-    bytes32 _delegationDigest = generateAttestForDelegationSchemaHash(
-      _subject,
-      _requester,
-      _reward,
-      _paymentNonce,
-      _dataHash,
-      _requestNonce
-    );
     // Confirm attester address matches recovered address from signature
-    require(_attester == recoverSigner(_delegationDigest, _delegationSig));
+    validateAttestForSig(_subject, _attester, _requester, _reward, _dataHash, _requestNonce, _delegationSig);
+    burnSignature(_delegationSig);
     attestForUser(
       _subject,
       _attester,
       _requester,
       _reward,
-      _paymentNonce,
       _requesterSig,
       _dataHash,
       _requestNonce,
@@ -126,10 +112,9 @@ contract AttestationLogic is Initializable, SigningLogic{
    * @param _attester user completing the attestation
    * @param _requester user requesting this attestation be completed and paying for it in BLT
    * @param _reward payment to attester from requester in BLT wei
-   * @param _paymentNonce nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
    * @param _requesterSig signature authorizing payment from requester to attester
    * @param _dataHash hash of data being attested and nonce
-   * param _requestNonce nonce in sig signed by subject so it can't be replayed
+   * @param _requestNonce Nonce in sig signed by subject and requester so they can't be replayed
    * @param _subjectSig signed authorization from subject with attestation agreement
    */
   function attestForUser(
@@ -137,11 +122,10 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _attester,
     address _requester,
     uint256 _reward,
-    bytes32 _paymentNonce,
     bytes _requesterSig,
     bytes32 _dataHash,
     bytes32 _requestNonce,
-    bytes _subjectSig // Sig of subject with requester, attester, dataHash, requestNonce
+    bytes _subjectSig
     ) private {
     
     validateSubjectSig(
@@ -160,7 +144,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     );
 
     if (_reward > 0) {
-      tokenEscrowMarketplace.requestTokenPayment(_requester, _attester, _reward, _paymentNonce, _requesterSig);
+      tokenEscrowMarketplace.requestTokenPayment(_requester, _attester, _reward, _requestNonce, _requesterSig);
     }
   }
 
@@ -169,20 +153,20 @@ contract AttestationLogic is Initializable, SigningLogic{
    *  without associating the negative attestation with the subject's bloomId
    * @param _requester User requesting and paying for this attestation in BLT
    * @param _reward Payment to attester from requester in BLT
-   * @param _paymentNonce Nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
+   * @param _requestNonce Nonce in sig signed by requester so it can't be replayed
    * @param _requesterSig Signature authorizing payment from requester to attester
    */
   function contest(
     address _requester,
     uint256 _reward,
-    bytes32 _paymentNonce,
+    bytes32 _requestNonce,
     bytes _requesterSig
   ) public {
     contestForUser(
       msg.sender,
       _requester,
       _reward,
-      _paymentNonce,
+      _requestNonce,
       _requesterSig
     );
   }
@@ -194,29 +178,30 @@ contract AttestationLogic is Initializable, SigningLogic{
    * @param _requester User requesting and paying for this attestation in BLT
    * @param _attester user completing the attestation
    * @param _reward Payment to attester from requester in BLT
-   * @param _paymentNonce Nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
+   * @param _requestNonce Nonce in sig signed by requester so it can't be replayed
    * @param _requesterSig Signature authorizing payment from requester to attester
    */
   function contestFor(
     address _attester,
     address _requester,
     uint256 _reward,
-    bytes32 _paymentNonce,
+    bytes32 _requestNonce,
     bytes _requesterSig,
     bytes _delegationSig
   ) public {
-    // Reconstruct attestation delegation message
-    bytes32 _delegationDigest = generateContestForDelegationSchemaHash(
+    validateContestForSig(
+      _attester,
       _requester,
       _reward,
-      _paymentNonce
+      _requestNonce,
+      _delegationSig
     );
-    require(_attester == recoverSigner(_delegationDigest, _delegationSig));
+    burnSignature(_delegationSig);
     contestForUser(
       _attester,
       _requester,
       _reward,
-      _paymentNonce,
+      _requestNonce,
       _requesterSig
     );
   }
@@ -227,25 +212,25 @@ contract AttestationLogic is Initializable, SigningLogic{
    * @param _attester user completing the attestation
    * @param _requester user requesting this attestation be completed and paying for it in BLT
    * @param _reward payment to attester from requester in BLT wei
-   * @param _paymentNonce nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
+   * @param _requestNonce Nonce in sig signed by requester so it can't be replayed
    * @param _requesterSig signature authorizing payment from requester to attester
    */
   function contestForUser(
     address _attester,
     address _requester,
     uint256 _reward,
-    bytes32 _paymentNonce,
+    bytes32 _requestNonce,
     bytes _requesterSig
     ) private {
 
     if (_reward > 0) {
-      tokenEscrowMarketplace.requestTokenPayment(_requester, _attester, _reward, _paymentNonce, _requesterSig);
+      tokenEscrowMarketplace.requestTokenPayment(_requester, _attester, _reward, _requestNonce, _requesterSig);
     }
     emit AttestationRejected(_attester, _requester);
   }
 
   /**
-   * @notice Verify subject signature is valid and unused 
+   * @notice Verify subject signature is valid 
    * @param _subject user this attestation is about
    * @param _dataHash hash of data being attested and nonce
    * param _requestNonce Nonce in sig signed by subject so it can't be replayed
@@ -257,12 +242,65 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _requestNonce,
     bytes _subjectSig
   ) internal view {
-
     require(_subject == recoverSigner(
       generateRequestAttestationSchemaHash(
       _dataHash,
       _requestNonce
     ), _subjectSig));
+  }
+
+  /**
+   * @notice Verify attester delegation signature is valid 
+   * @param _subject user this attestation is about
+   * @param _attester user completing the attestation
+   * @param _requester user requesting this attestation be completed and paying for it in BLT
+   * @param _reward payment to attester from requester in BLT wei
+   * @param _dataHash hash of data being attested and nonce
+   * @param _requestNonce nonce in sig signed by subject so it can't be replayed
+   * @param _delegationSig signature authorizing attestation on behalf of attester
+   */
+  function validateAttestForSig(
+    address _subject,
+    address _attester,
+    address _requester,
+    uint256 _reward,
+    bytes32 _dataHash,
+    bytes32 _requestNonce,
+    bytes _delegationSig
+  ) internal view {
+    require(_attester == recoverSigner(
+      generateAttestForDelegationSchemaHash(
+        _subject,
+        _requester,
+        _reward,
+        _dataHash,
+        _requestNonce
+        ),
+        _delegationSig), 'Invalid AttestFor Signature');
+  }
+
+  /**
+   * @notice Verify attester delegation signature is valid 
+   * @param _attester user completing the attestation
+   * @param _requester user requesting this attestation be completed and paying for it in BLT
+   * @param _reward payment to attester from requester in BLT wei
+   * @param _requestNonce nonce referenced in TokenEscrowMarketplace so payment sig can't be replayed
+   * @param _delegationSig signature authorizing attestation on behalf of attester
+   */
+  function validateContestForSig(
+    address _attester,
+    address _requester,
+    uint256 _reward,
+    bytes32 _requestNonce,
+    bytes _delegationSig
+  ) internal view {
+    require(_attester == recoverSigner(
+      generateContestForDelegationSchemaHash(
+        _requester,
+        _reward,
+        _requestNonce
+        ),
+        _delegationSig), 'Invalid ContestFor Signature');
   }
 
   /**
