@@ -92,7 +92,7 @@ contract AttestationLogic is Initializable, SigningLogic{
   ) public {
     // Confirm attester address matches recovered address from signature
     validateAttestForSig(_subject, _attester, _requester, _reward, _dataHash, _requestNonce, _delegationSig);
-    burnSignature(_delegationSig);
+    burnSignature(_attester, _requestNonce);
     attestForUser(
       _subject,
       _attester,
@@ -134,7 +134,7 @@ contract AttestationLogic is Initializable, SigningLogic{
       _requestNonce,
       _subjectSig
     );
-    burnSignature(_subjectSig);
+    burnSignature(_subject, _requestNonce);
 
     emit TraitAttested(
       _subject,
@@ -196,7 +196,7 @@ contract AttestationLogic is Initializable, SigningLogic{
       _requestNonce,
       _delegationSig
     );
-    burnSignature(_delegationSig);
+    burnSignature(_attester, _requestNonce);
     contestForUser(
       _attester,
       _requester,
@@ -342,12 +342,13 @@ contract AttestationLogic is Initializable, SigningLogic{
    * @param _link bytes string embedded in dataHash to link revocation
    */
   function revokeAttestationFor(
-    bytes32 _link,
     address _sender,
+    bytes32 _link,
+    bytes32 _nonce,
     bytes _delegationSig
     ) public {
-      validateRevokeForSig(_link, _sender, _delegationSig);
-      burnSignature(_delegationSig);
+      validateRevokeForSig(_sender, _link, _nonce, _delegationSig);
+      burnSignature(_sender, _nonce);
       revokeAttestationForUser(_link, _sender);
   }
 
@@ -358,13 +359,15 @@ contract AttestationLogic is Initializable, SigningLogic{
    * @param _delegationSig signature authorizing revocation on behalf of revoker
    */
   function validateRevokeForSig(
-    bytes32 _link,
     address _sender,
+    bytes32 _link,
+    bytes32 _nonce,
     bytes _delegationSig
   ) internal view {
     require(_sender == recoverSigner(
       generateRevokeAttestationForDelegationSchemaHash(
-        _link
+        _link,
+        _nonce
         ),
         _delegationSig), 'Invalid RevokeFor Signature');
   }

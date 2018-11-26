@@ -72,7 +72,7 @@ contract TokenEscrowMarketplace is SigningLogic {
         _nonce,
         _delegationSig
       );
-      burnSignature(_delegationSig);
+      burnSignature(_sender, _nonce);
       moveTokensToEscrowLockupForUser(_sender, _amount);
   }
 
@@ -143,7 +143,7 @@ contract TokenEscrowMarketplace is SigningLogic {
         _nonce,
         _delegationSig
       );
-      burnSignature(_delegationSig);
+      burnSignature(_sender, _nonce);
       releaseTokensFromEscrowForUser(_sender, _amount);
   }
 
@@ -229,7 +229,7 @@ contract TokenEscrowMarketplace is SigningLogic {
       _nonce,
       _paymentSig
     );
-    burnSignature(_paymentSig);
+    burnSignature(_payer, _nonce);
 
     payTokensFromEscrow(_payer, _receiver, _amount);
     emit TokenMarketplaceEscrowPayment(_payer, _receiver, _amount);

@@ -13,8 +13,8 @@ contract SigningLogic {
   //  have been used so they can't be replayed
   mapping (bytes32 => bool) public usedSignatures;
 
-  function burnSignature(bytes _signature) internal {
-    bytes32 _signatureHash = keccak256(abi.encodePacked(_signature));
+  function burnSignature(address _sender, bytes32 _nonce) internal {
+    bytes32 _signatureHash = keccak256(abi.encode(_sender, _nonce));
     require(!usedSignatures[_signatureHash], "Signature not unique");
     usedSignatures[_signatureHash] = true;
   }
@@ -52,7 +52,7 @@ contract SigningLogic {
   );
 
   bytes32 constant REVOKE_ATTESTATION_FOR_TYPEHASH = keccak256(
-    "RevokeAttestationFor(bytes32 link)"
+    "RevokeAttestationFor(bytes32 link,bytes32 nonce)"
   );
 
   bytes32 constant VOTE_FOR_TYPEHASH = keccak256(
@@ -183,12 +183,14 @@ contract SigningLogic {
 
   struct RevokeAttestationFor {
       bytes32 link;
+      bytes32 nonce;
   }
 
   function hash(RevokeAttestationFor request) internal pure returns (bytes32) {
     return keccak256(abi.encode(
       REVOKE_ATTESTATION_FOR_TYPEHASH,
-      request.link
+      request.link,
+      request.nonce
     ));
   }
 
@@ -348,14 +350,16 @@ contract SigningLogic {
   }
 
   function generateRevokeAttestationForDelegationSchemaHash(
-    bytes32 _link
+    bytes32 _link,
+    bytes32 _nonce
   ) internal view returns (bytes32) {
     return keccak256(
       abi.encodePacked(
         "\x19\x01",
         DOMAIN_SEPARATOR,
         hash(RevokeAttestationFor(
-          _link
+          _link,
+          _nonce
         ))
       )
       );

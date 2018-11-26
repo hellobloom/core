@@ -56,7 +56,7 @@ contract Poll is DependentOnIPFS, SigningLogic {
       _delegationSig),
       "Invalid signer"
       );
-    burnSignature(_delegationSig);
+    burnSignature(_voter, _nonce);
     voteForUser(_choice, _voter);
   }
 

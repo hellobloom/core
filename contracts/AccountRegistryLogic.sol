@@ -42,11 +42,11 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
       require(linkIds[_newAddress] == 0);
       // Confirm new address is signed by current address and is unused
       validateLinkSignature(_currentAddress, _newAddress, _nonce, _currentAddressSig);
-      burnSignature(_currentAddressSig);
+      burnSignature(_currentAddress, _nonce);
 
       // Confirm current address is signed by new address and is unused
       validateLinkSignature(_newAddress, _currentAddress, _nonce, _newAddressSig);
-      burnSignature(_newAddressSig);
+      burnSignature(_newAddress, _nonce);
 
       // Get linkId of current address if exists. Otherwise use incremented linkCounter
       if (linkIds[_currentAddress] == 0) {
@@ -70,7 +70,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
   ) public {
     // Confirm unlink request is signed by sender and is unused
     validateUnlinkSignature(_addressToRemove, _nonce, _unlinkSignature);
-    burnSignature(_unlinkSignature);
+    burnSignature(_addressToRemove, _nonce);
     linkIds[_addressToRemove] = 0;
 
     emit AddressUnlinked(_addressToRemove);

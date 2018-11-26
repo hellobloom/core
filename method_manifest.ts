@@ -498,19 +498,23 @@ export const AttestationLogic: IContractMethodManifest = {
       }
     },
     revokeAttestationFor: {
-      args_arr: ["_link", "_sender", "_delegationSig"],
+      args_arr: ["_sender", "_link", "_nonce", "_delegationSig"],
       args: {
-        _link: {
-          type: "bytes32",
-          index: 0
-        },
         _sender: {
           type: "address",
+          index: 0
+        },
+        _link: {
+          type: "bytes32",
           index: 1
+        },
+        _nonce: {
+          type: "bytes32",
+          index: 2
         },
         _delegationSig: {
           type: "bytes",
-          index: 2
+          index: 3
         }
       }
     },

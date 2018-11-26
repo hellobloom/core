@@ -672,19 +672,30 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
 
     it("Allows anyone to revoke an attestation on behalf of an attester with a valid sig", async () => {
       revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
-        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink, nonce)
       })
-      await attestationLogic.revokeAttestationFor(revokeLink, bob, revokeAttestationDelegationSig, {
+      await attestationLogic.revokeAttestationFor(bob, revokeLink, nonce, revokeAttestationDelegationSig, {
         from: carl
       }).should.be.fulfilled
     })
 
-    it("Fails is link is wrong", async () => {
+    it("Fails if link is wrong", async () => {
       revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
-        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink, nonce)
       })
       await attestationLogic
-        .revokeAttestationFor(differentRevokeLink, bob, revokeAttestationDelegationSig, {
+        .revokeAttestationFor(bob, differentRevokeLink, nonce, revokeAttestationDelegationSig, {
+          from: carl
+        })
+        .should.be.rejectedWith(EVMThrow)
+    })
+
+    it("Fails if nonce is wrong", async () => {
+      revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink, nonce)
+      })
+      await attestationLogic
+        .revokeAttestationFor(bob, revokeLink, differentNonce, revokeAttestationDelegationSig, {
           from: carl
         })
         .should.be.rejectedWith(EVMThrow)
@@ -692,12 +703,12 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
 
     it("Does not allow sig to be replayed", async () => {
       revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
-        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink, nonce)
       })
-      await attestationLogic.revokeAttestationFor(revokeLink, bob, revokeAttestationDelegationSig, {
+      await attestationLogic.revokeAttestationFor(bob, revokeLink, nonce, revokeAttestationDelegationSig, {
         from: carl
       }).should.be.fulfilled
-      await attestationLogic.revokeAttestationFor(revokeLink, bob, revokeAttestationDelegationSig, {
+      await attestationLogic.revokeAttestationFor(bob, revokeLink, nonce, revokeAttestationDelegationSig, {
         from: carl
       }).should.be.rejectedWith(EVMThrow)
     })
@@ -709,9 +720,9 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
 
     it("emits an event when attestation is revoked via delegated sig", async () => {
       revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
-        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink, nonce)
       })
-      const { logs } = ((await attestationLogic.revokeAttestationFor(revokeLink, bob, revokeAttestationDelegationSig, {
+      const { logs } = ((await attestationLogic.revokeAttestationFor(bob, revokeLink, nonce, revokeAttestationDelegationSig, {
         from: carl
       })) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<RevokeEventArgs>
 
