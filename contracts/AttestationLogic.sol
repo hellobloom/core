@@ -346,11 +346,27 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _sender,
     bytes _delegationSig
     ) public {
-      bytes32 _delegationDigest = generateRevokeAttestationForDelegationSchemaHash(
-        _link
-      );
-      require(_sender == recoverSigner(_delegationDigest, _delegationSig));
+      validateRevokeForSig(_link, _sender, _delegationSig);
+      burnSignature(_delegationSig);
       revokeAttestationForUser(_link, _sender);
+  }
+
+  /**
+   * @notice Verify revocation signature is valid 
+   * @param _link bytes string embedded in dataHash to link revocation
+   * @param _sender user revoking attestation
+   * @param _delegationSig signature authorizing revocation on behalf of revoker
+   */
+  function validateRevokeForSig(
+    bytes32 _link,
+    address _sender,
+    bytes _delegationSig
+  ) internal view {
+    require(_sender == recoverSigner(
+      generateRevokeAttestationForDelegationSchemaHash(
+        _link
+        ),
+        _delegationSig), 'Invalid RevokeFor Signature');
   }
 
   /**

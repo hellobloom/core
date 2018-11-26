@@ -690,6 +690,18 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
         .should.be.rejectedWith(EVMThrow)
     })
 
+    it("Does not allow sig to be replayed", async () => {
+      revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
+        data: getFormattedTypedDataRevokeAttestationFor(attestationLogicAddress, 1, revokeLink)
+      })
+      await attestationLogic.revokeAttestationFor(revokeLink, bob, revokeAttestationDelegationSig, {
+        from: carl
+      }).should.be.fulfilled
+      await attestationLogic.revokeAttestationFor(revokeLink, bob, revokeAttestationDelegationSig, {
+        from: carl
+      }).should.be.rejectedWith(EVMThrow)
+    })
+
     interface RevokeEventArgs {
       link: string
       attester: string
