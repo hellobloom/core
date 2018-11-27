@@ -13,10 +13,9 @@ contract SigningLogic {
   //  have been used so they can't be replayed
   mapping (bytes32 => bool) public usedSignatures;
 
-  function burnSignature(address _sender, bytes32 _nonce) internal {
-    bytes32 _signatureHash = keccak256(abi.encode(_sender, _nonce));
-    require(!usedSignatures[_signatureHash], "Signature not unique");
-    usedSignatures[_signatureHash] = true;
+  function burnSignatureDigest(bytes32 _signatureDigest) internal {
+    require(!usedSignatures[_signatureDigest], "Signature not unique");
+    usedSignatures[_signatureDigest] = true;
   }
 
   bytes32 constant EIP712DOMAIN_TYPEHASH = keccak256(

@@ -72,7 +72,6 @@ contract TokenEscrowMarketplace is SigningLogic {
         _nonce,
         _delegationSig
       );
-      burnSignature(_sender, _nonce);
       moveTokensToEscrowLockupForUser(_sender, _amount);
   }
 
@@ -90,13 +89,9 @@ contract TokenEscrowMarketplace is SigningLogic {
     bytes _delegationSig
 
   ) internal view {
-    require(_sender == recoverSigner(
-      generateLockupTokensDelegationSchemaHash(
-        _sender,
-        _amount,
-        _nonce
-        ),
-        _delegationSig), 'Invalid LockupTokens Signature');
+    bytes32 _signatureDigest = generateLockupTokensDelegationSchemaHash(_sender, _amount, _nonce);
+    require(_sender == recoverSigner(_signatureDigest, _delegationSig), 'Invalid LockupTokens Signature');
+    burnSignatureDigest(_signatureDigest);
   }
 
   /**
@@ -143,7 +138,6 @@ contract TokenEscrowMarketplace is SigningLogic {
         _nonce,
         _delegationSig
       );
-      burnSignature(_sender, _nonce);
       releaseTokensFromEscrowForUser(_sender, _amount);
   }
 
@@ -161,13 +155,9 @@ contract TokenEscrowMarketplace is SigningLogic {
     bytes _delegationSig
 
   ) internal view {
-    require(_sender == recoverSigner(
-      generateReleaseTokensDelegationSchemaHash(
-        _sender,
-        _amount,
-        _nonce
-        ),
-        _delegationSig), 'Invalid ReleaseTokens Signature');
+    bytes32 _signatureDigest = generateReleaseTokensDelegationSchemaHash(_sender, _amount, _nonce);
+    require(_sender == recoverSigner(_signatureDigest, _delegationSig), 'Invalid ReleaseTokens Signature');
+    burnSignatureDigest(_signatureDigest);
   }
 
   /**
@@ -229,8 +219,6 @@ contract TokenEscrowMarketplace is SigningLogic {
       _nonce,
       _paymentSig
     );
-    burnSignature(_payer, _nonce);
-
     payTokensFromEscrow(_payer, _receiver, _amount);
     emit TokenMarketplaceEscrowPayment(_payer, _receiver, _amount);
   }
@@ -251,14 +239,9 @@ contract TokenEscrowMarketplace is SigningLogic {
     bytes _paymentSig
 
   ) internal view {
-    require(_payer == recoverSigner(
-      generatePayTokensSchemaHash(
-        _payer,
-        _receiver,
-        _amount,
-        _nonce
-        ),
-        _paymentSig), 'Invalid Payment Signature');
+    bytes32 _signatureDigest = generatePayTokensSchemaHash(_payer, _receiver, _amount, _nonce);
+    require(_payer == recoverSigner(_signatureDigest, _paymentSig), 'Invalid Payment Signature');
+    burnSignatureDigest(_signatureDigest);
   }
 
   /**

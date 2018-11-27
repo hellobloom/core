@@ -47,17 +47,21 @@ contract Poll is DependentOnIPFS, SigningLogic {
   }
 
   function voteFor(uint16 _choice, address _voter, bytes32 _nonce, bytes _delegationSig) external {
-    require(_voter == recoverSigner(
-      generateVoteForDelegationSchemaHash(
-        _choice,
-        _voter,
-        _nonce,
-        this),
-      _delegationSig),
+    validateVoteForSig(_choice, _voter, _nonce, _delegationSig);
+    voteForUser(_choice, _voter);
+  }
+
+  function validateVoteForSig(
+    uint16 _choice,
+    address _voter,
+    bytes32 _nonce,
+    bytes _delegationSig
+  ) internal view {
+    bytes32 _signatureDigest = generateVoteForDelegationSchemaHash(_choice, _voter, _nonce, this);
+    require(_voter == recoverSigner(_signatureDigest, _delegationSig),
       "Invalid signer"
       );
-    burnSignature(_voter, _nonce);
-    voteForUser(_choice, _voter);
+    burnSignatureDigest(_signatureDigest);
   }
 
   /**
