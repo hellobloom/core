@@ -61,7 +61,7 @@ contract Poll is DependentOnIPFS, SigningLogic {
     require(_voter == recoverSigner(_signatureDigest, _delegationSig),
       "Invalid signer"
       );
-    burnSignatureDigest(_signatureDigest);
+    burnSignatureDigest(_signatureDigest, _voter);
   }
 
   /**

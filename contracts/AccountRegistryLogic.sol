@@ -88,7 +88,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
   ) internal view {
     bytes32 _signatureDigest = generateAddAddressSchemaHash(_addressToAdd, _nonce);
     require(_currentAddress == recoverSigner(_signatureDigest, _linkSignature));
-    burnSignatureDigest(_signatureDigest);
+    burnSignatureDigest(_signatureDigest, _currentAddress);
   }
 
   /**
@@ -109,7 +109,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
     bytes32 _signatureDigest = generateRemoveAddressSchemaHash(_addressToRemove, _nonce);
 
     require(_addressToRemove == recoverSigner(_signatureDigest, _unlinkSignature));
-    burnSignatureDigest(_signatureDigest);
+    burnSignatureDigest(_signatureDigest, _addressToRemove);
   }
 
   /**

@@ -91,7 +91,7 @@ contract TokenEscrowMarketplace is SigningLogic {
   ) internal view {
     bytes32 _signatureDigest = generateLockupTokensDelegationSchemaHash(_sender, _amount, _nonce);
     require(_sender == recoverSigner(_signatureDigest, _delegationSig), 'Invalid LockupTokens Signature');
-    burnSignatureDigest(_signatureDigest);
+    burnSignatureDigest(_signatureDigest, _sender);
   }
 
   /**
@@ -157,7 +157,7 @@ contract TokenEscrowMarketplace is SigningLogic {
   ) internal view {
     bytes32 _signatureDigest = generateReleaseTokensDelegationSchemaHash(_sender, _amount, _nonce);
     require(_sender == recoverSigner(_signatureDigest, _delegationSig), 'Invalid ReleaseTokens Signature');
-    burnSignatureDigest(_signatureDigest);
+    burnSignatureDigest(_signatureDigest, _sender);
   }
 
   /**
@@ -241,7 +241,7 @@ contract TokenEscrowMarketplace is SigningLogic {
   ) internal view {
     bytes32 _signatureDigest = generatePayTokensSchemaHash(_payer, _receiver, _amount, _nonce);
     require(_payer == recoverSigner(_signatureDigest, _paymentSig), 'Invalid Payment Signature');
-    burnSignatureDigest(_signatureDigest);
+    burnSignatureDigest(_signatureDigest, _payer);
   }
 
   /**
