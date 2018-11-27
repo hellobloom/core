@@ -29,7 +29,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
    * @param _currentAddressSig Signed message from address currently associated with account confirming intention
    * @param _newAddress Address to add to account. Cannot currently be linked to another address
    * @param _newAddressSig Signed message from new address confirming ownership by the sender
-   * @param _nonce uuid used when generating sigs to make them one time use
+   * @param _nonce hex string used when generating sigs to make them one time use
    */
   function linkAddresses(
     address _currentAddress,
@@ -59,7 +59,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
    * @notice Remove an address from a link relationship
    * @param _addressToRemove Address to unlink from all other addresses
    * @param _unlinkSignature Signed message from address currently associated with account confirming intention to unlink
-   * @param _nonce uuid used when generating sigs to make them one time use
+   * @param _nonce hex string used when generating sigs to make them one time use
    */
   function unlinkAddress(
     address _addressToRemove,

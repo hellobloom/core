@@ -103,7 +103,6 @@ Links are stored as mapping from addresses to a link Id. Users can have any numb
 ## Account Registry Logic Public Functions
 ### linkIds
 Public getter to check if an address is linked to another address. Returns 0 if no link.
-Retrieve the account Id associated with an address. Reverts if the address is not associated with an account
 #### Interface
 ```
 function linkIds(address _address) public view returns (uint256)
@@ -122,7 +121,7 @@ if (linkA === linkB && linkA !== 0) {
 ```
 
 ### linkAddresses
-Store a link demonstrating ownership of multiple addresses. Each address much sign a message indicating intention to be linked. `currentAddress` may be linked to other addresses. `newAddress` must be unclaimed.
+Store a link demonstrating ownership of multiple addresses. Each address must sign a message indicating intention to be linked. `currentAddress` may be linked to other addresses. `newAddress` must be unclaimed.
 
 A user can submit this transaction from their own address or it can be submitted by a third party on their behalf.
 #### Interface
