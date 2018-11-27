@@ -92,7 +92,6 @@ contract AttestationLogic is Initializable, SigningLogic{
   ) public {
     // Confirm attester address matches recovered address from signature
     validateAttestForSig(_subject, _attester, _requester, _reward, _dataHash, _requestNonce, _delegationSig);
-    burnSignature(_delegationSig);
     attestForUser(
       _subject,
       _attester,
@@ -134,7 +133,6 @@ contract AttestationLogic is Initializable, SigningLogic{
       _requestNonce,
       _subjectSig
     );
-    burnSignature(_subjectSig);
 
     emit TraitAttested(
       _subject,
@@ -196,7 +194,6 @@ contract AttestationLogic is Initializable, SigningLogic{
       _requestNonce,
       _delegationSig
     );
-    burnSignature(_delegationSig);
     contestForUser(
       _attester,
       _requester,
@@ -242,11 +239,9 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _requestNonce,
     bytes _subjectSig
   ) internal view {
-    require(_subject == recoverSigner(
-      generateRequestAttestationSchemaHash(
-      _dataHash,
-      _requestNonce
-    ), _subjectSig));
+    bytes32 _signatureDigest = generateRequestAttestationSchemaHash(_dataHash, _requestNonce);
+    require(_subject == recoverSigner(_signatureDigest, _subjectSig));
+    burnSignatureDigest(_signatureDigest, _subject);
   }
 
   /**
@@ -268,15 +263,9 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _requestNonce,
     bytes _delegationSig
   ) internal view {
-    require(_attester == recoverSigner(
-      generateAttestForDelegationSchemaHash(
-        _subject,
-        _requester,
-        _reward,
-        _dataHash,
-        _requestNonce
-        ),
-        _delegationSig), 'Invalid AttestFor Signature');
+    bytes32 _delegationDigest = generateAttestForDelegationSchemaHash(_subject, _requester, _reward, _dataHash, _requestNonce);
+    require(_attester == recoverSigner(_delegationDigest, _delegationSig), 'Invalid AttestFor Signature');
+    burnSignatureDigest(_delegationDigest, _attester);
   }
 
   /**
@@ -294,13 +283,9 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _requestNonce,
     bytes _delegationSig
   ) internal view {
-    require(_attester == recoverSigner(
-      generateContestForDelegationSchemaHash(
-        _requester,
-        _reward,
-        _requestNonce
-        ),
-        _delegationSig), 'Invalid ContestFor Signature');
+    bytes32 _delegationDigest = generateContestForDelegationSchemaHash(_requester, _reward, _requestNonce);
+    require(_attester == recoverSigner(_delegationDigest, _delegationSig), 'Invalid ContestFor Signature');
+    burnSignatureDigest(_delegationDigest, _attester);
   }
 
   /**
@@ -342,12 +327,12 @@ contract AttestationLogic is Initializable, SigningLogic{
    * @param _link bytes string embedded in dataHash to link revocation
    */
   function revokeAttestationFor(
-    bytes32 _link,
     address _sender,
+    bytes32 _link,
+    bytes32 _nonce,
     bytes _delegationSig
     ) public {
-      validateRevokeForSig(_link, _sender, _delegationSig);
-      burnSignature(_delegationSig);
+      validateRevokeForSig(_sender, _link, _nonce, _delegationSig);
       revokeAttestationForUser(_link, _sender);
   }
 
@@ -358,15 +343,14 @@ contract AttestationLogic is Initializable, SigningLogic{
    * @param _delegationSig signature authorizing revocation on behalf of revoker
    */
   function validateRevokeForSig(
-    bytes32 _link,
     address _sender,
+    bytes32 _link,
+    bytes32 _nonce,
     bytes _delegationSig
   ) internal view {
-    require(_sender == recoverSigner(
-      generateRevokeAttestationForDelegationSchemaHash(
-        _link
-        ),
-        _delegationSig), 'Invalid RevokeFor Signature');
+    bytes32 _delegationDigest = generateRevokeAttestationForDelegationSchemaHash(_link, _nonce);
+    require(_sender == recoverSigner(_delegationDigest, _delegationSig), 'Invalid RevokeFor Signature');
+    burnSignatureDigest(_delegationDigest, _sender);
   }
 
   /**

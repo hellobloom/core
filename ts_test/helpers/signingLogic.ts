@@ -354,6 +354,7 @@ export const getFormattedTypedDataRevokeAttestationFor = (
   contractAddress: string,
   chainId: number,
   link: string,
+  nonce: string,
 ): IFormattedTypedData => {
   return {
     types: {
@@ -365,6 +366,7 @@ export const getFormattedTypedDataRevokeAttestationFor = (
       ],
       RevokeAttestationFor: [
         { name: 'link', type: 'bytes32'},
+        { name: 'nonce', type: 'bytes32'},
       ]
     },
     primaryType: 'RevokeAttestationFor',
@@ -376,6 +378,7 @@ export const getFormattedTypedDataRevokeAttestationFor = (
     },
     message: {
       link: link,
+      nonce: nonce,
     }
   }
 }
