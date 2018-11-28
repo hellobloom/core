@@ -65,7 +65,7 @@ contract TokenEscrowMarketplace is SigningLogic {
     uint256 _amount,
     bytes32 _nonce,
     bytes _delegationSig
-    ) public {
+    ) external {
       validateLockupTokensSig(
         _sender,
         _amount,
@@ -87,8 +87,7 @@ contract TokenEscrowMarketplace is SigningLogic {
     uint256 _amount,
     bytes32 _nonce,
     bytes _delegationSig
-
-  ) internal view {
+  ) private {
     bytes32 _signatureDigest = generateLockupTokensDelegationSchemaHash(_sender, _amount, _nonce);
     require(_sender == recoverSigner(_signatureDigest, _delegationSig), 'Invalid LockupTokens Signature');
     burnSignatureDigest(_signatureDigest, _sender);
@@ -98,7 +97,7 @@ contract TokenEscrowMarketplace is SigningLogic {
    * @notice Lockup tokens by user. Must be preceeded by approve
    * @param _amount Tokens to lock up
    */
-  function moveTokensToEscrowLockup(uint256 _amount) public {
+  function moveTokensToEscrowLockup(uint256 _amount) external {
     moveTokensToEscrowLockupForUser(msg.sender, _amount);
   }
 
@@ -131,7 +130,7 @@ contract TokenEscrowMarketplace is SigningLogic {
     uint256 _amount,
     bytes32 _nonce,
     bytes _delegationSig
-    ) public {
+    ) external {
       validateReleaseTokensSig(
         _sender,
         _amount,
@@ -154,7 +153,7 @@ contract TokenEscrowMarketplace is SigningLogic {
     bytes32 _nonce,
     bytes _delegationSig
 
-  ) internal view {
+  ) private {
     bytes32 _signatureDigest = generateReleaseTokensDelegationSchemaHash(_sender, _amount, _nonce);
     require(_sender == recoverSigner(_signatureDigest, _delegationSig), 'Invalid ReleaseTokens Signature');
     burnSignatureDigest(_signatureDigest, _sender);
@@ -165,7 +164,7 @@ contract TokenEscrowMarketplace is SigningLogic {
    * @dev Token balance retreived by accountId. Can be different address from the one that deposited tokens
    * @param _amount Tokens to retreive from escrow
    */
-  function releaseTokensFromEscrow(uint256 _amount) public {
+  function releaseTokensFromEscrow(uint256 _amount) external {
     releaseTokensFromEscrowForUser(msg.sender, _amount);
   }
 
@@ -238,7 +237,7 @@ contract TokenEscrowMarketplace is SigningLogic {
     bytes32 _nonce,
     bytes _paymentSig
 
-  ) internal view {
+  ) private {
     bytes32 _signatureDigest = generatePayTokensSchemaHash(_payer, _receiver, _amount, _nonce);
     require(_payer == recoverSigner(_signatureDigest, _paymentSig), 'Invalid Payment Signature');
     burnSignatureDigest(_signatureDigest, _payer);

@@ -81,7 +81,7 @@ contract SigningLogic {
       address verifyingContract;
   }
 
-  function hash(EIP712Domain eip712Domain) internal pure returns (bytes32) {
+  function hash(EIP712Domain eip712Domain) private pure returns (bytes32) {
     return keccak256(abi.encode(
       EIP712DOMAIN_TYPEHASH,
       keccak256(bytes(eip712Domain.name)),
@@ -96,7 +96,7 @@ contract SigningLogic {
       bytes32 nonce;
   }
 
-  function hash(AttestationRequest request) internal pure returns (bytes32) {
+  function hash(AttestationRequest request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       ATTESTATION_REQUEST_TYPEHASH,
       request.dataHash,
@@ -109,7 +109,7 @@ contract SigningLogic {
       bytes32 nonce;
   }
 
-  function hash(AddAddress request) internal pure returns (bytes32) {
+  function hash(AddAddress request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       ADD_ADDRESS_TYPEHASH,
       request.addressToAdd,
@@ -122,7 +122,7 @@ contract SigningLogic {
       bytes32 nonce;
   }
 
-  function hash(RemoveAddress request) internal pure returns (bytes32) {
+  function hash(RemoveAddress request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       REMOVE_ADDRESS_TYPEHASH,
       request.addressToRemove,
@@ -137,7 +137,7 @@ contract SigningLogic {
       bytes32 nonce;
   }
 
-  function hash(PayTokens request) internal pure returns (bytes32) {
+  function hash(PayTokens request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       PAY_TOKENS_TYPEHASH,
       request.sender,
@@ -155,7 +155,7 @@ contract SigningLogic {
       bytes32 requestNonce;
   }
 
-  function hash(AttestFor request) internal pure returns (bytes32) {
+  function hash(AttestFor request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       ATTEST_FOR_TYPEHASH,
       request.subject,
@@ -172,7 +172,7 @@ contract SigningLogic {
       bytes32 requestNonce;
   }
 
-  function hash(ContestFor request) internal pure returns (bytes32) {
+  function hash(ContestFor request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       CONTEST_FOR_TYPEHASH,
       request.requester,
@@ -186,7 +186,7 @@ contract SigningLogic {
       bytes32 nonce;
   }
 
-  function hash(RevokeAttestationFor request) internal pure returns (bytes32) {
+  function hash(RevokeAttestationFor request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       REVOKE_ATTESTATION_FOR_TYPEHASH,
       request.link,
@@ -201,7 +201,7 @@ contract SigningLogic {
       address poll;
   }
 
-  function hash(VoteFor request) internal pure returns (bytes32) {
+  function hash(VoteFor request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       VOTE_FOR_TYPEHASH,
       request.choice,
@@ -217,7 +217,7 @@ contract SigningLogic {
     bytes32 nonce;
   }
 
-  function hash(LockupTokensFor request) internal pure returns (bytes32) {
+  function hash(LockupTokensFor request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       LOCKUP_TOKENS_FOR_TYPEHASH,
       request.sender,
@@ -232,7 +232,7 @@ contract SigningLogic {
     bytes32 nonce;
   }
 
-  function hash(ReleaseTokensFor request) internal pure returns (bytes32) {
+  function hash(ReleaseTokensFor request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       RELEASE_TOKENS_FOR_TYPEHASH,
       request.sender,

@@ -6,7 +6,6 @@ import { VotingCenterInstance} from "../truffle";
 
 const VotingCenter = artifacts.require("VotingCenter");
 const Poll = artifacts.require("Poll");
-const SigningLogic = artifacts.require("SigningLogicLegacy");
 
 contract("VotingCenter", function([alice, bob, carl]) {
   let votingCenter: VotingCenterInstance;

@@ -29,7 +29,7 @@ contract VotingCenter {
     uint16 _numOptions,
     uint256 _startTime,
     uint256 _endTime
-  ) public returns (address) {
+  ) external returns (address) {
     Poll newPoll = new Poll(
       _name,
       _chainId,
@@ -46,11 +46,11 @@ contract VotingCenter {
     return newPoll;
   }
 
-  function allPolls() view public returns (Poll[]) {
+  function allPolls() external view returns (Poll[]) {
     return polls;
   }
 
-  function numPolls() view public returns (uint256) {
+  function numPolls() external view returns (uint256) {
     return polls.length;
   }
 }
