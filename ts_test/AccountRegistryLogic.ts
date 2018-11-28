@@ -101,6 +101,22 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       ;(await registryLogic.linkIds(unclaimedB)).should.be.bignumber.equal(1)
     })
 
+    it("Incrementes linkId for new links", async () => {
+      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice }).should.be.fulfilled
+      await registryLogic.linkAddresses(
+        bob,
+        ethSigUtil.signTypedData(bobPrivkey, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimedB, differentNonce) }),
+        unclaimedB,
+        ethSigUtil.signTypedData(unclaimedPrivkeyB, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, bob, differentNonce) }),
+        differentNonce,
+        { from: bob }
+      ).should.be.fulfilled
+      ;(await registryLogic.linkIds(alice)).should.be.bignumber.equal(1)
+      ;(await registryLogic.linkIds(unclaimed)).should.be.bignumber.equal(1)
+      ;(await registryLogic.linkIds(bob)).should.be.bignumber.equal(2)
+      ;(await registryLogic.linkIds(unclaimedB)).should.be.bignumber.equal(2)
+    })
+
     it("Allows anyone to submit the link tx", async () => {
       await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: bob }).should.be.fulfilled
     })
