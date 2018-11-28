@@ -53,7 +53,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _dataHash,
     bytes32 _requestNonce,
     bytes _subjectSig // Sig of subject with requester, attester, dataHash, requestNonce
-  ) public {
+  ) external {
     attestForUser(
       _subject,
       msg.sender,
@@ -89,7 +89,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _requestNonce,
     bytes _subjectSig, // Sig of subject with dataHash and requestNonce
     bytes _delegationSig
-  ) public {
+  ) external {
     // Confirm attester address matches recovered address from signature
     validateAttestForSig(_subject, _attester, _requester, _reward, _dataHash, _requestNonce, _delegationSig);
     attestForUser(
@@ -159,7 +159,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     uint256 _reward,
     bytes32 _requestNonce,
     bytes _requesterSig
-  ) public {
+  ) external {
     contestForUser(
       msg.sender,
       _requester,
@@ -186,7 +186,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _requestNonce,
     bytes _requesterSig,
     bytes _delegationSig
-  ) public {
+  ) external {
     validateContestForSig(
       _attester,
       _requester,
@@ -238,7 +238,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _dataHash,
     bytes32 _requestNonce,
     bytes _subjectSig
-  ) internal view {
+  ) private {
     bytes32 _signatureDigest = generateRequestAttestationSchemaHash(_dataHash, _requestNonce);
     require(_subject == recoverSigner(_signatureDigest, _subjectSig));
     burnSignatureDigest(_signatureDigest, _subject);
@@ -262,7 +262,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _dataHash,
     bytes32 _requestNonce,
     bytes _delegationSig
-  ) internal view {
+  ) private {
     bytes32 _delegationDigest = generateAttestForDelegationSchemaHash(_subject, _requester, _reward, _dataHash, _requestNonce);
     require(_attester == recoverSigner(_delegationDigest, _delegationSig), 'Invalid AttestFor Signature');
     burnSignatureDigest(_delegationDigest, _attester);
@@ -282,7 +282,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     uint256 _reward,
     bytes32 _requestNonce,
     bytes _delegationSig
-  ) internal view {
+  ) private {
     bytes32 _delegationDigest = generateContestForDelegationSchemaHash(_requester, _reward, _requestNonce);
     require(_attester == recoverSigner(_delegationDigest, _delegationSig), 'Invalid ContestFor Signature');
     burnSignatureDigest(_delegationDigest, _attester);
@@ -317,7 +317,7 @@ contract AttestationLogic is Initializable, SigningLogic{
    */
   function revokeAttestation(
     bytes32 _link
-    ) public {
+    ) external {
       revokeAttestationForUser(_link, msg.sender);
   }
 
@@ -331,7 +331,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _link,
     bytes32 _nonce,
     bytes _delegationSig
-    ) public {
+    ) external {
       validateRevokeForSig(_sender, _link, _nonce, _delegationSig);
       revokeAttestationForUser(_link, _sender);
   }
@@ -347,7 +347,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     bytes32 _link,
     bytes32 _nonce,
     bytes _delegationSig
-  ) internal view {
+  ) private {
     bytes32 _delegationDigest = generateRevokeAttestationForDelegationSchemaHash(_link, _nonce);
     require(_sender == recoverSigner(_delegationDigest, _delegationSig), 'Invalid RevokeFor Signature');
     burnSignatureDigest(_delegationDigest, _sender);
@@ -371,7 +371,7 @@ contract AttestationLogic is Initializable, SigningLogic{
    * @dev Restricted to initializer
    * @param _newTokenEscrowMarketplace Address of new SigningLogic implementation
    */
-  function setTokenEscrowMarketplace(TokenEscrowMarketplace _newTokenEscrowMarketplace) public onlyDuringInitialization {
+  function setTokenEscrowMarketplace(TokenEscrowMarketplace _newTokenEscrowMarketplace) external onlyDuringInitialization {
     address oldTokenEscrowMarketplace = tokenEscrowMarketplace;
     tokenEscrowMarketplace = _newTokenEscrowMarketplace;
     emit TokenEscrowMarketplaceChanged(oldTokenEscrowMarketplace, tokenEscrowMarketplace);

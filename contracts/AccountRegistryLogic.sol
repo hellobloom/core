@@ -37,7 +37,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
     address _newAddress,
     bytes _newAddressSig,
     bytes32 _nonce
-    ) public {
+    ) external {
       // Confirm newAddress is not linked to another account
       require(linkIds[_newAddress] == 0);
       // Confirm new address is signed by current address and is unused
@@ -65,7 +65,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
     address _addressToRemove,
     bytes32 _nonce,
     bytes _unlinkSignature
-  ) public {
+  ) external {
     // Confirm unlink request is signed by sender and is unused
     validateUnlinkSignature(_addressToRemove, _nonce, _unlinkSignature);
     linkIds[_addressToRemove] = 0;
@@ -85,7 +85,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
     address _addressToAdd,
     bytes32 _nonce,
     bytes _linkSignature
-  ) internal view {
+  ) private {
     bytes32 _signatureDigest = generateAddAddressSchemaHash(_addressToAdd, _nonce);
     require(_currentAddress == recoverSigner(_signatureDigest, _linkSignature));
     burnSignatureDigest(_signatureDigest, _currentAddress);
@@ -101,7 +101,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
     address _addressToRemove,
     bytes32 _nonce,
     bytes _unlinkSignature
-  ) internal view {
+  ) private {
 
     // require that address to remove is currently linked to senderAddress
     require(linkIds[_addressToRemove] != 0, "Address does not have active link");
@@ -121,7 +121,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
   function migrateLink(
     address _currentAddress,
     address _newAddress
-  ) public onlyDuringInitialization {
+  ) external onlyDuringInitialization {
     // Confirm newAddress is not linked to another account
     require(linkIds[_newAddress] == 0);
 

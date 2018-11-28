@@ -56,7 +56,7 @@ contract Poll is DependentOnIPFS, SigningLogic {
     address _voter,
     bytes32 _nonce,
     bytes _delegationSig
-  ) internal view {
+  ) private {
     bytes32 _signatureDigest = generateVoteForDelegationSchemaHash(_choice, _voter, _nonce, this);
     require(_voter == recoverSigner(_signatureDigest, _delegationSig),
       "Invalid signer"
@@ -68,7 +68,7 @@ contract Poll is DependentOnIPFS, SigningLogic {
    * @dev Cast or change your vote
    * @param _choice The index of the option in the corresponding IPFS document.
    */
-  function voteForUser(uint16 _choice, address _voter) internal duringPoll {
+  function voteForUser(uint16 _choice, address _voter) private duringPoll {
     // Choices are indexed from 1 since the mapping returns 0 for "no vote cast"
     require(_choice <= numChoices && _choice > 0);
     emit VoteCast(_voter, _choice);
