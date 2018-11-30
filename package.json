@@ -10,7 +10,7 @@
     "yarn": "^1.3.2"
   },
   "dependencies": {
-    "@bloomprotocol/attestations-lib": "^0.4.3",
+    "@bloomprotocol/attestations-lib": "^3.0.2",
     "eth-gas-reporter": "^0.1.9",
     "eth-sig-util": "^2.0.1",
     "ethereumjs-util": "^5.1.2",

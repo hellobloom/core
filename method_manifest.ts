@@ -20,6 +20,7 @@ export enum EContractNames {
   "ApproveAndCallFallBack" = "ApproveAndCallFallBack",
   "AttestationLogic" = "AttestationLogic",
   "BasicToken" = "BasicToken",
+  "BatchInitializer" = "BatchInitializer",
   "BLT" = "BLT",
   "Controlled" = "Controlled",
   "ConvertLib" = "ConvertLib",
@@ -554,6 +555,116 @@ export const BasicToken: IContractMethodManifest = {
         _owner: {
           type: "address",
           index: 0
+        }
+      }
+    }
+  }
+}
+
+export const BatchInitializer: IContractMethodManifest = {
+  methods: {
+    attestationLogic: {
+      args_arr: [],
+      args: {}
+    },
+    owner: {
+      args_arr: [],
+      args: {}
+    },
+    registryLogic: {
+      args_arr: [],
+      args: {}
+    },
+    transferOwnership: {
+      args_arr: ["newOwner"],
+      args: {
+        newOwner: {
+          type: "address",
+          index: 0
+        }
+      }
+    },
+    admin: {
+      args_arr: [],
+      args: {}
+    },
+
+    setAdmin: {
+      args_arr: ["_newAdmin"],
+      args: {
+        _newAdmin: {
+          type: "address",
+          index: 0
+        }
+      }
+    },
+    setRegistryLogic: {
+      args_arr: ["_newRegistryLogic"],
+      args: {
+        _newRegistryLogic: {
+          type: "address",
+          index: 0
+        }
+      }
+    },
+    setAttestationLogic: {
+      args_arr: ["_newAttestationLogic"],
+      args: {
+        _newAttestationLogic: {
+          type: "address",
+          index: 0
+        }
+      }
+    },
+    setTokenEscrowMarketplace: {
+      args_arr: ["_newMarketplace"],
+      args: {
+        _newMarketplace: {
+          type: "address",
+          index: 0
+        }
+      }
+    },
+    endInitialization: {
+      args_arr: ["_initializable"],
+      args: {
+        _initializable: {
+          type: "address",
+          index: 0
+        }
+      }
+    },
+    batchLinkAddresses: {
+      args_arr: ["_currentAddresses", "_newAddresses"],
+      args: {
+        _currentAddresses: {
+          type: "address[]",
+          index: 0
+        },
+        _newAddresses: {
+          type: "address[]",
+          index: 1
+        }
+      }
+    },
+    batchMigrateAttestations: {
+      args_arr: ["_requesters", "_attesters", "_subjects", "_dataHashes"],
+      args: {
+        _requesters: {
+          type: "address[]",
+          index: 0
+        },
+        _attesters: {
+          type: "address[]",
+          index: 1
+        },
+        _subjects: {
+          type: "address[]",
+          index: 2
+        },
+        _dataHashes: {
+          type: "bytes32[]",
+          index: 3
         }
       }
     }

@@ -56,30 +56,8 @@ contract("AttestationLogic", function([alice, bob, carl, david, ellen, initializ
     throw new Error("Mnemonic used for truffle tests out of sync?")
   }
 
-  const phoneData: HashingLogic.IAttestationData = {
-    type: "phone",
-    provider: "Bloom",
-    data: "12223334444",
-    nonce: uuid(),
-    version: "1.0.0"
-  }
-
-  const emailData: HashingLogic.IAttestationData = {
-    type: "email",
-    provider: "Bloom",
-    data: "abc@google.com",
-    nonce: uuid(),
-    version: "1.0.0"
-  }
-
-  const phoneOnlyMerkleTree = HashingLogic.getMerkleTree([phoneData])
-  const emailOnlyMerkleTree = HashingLogic.getMerkleTree([emailData])
-
-  const phoneDataHash = bufferToHex(phoneOnlyMerkleTree.getRoot())
-  const emailDataHash = bufferToHex(emailOnlyMerkleTree.getRoot())
-
-  const merkleTree = HashingLogic.getMerkleTree([phoneData, emailData])
-  const combinedDataHash = bufferToHex(merkleTree.getRoot())
+  const emailDataHash = '0xd1696aa0222c2ee299efa58d265eaecc4677d8c88cb3a5c7e60bc5957fff514a'
+  const combinedDataHash = '0xe72cf1f9a85fbc529cd17cded83d0021beb12359c7f238276d8e20aea603e928'
 
   let nonce: string
   let differentNonce: string

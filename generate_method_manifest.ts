@@ -28,7 +28,7 @@ interface UnknownMember {
   type: string
 }
 
-type SolidityType = "address" | "address[]" | "bool" | "bytes" | "bytes32" | "string" | "uint8" | "uint16" | "uint64" | "uint256" | "uint256[]"
+type SolidityType = "address" | "address[]" | "bool" | "bytes" | "bytes32" | "bytes32[]" | "string" | "uint8" | "uint16" | "uint64" | "uint256" | "uint256[]"
 
 interface FunctionMemberInput {
   name: string
@@ -173,6 +173,8 @@ function translateType(type: SolidityType, options = { UInt: "UInt" }): string {
       return "string"
     case "bytes32":
       return "string"
+    case "bytes32[]":
+      return "string[]"
     case "uint8":
     case "uint16":
     case "uint64":

@@ -43,6 +43,7 @@ interface Artifacts {
   require(name: "ApproveAndCallFallBack"): ApproveAndCallFallBackContract
   require(name: "AttestationLogic"): AttestationLogicContract
   require(name: "BasicToken"): BasicTokenContract
+  require(name: "BatchInitializer"): BatchInitializerContract
   require(name: "BLT"): BLTContract
   require(name: "Controlled"): ControlledContract
   require(name: "ConvertLib"): ConvertLibContract
@@ -567,6 +568,106 @@ export interface BasicTokenContract {
   new: (options?: TransactionOptions) => Promise<BasicTokenInstance>
   deployed(): Promise<BasicTokenInstance>
   at(address: string): BasicTokenInstance
+}
+
+export interface BatchInitializerInstance extends ContractInstance {
+  attestationLogic: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(options?: TransactionOptions): Promise<Address>
+    sendTransaction(options?: TransactionOptions): Promise<string>
+    estimateGas(options?: TransactionOptions): Promise<number>
+  }
+  owner: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(options?: TransactionOptions): Promise<Address>
+    sendTransaction(options?: TransactionOptions): Promise<string>
+    estimateGas(options?: TransactionOptions): Promise<number>
+  }
+  registryLogic: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(options?: TransactionOptions): Promise<Address>
+    sendTransaction(options?: TransactionOptions): Promise<string>
+    estimateGas(options?: TransactionOptions): Promise<number>
+  }
+  transferOwnership: {
+    (newOwner: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(newOwner: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(newOwner: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(newOwner: Address, options?: TransactionOptions): Promise<number>
+  }
+  admin: {
+    (options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(options?: TransactionOptions): Promise<Address>
+    sendTransaction(options?: TransactionOptions): Promise<string>
+    estimateGas(options?: TransactionOptions): Promise<number>
+  }
+
+  linkSkipped: Web3.EventFilterCreator<{ currentAddress: Address; newAddress: Address }>
+
+  OwnershipTransferred: Web3.EventFilterCreator<{ previousOwner: Address; newOwner: Address }>
+
+  setAdmin: {
+    (newAdmin: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(newAdmin: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(newAdmin: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(newAdmin: Address, options?: TransactionOptions): Promise<number>
+  }
+  setRegistryLogic: {
+    (newRegistryLogic: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(newRegistryLogic: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(newRegistryLogic: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(newRegistryLogic: Address, options?: TransactionOptions): Promise<number>
+  }
+  setAttestationLogic: {
+    (newAttestationLogic: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(newAttestationLogic: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(newAttestationLogic: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(newAttestationLogic: Address, options?: TransactionOptions): Promise<number>
+  }
+  setTokenEscrowMarketplace: {
+    (newMarketplace: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(newMarketplace: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(newMarketplace: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(newMarketplace: Address, options?: TransactionOptions): Promise<number>
+  }
+  endInitialization: {
+    (initializable: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(initializable: Address, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(initializable: Address, options?: TransactionOptions): Promise<string>
+    estimateGas(initializable: Address, options?: TransactionOptions): Promise<number>
+  }
+  batchLinkAddresses: {
+    (currentAddresses: Address[], newAddresses: Address[], options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(currentAddresses: Address[], newAddresses: Address[], options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(currentAddresses: Address[], newAddresses: Address[], options?: TransactionOptions): Promise<string>
+    estimateGas(currentAddresses: Address[], newAddresses: Address[], options?: TransactionOptions): Promise<number>
+  }
+  batchMigrateAttestations: {
+    (requesters: Address[], attesters: Address[], subjects: Address[], dataHashes: string[], options?: TransactionOptions): Promise<
+      Web3.TransactionReceipt
+    >
+    call(
+      requesters: Address[],
+      attesters: Address[],
+      subjects: Address[],
+      dataHashes: string[],
+      options?: TransactionOptions
+    ): Promise<Web3.TransactionReceipt>
+    sendTransaction(
+      requesters: Address[],
+      attesters: Address[],
+      subjects: Address[],
+      dataHashes: string[],
+      options?: TransactionOptions
+    ): Promise<string>
+    estimateGas(requesters: Address[], attesters: Address[], subjects: Address[], dataHashes: string[], options?: TransactionOptions): Promise<number>
+  }
+}
+
+export interface BatchInitializerContract {
+  new: (attestationLogic: Address, registryLogic: Address, options?: TransactionOptions) => Promise<BatchInitializerInstance>
+  deployed(): Promise<BatchInitializerInstance>
+  at(address: string): BatchInitializerInstance
 }
 
 export interface BLTInstance extends ContractInstance {
