@@ -94,6 +94,21 @@ contract("BatchInitializer", function([owner, admin, unrelated]) {
     it("does not allow anyone else to end initialization", async () => {
       await batchInitializer.endInitialization(registryLogic.address, {from: unrelated}).should.be.rejectedWith(EVMThrow)
     })
+
+    it("allows the owner to configure contracts", async () => {
+      await batchInitializer.setAdmin(unrelated, {from: owner}).should.be.fulfilled
+      await batchInitializer.setTokenEscrowMarketplace(unrelated, {from: owner}).should.be.fulfilled
+      await batchInitializer.setAttestationLogic(unrelated, {from: owner}).should.be.fulfilled
+      await batchInitializer.setRegistryLogic(unrelated, {from: owner}).should.be.fulfilled
+    })
+
+    it("Does not allow anyone else to set interface contracts", async () => {
+      await batchInitializer.setAdmin(unrelated, {from: admin}).should.be.rejectedWith(EVMThrow)
+      await batchInitializer.setTokenEscrowMarketplace(unrelated, {from: admin}).should.be.rejectedWith(EVMThrow)
+      await batchInitializer.setAttestationLogic(unrelated, {from: admin}).should.be.rejectedWith(EVMThrow)
+      await batchInitializer.setRegistryLogic(unrelated, {from: admin}).should.be.rejectedWith(EVMThrow)
+    })
+
   })
 
   describe("Batch loading accounts", async () => {
