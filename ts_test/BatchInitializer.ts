@@ -102,6 +102,14 @@ contract("BatchInitializer", function([owner, admin, unrelated]) {
       await batchInitializer.setRegistryLogic(unrelated, {from: owner}).should.be.fulfilled
     })
 
+    it("Sets TEM in attestationLogic", async () => {
+      const addressBefore = await attestationLogic.tokenEscrowMarketplace.call()
+      addressBefore.should.be.equal(tokenEscrowMarketplace.address)
+      await batchInitializer.setTokenEscrowMarketplace(unrelated, {from: owner}).should.be.fulfilled
+      const addressAfter = await attestationLogic.tokenEscrowMarketplace.call()
+      addressAfter.should.be.equal(unrelated)
+    })
+
     it("Does not allow anyone else to set interface contracts", async () => {
       await batchInitializer.setAdmin(unrelated, {from: admin}).should.be.rejectedWith(EVMThrow)
       await batchInitializer.setTokenEscrowMarketplace(unrelated, {from: admin}).should.be.rejectedWith(EVMThrow)
