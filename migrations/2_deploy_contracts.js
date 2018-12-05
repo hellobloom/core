@@ -7,9 +7,7 @@ var TokenEscrowMarketplace = artifacts.require("TokenEscrowMarketplace")
 var AirdropProxy = artifacts.require("AirdropProxy")
 var Poll = artifacts.require("Poll")
 var VotingCenter = artifacts.require("VotingCenter")
-
-const adminAddress = '0x627306090abaB3A6e1400e9345bC60c78a8BEf57'
-
+var BatchInitializer = artifacts.require("BatchInitializer")
 
 module.exports = function(deployer) {
 
@@ -23,19 +21,21 @@ module.exports = function(deployer) {
     .then(() => deployer.deploy(BLT))
     .then(() => BLT.deployed())
     .then(blt => (token = blt))
-    .then(() => deployer.deploy(AccountRegistryLogic, adminAddress))
+    .then(() => deployer.deploy(BatchInitializer, '0x0', '0x0'))
+    .then(() => BatchInitializer.deployed())
+    .then(bi => (batchInitializer = bi))
+    .then(() => deployer.deploy(AccountRegistryLogic, batchInitializer.address))
     .then(() => AccountRegistryLogic.deployed())
     .then(rl => (registryLogic = rl))
 
     .then(() => deployer.deploy(AirdropProxy, token.address))
     .then(() => AirdropProxy.deployed())
     .then(ap => (airdropProxy = ap))
-    .then(() => airdropProxy.transferOwnership(adminAddress))
 
     .then(() =>
       deployer.deploy(
         AttestationLogic,
-        adminAddress,
+        batchInitializer.address,
         "0x0"
       ))
     .then(() => AttestationLogic.deployed())
@@ -49,8 +49,9 @@ module.exports = function(deployer) {
     .then(() => TokenEscrowMarketplace.deployed())
     .then(te => (tokenEscrowMarketplace = te))
 
-    .then(() => attestationLogic.setTokenEscrowMarketplace(tokenEscrowMarketplace.address))
-    .then(() => attestationLogic.endInitialization())
+    .then(() => batchInitializer.setRegistryLogic(registryLogic.address))
+    .then(() => batchInitializer.setAttestationLogic(attestationLogic.address))
+    .then(() => batchInitializer.setTokenEscrowMarketplace(tokenEscrowMarketplace.address))
 
     ,{
       gas: 4712388,
