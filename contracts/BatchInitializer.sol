@@ -1,23 +1,19 @@
 pragma solidity 0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./AccountRegistryLogic.sol";
 import "./AttestationLogic.sol";
 import "./TokenEscrowMarketplace.sol";
 import "./Initializable.sol";
 
 contract BatchInitializer is Ownable{
 
-  AccountRegistryLogic public registryLogic;
   AttestationLogic public attestationLogic;
   address public admin;
 
   constructor(
-    AttestationLogic _attestationLogic,
-    AccountRegistryLogic _registryLogic
+    AttestationLogic _attestationLogic
     ) public {
     attestationLogic = _attestationLogic;
-    registryLogic = _registryLogic;
     admin = owner;
   }
 
@@ -33,15 +29,11 @@ contract BatchInitializer is Ownable{
 
   /**
    * @notice Change the address of the admin, who has the privilege to create new accounts
-   * @dev Restricted to AccountRegistry owner and new admin address cannot be 0x0
+   * @dev Restricted to BatchInitializer owner and new admin address cannot be 0x0
    * @param _newAdmin Address of new admin
    */
   function setAdmin(address _newAdmin) external onlyOwner {
     admin = _newAdmin;
-  }
-
-  function setRegistryLogic(AccountRegistryLogic _newRegistryLogic) external onlyOwner {
-    registryLogic = _newRegistryLogic;
   }
 
   function setAttestationLogic(AttestationLogic _newAttestationLogic) external onlyOwner {
@@ -54,17 +46,6 @@ contract BatchInitializer is Ownable{
 
   function endInitialization(Initializable _initializable) external onlyOwner {
     _initializable.endInitialization();
-  }
-
-  function batchLinkAddresses(address[] _currentAddresses, address[] _newAddresses) external onlyAdmin {
-    require(_currentAddresses.length == _newAddresses.length);
-    for (uint256 i = 0; i < _currentAddresses.length; i++) {
-      if (registryLogic.linkIds(_newAddresses[i]) > 0) {
-        emit linkSkipped(_currentAddresses[i], _newAddresses[i]);
-      } else {
-        registryLogic.migrateLink(_currentAddresses[i], _newAddresses[i]);
-      }
-    }
   }
 
   function batchMigrateAttestations(

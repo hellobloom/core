@@ -27,14 +27,6 @@ contract SigningLogic {
     "AttestationRequest(bytes32 dataHash,bytes32 nonce)"
   );
 
-  bytes32 constant ADD_ADDRESS_TYPEHASH = keccak256(
-    "AddAddress(address addressToAdd,bytes32 nonce)"
-  );
-
-  bytes32 constant REMOVE_ADDRESS_TYPEHASH = keccak256(
-    "RemoveAddress(address addressToRemove,bytes32 nonce)"
-  );
-
   bytes32 constant PAY_TOKENS_TYPEHASH = keccak256(
     "PayTokens(address sender,address receiver,uint256 amount,bytes32 nonce)"
   );
@@ -100,32 +92,6 @@ contract SigningLogic {
     return keccak256(abi.encode(
       ATTESTATION_REQUEST_TYPEHASH,
       request.dataHash,
-      request.nonce
-    ));
-  }
-
-  struct AddAddress {
-      address addressToAdd;
-      bytes32 nonce;
-  }
-
-  function hash(AddAddress request) private pure returns (bytes32) {
-    return keccak256(abi.encode(
-      ADD_ADDRESS_TYPEHASH,
-      request.addressToAdd,
-      request.nonce
-    ));
-  }
-
-  struct RemoveAddress {
-      address addressToRemove;
-      bytes32 nonce;
-  }
-
-  function hash(RemoveAddress request) private pure returns (bytes32) {
-    return keccak256(abi.encode(
-      REMOVE_ADDRESS_TYPEHASH,
-      request.addressToRemove,
       request.nonce
     ));
   }
@@ -251,38 +217,6 @@ contract SigningLogic {
         DOMAIN_SEPARATOR,
         hash(AttestationRequest(
           _dataHash,
-          _nonce
-        ))
-      )
-      );
-  }
-
-  function generateAddAddressSchemaHash(
-    address _addressToAdd,
-    bytes32 _nonce
-  ) internal view returns (bytes32) {
-    return keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        DOMAIN_SEPARATOR,
-        hash(AddAddress(
-          _addressToAdd,
-          _nonce
-        ))
-      )
-      );
-  }
-
-  function generateRemoveAddressSchemaHash(
-    address _addressToRemove,
-    bytes32 _nonce
-  ) internal view returns (bytes32) {
-    return keccak256(
-      abi.encodePacked(
-        "\x19\x01",
-        DOMAIN_SEPARATOR,
-        hash(RemoveAddress(
-          _addressToRemove,
           _nonce
         ))
       )

@@ -14,7 +14,6 @@ interface IContractMethodManifest {
   }
 }
 export enum EContractNames {
-  "AccountRegistryLogic" = "AccountRegistryLogic",
   "AccreditationRepo" = "AccreditationRepo",
   "AirdropProxy" = "AirdropProxy",
   "ApproveAndCallFallBack" = "ApproveAndCallFallBack",
@@ -50,97 +49,6 @@ export enum EContractNames {
 }
 
 export type TContractNames = keyof typeof EContractNames
-
-export const AccountRegistryLogic: IContractMethodManifest = {
-  methods: {
-    initializing: {
-      args_arr: [],
-      args: {}
-    },
-    initializer: {
-      args_arr: [],
-      args: {}
-    },
-    linkIds: {
-      args_arr: ["anonymous_0"],
-      args: {
-        anonymous_0: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    endInitialization: {
-      args_arr: [],
-      args: {}
-    },
-    usedSignatures: {
-      args_arr: ["anonymous_0"],
-      args: {
-        anonymous_0: {
-          type: "bytes32",
-          index: 0
-        }
-      }
-    },
-
-    linkAddresses: {
-      args_arr: ["_currentAddress", "_currentAddressSig", "_newAddress", "_newAddressSig", "_nonce"],
-      args: {
-        _currentAddress: {
-          type: "address",
-          index: 0
-        },
-        _currentAddressSig: {
-          type: "bytes",
-          index: 1
-        },
-        _newAddress: {
-          type: "address",
-          index: 2
-        },
-        _newAddressSig: {
-          type: "bytes",
-          index: 3
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 4
-        }
-      }
-    },
-    unlinkAddress: {
-      args_arr: ["_addressToRemove", "_nonce", "_unlinkSignature"],
-      args: {
-        _addressToRemove: {
-          type: "address",
-          index: 0
-        },
-        _nonce: {
-          type: "bytes32",
-          index: 1
-        },
-        _unlinkSignature: {
-          type: "bytes",
-          index: 2
-        }
-      }
-    },
-    migrateLink: {
-      args_arr: ["_currentAddress", "_newAddress"],
-      args: {
-        _currentAddress: {
-          type: "address",
-          index: 0
-        },
-        _newAddress: {
-          type: "address",
-          index: 1
-        }
-      }
-    }
-  }
-}
 
 export const AccreditationRepo: IContractMethodManifest = {
   methods: {
@@ -571,10 +479,6 @@ export const BatchInitializer: IContractMethodManifest = {
       args_arr: [],
       args: {}
     },
-    registryLogic: {
-      args_arr: [],
-      args: {}
-    },
     transferOwnership: {
       args_arr: ["newOwner"],
       args: {
@@ -593,15 +497,6 @@ export const BatchInitializer: IContractMethodManifest = {
       args_arr: ["_newAdmin"],
       args: {
         _newAdmin: {
-          type: "address",
-          index: 0
-        }
-      }
-    },
-    setRegistryLogic: {
-      args_arr: ["_newRegistryLogic"],
-      args: {
-        _newRegistryLogic: {
           type: "address",
           index: 0
         }
@@ -631,19 +526,6 @@ export const BatchInitializer: IContractMethodManifest = {
         _initializable: {
           type: "address",
           index: 0
-        }
-      }
-    },
-    batchLinkAddresses: {
-      args_arr: ["_currentAddresses", "_newAddresses"],
-      args: {
-        _currentAddresses: {
-          type: "address[]",
-          index: 0
-        },
-        _newAddresses: {
-          type: "address[]",
-          index: 1
         }
       }
     },
