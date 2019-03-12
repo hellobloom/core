@@ -1,6 +1,5 @@
 const ECRecovery = artifacts.require("ECRecovery")
 var BLT = artifacts.require("./MockBLT.sol")
-var AccountRegistryLogic = artifacts.require("AccountRegistryLogic")
 var SigningLogic = artifacts.require("SigningLogic")
 var AttestationLogic = artifacts.require("AttestationLogic")
 var TokenEscrowMarketplace = artifacts.require("TokenEscrowMarketplace")
@@ -13,7 +12,6 @@ module.exports = function(deployer) {
 
   deployer
     .deploy(ECRecovery)
-    .then(() => deployer.link(ECRecovery, AccountRegistryLogic))
     .then(() => deployer.link(ECRecovery, AttestationLogic))
     .then(() => deployer.link(ECRecovery, TokenEscrowMarketplace))
     .then(() => deployer.link(ECRecovery, VotingCenter))
@@ -21,12 +19,9 @@ module.exports = function(deployer) {
     .then(() => deployer.deploy(BLT))
     .then(() => BLT.deployed())
     .then(blt => (token = blt))
-    .then(() => deployer.deploy(BatchInitializer, '0x0', '0x0'))
+    .then(() => deployer.deploy(BatchInitializer, '0x0'))
     .then(() => BatchInitializer.deployed())
     .then(bi => (batchInitializer = bi))
-    .then(() => deployer.deploy(AccountRegistryLogic, batchInitializer.address))
-    .then(() => AccountRegistryLogic.deployed())
-    .then(rl => (registryLogic = rl))
 
     .then(() => deployer.deploy(AirdropProxy, token.address))
     .then(() => AirdropProxy.deployed())
@@ -49,7 +44,6 @@ module.exports = function(deployer) {
     .then(() => TokenEscrowMarketplace.deployed())
     .then(te => (tokenEscrowMarketplace = te))
 
-    .then(() => batchInitializer.setRegistryLogic(registryLogic.address))
     .then(() => batchInitializer.setAttestationLogic(attestationLogic.address))
     .then(() => batchInitializer.setTokenEscrowMarketplace(tokenEscrowMarketplace.address))
 
