@@ -43,6 +43,7 @@ interface Artifacts {
   require(name: "ApproveAndCallFallBack"): ApproveAndCallFallBackContract
   require(name: "AttestationLogic"): AttestationLogicContract
   require(name: "BasicToken"): BasicTokenContract
+  require(name: "BatchAttestationLogic"): BatchAttestationLogicContract
   require(name: "BatchInitializer"): BatchInitializerContract
   require(name: "BLT"): BLTContract
   require(name: "Controlled"): ControlledContract
@@ -568,6 +569,23 @@ export interface BasicTokenContract {
   new: (options?: TransactionOptions) => Promise<BasicTokenInstance>
   deployed(): Promise<BasicTokenInstance>
   at(address: string): BasicTokenInstance
+}
+
+export interface BatchAttestationLogicInstance extends ContractInstance {
+  BatchTraitAttested: Web3.EventFilterCreator<{ rootHash: string }>
+
+  batchAttest: {
+    (dataHash: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    call(dataHash: string, options?: TransactionOptions): Promise<Web3.TransactionReceipt>
+    sendTransaction(dataHash: string, options?: TransactionOptions): Promise<string>
+    estimateGas(dataHash: string, options?: TransactionOptions): Promise<number>
+  }
+}
+
+export interface BatchAttestationLogicContract {
+  new: (options?: TransactionOptions) => Promise<BatchAttestationLogicInstance>
+  deployed(): Promise<BatchAttestationLogicInstance>
+  at(address: string): BatchAttestationLogicInstance
 }
 
 export interface BatchInitializerInstance extends ContractInstance {

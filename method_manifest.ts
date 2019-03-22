@@ -20,6 +20,7 @@ export enum EContractNames {
   "ApproveAndCallFallBack" = "ApproveAndCallFallBack",
   "AttestationLogic" = "AttestationLogic",
   "BasicToken" = "BasicToken",
+  "BatchAttestationLogic" = "BatchAttestationLogic",
   "BatchInitializer" = "BatchInitializer",
   "BLT" = "BLT",
   "Controlled" = "Controlled",
@@ -554,6 +555,20 @@ export const BasicToken: IContractMethodManifest = {
       args: {
         _owner: {
           type: "address",
+          index: 0
+        }
+      }
+    }
+  }
+}
+
+export const BatchAttestationLogic: IContractMethodManifest = {
+  methods: {
+    batchAttest: {
+      args_arr: ["_dataHash"],
+      args: {
+        _dataHash: {
+          type: "bytes32",
           index: 0
         }
       }
