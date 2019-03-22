@@ -13,7 +13,6 @@
     "sourceMap": true
   },
   "include": [
-    "./contracts.d.ts",
     "./web3.d.ts",
     "./chai-bignumber.d.ts",
     "typings/*.d.ts",
