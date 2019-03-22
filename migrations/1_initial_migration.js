@@ -8,6 +8,6 @@ module.exports = function(deployer) {
       gasPrice: 5000000000
     }
   )
-  .then(() => new Promise(resolve => setTimeout(() => resolve(), 10000)))
+  // .then(() => new Promise(resolve => setTimeout(() => resolve(), 10000)))
 )
 };
