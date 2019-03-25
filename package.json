@@ -12,6 +12,7 @@
   "dependencies": {
     "@bloomprotocol/attestations-lib": "^3.0.2",
     "@types/web3": "^1.0.18",
+    "bn-chai": "^1.0.1",
     "eth-gas-reporter": "^0.1.9",
     "eth-sig-util": "^2.0.1",
     "ethereumjs-util": "^5.1.2",
@@ -40,7 +41,6 @@
     "babel-register": "^6.26.0",
     "chai": "^4.1.1",
     "chai-as-promised": "^7.1.1",
-    "chai-bignumber": "^2.0.1",
     "ethereumjs-abi": "^0.6.5",
     "ganache-cli": "^6.0.3",
     "lodash": "^4.17.5",
