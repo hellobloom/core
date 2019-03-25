@@ -1,13 +1,13 @@
 interface ConstructorMember {
   inputs: FunctionMemberInput[]
   payable: false
-  type: "constructor"
+  type: 'constructor'
 }
 
 interface EventMember {
   inputs: EventMemberInput[]
   name: string
-  type: "event"
+  type: 'event'
 }
 
 interface FunctionMember {
@@ -16,11 +16,11 @@ interface FunctionMember {
   name: string
   constant: boolean
   payable: boolean
-  type: "function"
+  type: 'function'
 }
 
 interface FallbackMember {
-  type: "fallback"
+  type: 'fallback'
   payable: boolean
 }
 
@@ -28,7 +28,19 @@ interface UnknownMember {
   type: string
 }
 
-type SolidityType = "address" | "address[]" | "bool" | "bytes" | "bytes32" | "bytes32[]" | "string" | "uint8" | "uint16" | "uint64" | "uint256" | "uint256[]"
+type SolidityType =
+  | 'address'
+  | 'address[]'
+  | 'bool'
+  | 'bytes'
+  | 'bytes32'
+  | 'bytes32[]'
+  | 'string'
+  | 'uint8'
+  | 'uint16'
+  | 'uint64'
+  | 'uint256'
+  | 'uint256[]'
 
 interface FunctionMemberInput {
   name: string
@@ -83,15 +95,15 @@ export const ${definition.contractName}: IContractMethodManifest = {
 }
 
 function buildMembers(abi: Abi, isTruffle: boolean): string {
-  return abi.map(buildMember).join("\n")
+  return abi.map(buildMember).join('\n')
 }
 
 function buildMember(member: Member): string {
   switch (member.type) {
-    case "function":
+    case 'function':
       return buildFunctionMember(member)
     default:
-      return ""
+      return ''
   }
 }
 
@@ -99,13 +111,15 @@ function buildFunctionMember(member: FunctionMember) {
   //console.log("MEMBER", member)
   const inputsWithNames = member.inputs.map((x: any, i: number) => {
     if (!x.name) {
-      x.name = "anonymous_" + i.toString()
+      x.name = 'anonymous_' + i.toString()
     }
     return x
   })
-  var str = ""
+  var str = ''
   str += `  "${member.name}": {\n`
-  str += `      "args_arr": [${inputsWithNames.map((input: any) => '"' + input.name + '"').join(",")}],\n`
+  str += `      "args_arr": [${inputsWithNames
+    .map((input: any) => '"' + input.name + '"')
+    .join(',')}],\n`
   str += `      "args": {\n`
   inputsWithNames.forEach((input: any, index: number) => {
     str += `        "${input.name}": {\n`
@@ -113,7 +127,7 @@ function buildFunctionMember(member: FunctionMember) {
     str += `          "index": ${index},\n`
     str += `        }`
     if (index != inputsWithNames.length) {
-      str += ","
+      str += ','
     }
     str += `\n`
   })
@@ -127,16 +141,16 @@ function translateOutputs(outputs: FunctionMemberInput[]) {
   if (outputs.length === 1) {
     valueType = translateOutput(outputs[0])
   } else if (outputs.length === 0) {
-    valueType = "Web3.TransactionReceipt"
+    valueType = 'Web3.TransactionReceipt'
   } else {
-    valueType = `[${outputs.map(translateOutput).join(", ")}]`
+    valueType = `[${outputs.map(translateOutput).join(', ')}]`
   }
 
   return `Promise<${valueType}>`
 }
 
 function translateOutput(output: FunctionMemberInput) {
-  return translateType(output.type, { UInt: "BigNumber.BigNumber" })
+  return translateType(output.type, {UInt: 'BigNumber.BigNumber'})
 }
 
 let unnamedArgumentNumber = 0
@@ -147,7 +161,7 @@ function unnamedArgumentName(): string {
 
 function buildFunctionArgument(input: FunctionMemberInput): string {
   let name = input.name
-  if (name[0] == "_") {
+  if (name[0] == '_') {
     name = name.slice(1)
   }
   const type = translateType(input.type)
@@ -159,28 +173,28 @@ function buildFunctionArgument(input: FunctionMemberInput): string {
   return `${name}: ${type}`
 }
 
-function translateType(type: SolidityType, options = { UInt: "UInt" }): string {
+function translateType(type: SolidityType, options = {UInt: 'UInt'}): string {
   switch (type) {
-    case "string":
-      return "string"
-    case "address":
-      return "Address"
-    case "address[]":
-      return "Address[]"
-    case "bool":
-      return "boolean"
-    case "bytes":
-      return "string"
-    case "bytes32":
-      return "string"
-    case "bytes32[]":
-      return "string[]"
-    case "uint8":
-    case "uint16":
-    case "uint64":
-    case "uint256":
+    case 'string':
+      return 'string'
+    case 'address':
+      return 'Address'
+    case 'address[]':
+      return 'Address[]'
+    case 'bool':
+      return 'boolean'
+    case 'bytes':
+      return 'string'
+    case 'bytes32':
+      return 'string'
+    case 'bytes32[]':
+      return 'string[]'
+    case 'uint8':
+    case 'uint16':
+    case 'uint64':
+    case 'uint256':
       return options.UInt
-    case "uint256[]":
+    case 'uint256[]':
       return `${options.UInt}[]`
     default:
       throw `Unexpected case! ${type}`
@@ -188,11 +202,11 @@ function translateType(type: SolidityType, options = { UInt: "UInt" }): string {
 }
 
 function buildEventMember(member: EventMember) {
-  console.log("MEMBER", member)
-  let args = member.inputs.map(buildFunctionArgument).join(", ")
+  console.log('MEMBER', member)
+  let args = member.inputs.map(buildFunctionArgument).join(', ')
 
   if (args.length > 0) {
-    args += ", "
+    args += ', '
   }
 
   const eventType = `{${args}}`
@@ -200,20 +214,20 @@ function buildEventMember(member: EventMember) {
 }
 
 function buildFallbackMember(_member: Member) {
-  return ""
+  return ''
 }
 
-const glob = require("glob")
+const glob = require('glob')
 
-glob("./build/contracts/*.json", {}, (err: string, files: string[]) => {
-  let isTruffle = process.argv.indexOf("--truffle") != -1
+glob('./build/contracts/*.json', {}, (err: string, files: string[]) => {
+  let isTruffle = process.argv.indexOf('--truffle') != -1
 
-  let buffer = ""
+  let buffer = ''
 
-  let method_buffer = ""
+  let method_buffer = ''
 
   if (err) {
-    console.log("Error!", err)
+    console.log('Error!', err)
     return
   }
 
@@ -229,7 +243,10 @@ glob("./build/contracts/*.json", {}, (err: string, files: string[]) => {
     method_buffer += buildContract(definition, isTruffle)
   })
 
-  buffer += `export enum EContractNames {` + contract_names.map((x: string) => `'${x}' = '${x}'`).join(`,`) + `}\n\n`
+  buffer +=
+    `export enum EContractNames {` +
+    contract_names.map((x: string) => `'${x}' = '${x}'`).join(`,`) +
+    `}\n\n`
 
   buffer += `export type TContractNames = keyof typeof EContractNames\n\n`
 

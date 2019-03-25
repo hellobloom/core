@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@bloomprotocol/attestations-lib": "^3.0.2",
+    "@types/web3": "^1.0.18",
     "eth-gas-reporter": "^0.1.9",
     "eth-sig-util": "^2.0.1",
     "ethereumjs-util": "^5.1.2",
@@ -21,7 +22,6 @@
     "truffle-debugger": "^2.0.3",
     "truffle-hdwallet-provider-privkey": "^0.2.0",
     "uuidv4": "^1.0.0",
-    "web3": "0.20.5",
     "web3-provider-engine": "13.6.5",
     "web3-utils": "^1.0.0-beta.33"
   },

@@ -1,13 +1,13 @@
 interface ConstructorMember {
   inputs: FunctionMemberInput[]
   payable: false
-  type: "constructor"
+  type: 'constructor'
 }
 
 interface EventMember {
   inputs: EventMemberInput[]
   name: string
-  type: "event"
+  type: 'event'
 }
 
 interface FunctionMember {
@@ -16,11 +16,11 @@ interface FunctionMember {
   name: string
   constant: boolean
   payable: boolean
-  type: "function"
+  type: 'function'
 }
 
 interface FallbackMember {
-  type: "fallback"
+  type: 'fallback'
   payable: boolean
 }
 
@@ -28,7 +28,19 @@ interface UnknownMember {
   type: string
 }
 
-type SolidityType = "address" | "address[]" | "bool" | "bytes" | "bytes32" | "bytes32[]" | "string" | "uint8" | "uint16" | "uint64" | "uint256" | "uint256[]"
+type SolidityType =
+  | 'address'
+  | 'address[]'
+  | 'bool'
+  | 'bytes'
+  | 'bytes32'
+  | 'bytes32[]'
+  | 'string'
+  | 'uint8'
+  | 'uint16'
+  | 'uint64'
+  | 'uint256'
+  | 'uint256[]'
 
 interface FunctionMemberInput {
   name: string
@@ -112,7 +124,9 @@ function generateArtifacts(files: string[]) {
     interface Artifacts {
       ${files.map(file => {
         let definition: Definition = require(file)
-        return `require(name: "${definition.contractName}"): ${definition.contractName}Contract`
+        return `require(name: "${definition.contractName}"): ${
+          definition.contractName
+        }Contract`
       })}
     }
   `
@@ -125,7 +139,9 @@ function buildContract(definition: Definition, isTruffle: boolean) {
     }
 
     export interface ${definition.contractName}Contract {
-      new: (${buildConstructorArguments(definition.abi)}options?: TransactionOptions) => Promise<${definition.contractName}Instance>;
+      new: (${buildConstructorArguments(
+        definition.abi
+      )}options?: TransactionOptions) => Promise<${definition.contractName}Instance>;
       deployed(): Promise<${definition.contractName}Instance>;
       at(address: string): ${definition.contractName}Instance;
     }
@@ -133,45 +149,45 @@ function buildContract(definition: Definition, isTruffle: boolean) {
 }
 
 function buildMembers(abi: Abi, isTruffle: boolean): string {
-  return abi.map(buildMember).join("\n")
+  return abi.map(buildMember).join('\n')
 }
 
 function buildMember(member: Member): string {
   switch (member.type) {
-    case "function":
+    case 'function':
       return buildFunctionMember(member)
-    case "event":
+    case 'event':
       return buildEventMember(member)
-    case "constructor":
+    case 'constructor':
       return buildConstructorMember(member)
-    case "fallback":
+    case 'fallback':
       return buildFallbackMember(member)
     default:
-      throw "Exhaustiveness miss!"
+      throw 'Exhaustiveness miss!'
   }
 }
 
 function isConstructorMember(member: Member): member is ConstructorMember {
-  return member.type === "constructor"
+  return member.type === 'constructor'
 }
 
 function buildConstructorArguments(abi: Abi): string {
   const constructorMember = abi.find(isConstructorMember)
 
   if (!constructorMember) {
-    return ""
+    return ''
   }
 
-  const args = constructorMember.inputs.map(buildFunctionArgument).join(", ")
+  const args = constructorMember.inputs.map(buildFunctionArgument).join(', ')
 
-  return args === "" ? args : args + ", "
+  return args === '' ? args : args + ', '
 }
 
 function buildFunctionMember(member: FunctionMember) {
-  let args = member.inputs.map(buildFunctionArgument).join(", ")
+  let args = member.inputs.map(buildFunctionArgument).join(', ')
 
   if (args.length > 0) {
-    args += ", "
+    args += ', '
   }
 
   const functionSignature = `(${args}options?: TransactionOptions)`
@@ -188,16 +204,16 @@ function translateOutputs(outputs: FunctionMemberInput[]) {
   if (outputs.length === 1) {
     valueType = translateOutput(outputs[0])
   } else if (outputs.length === 0) {
-    valueType = "Web3.TransactionReceipt"
+    valueType = 'Web3.TransactionReceipt'
   } else {
-    valueType = `[${outputs.map(translateOutput).join(", ")}]`
+    valueType = `[${outputs.map(translateOutput).join(', ')}]`
   }
 
   return `Promise<${valueType}>`
 }
 
 function translateOutput(output: FunctionMemberInput) {
-  return translateType(output.type, { UInt: "BigNumber.BigNumber" })
+  return translateType(output.type, {UInt: 'BigNumber.BigNumber'})
 }
 
 let unnamedArgumentNumber = 0
@@ -208,7 +224,7 @@ function unnamedArgumentName(): string {
 
 function buildFunctionArgument(input: FunctionMemberInput): string {
   let name = input.name
-  if (name[0] == "_") {
+  if (name[0] == '_') {
     name = name.slice(1)
   }
   const type = translateType(input.type)
@@ -220,28 +236,28 @@ function buildFunctionArgument(input: FunctionMemberInput): string {
   return `${name}: ${type}`
 }
 
-function translateType(type: SolidityType, options = { UInt: "UInt" }): string {
+function translateType(type: SolidityType, options = {UInt: 'UInt'}): string {
   switch (type) {
-    case "string":
-      return "string"
-    case "address":
-      return "Address"
-    case "address[]":
-      return "Address[]"
-    case "bool":
-      return "boolean"
-    case "bytes":
-      return "string"
-    case "bytes32":
-      return "string"
-    case "bytes32[]":
-      return "string[]"
-    case "uint8":
-    case "uint16":
-    case "uint64":
-    case "uint256":
+    case 'string':
+      return 'string'
+    case 'address':
+      return 'Address'
+    case 'address[]':
+      return 'Address[]'
+    case 'bool':
+      return 'boolean'
+    case 'bytes':
+      return 'string'
+    case 'bytes32':
+      return 'string'
+    case 'bytes32[]':
+      return 'string[]'
+    case 'uint8':
+    case 'uint16':
+    case 'uint64':
+    case 'uint256':
       return options.UInt
-    case "uint256[]":
+    case 'uint256[]':
       return `${options.UInt}[]`
     default:
       throw `Unexpected case! ${type}`
@@ -249,10 +265,10 @@ function translateType(type: SolidityType, options = { UInt: "UInt" }): string {
 }
 
 function buildEventMember(member: EventMember) {
-  let args = member.inputs.map(buildFunctionArgument).join(", ")
+  let args = member.inputs.map(buildFunctionArgument).join(', ')
 
   if (args.length > 0) {
-    args += ", "
+    args += ', '
   }
 
   const eventType = `{${args}}`
@@ -260,22 +276,22 @@ function buildEventMember(member: EventMember) {
 }
 
 function buildConstructorMember(_member: Member) {
-  return ""
+  return ''
 }
 
 function buildFallbackMember(_member: Member) {
-  return ""
+  return ''
 }
 
-const glob = require("glob")
+const glob = require('glob')
 
-glob("./build/contracts/*.json", {}, (err: string, files: string[]) => {
-  let isTruffle = process.argv.indexOf("--truffle") != -1
+glob('./build/contracts/*.json', {}, (err: string, files: string[]) => {
+  let isTruffle = process.argv.indexOf('--truffle') != -1
 
-  let buffer = ""
+  let buffer = ''
 
   if (err) {
-    console.log("Error!", err)
+    console.log('Error!', err)
     return
   }
 

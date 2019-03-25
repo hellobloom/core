@@ -9,7 +9,7 @@
     "module": "commonjs",
     "lib": ["es6", "es2017", "dom"],
     "target": "es5",
-    "plugins": [{ "name": "tslint-language-service" }],
+    "plugins": [{"name": "tslint-language-service"}],
     "sourceMap": true
   },
   "include": [
