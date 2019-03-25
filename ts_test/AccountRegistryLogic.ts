@@ -1,5 +1,4 @@
 import * as BigNumber from 'bignumber.js'
-import * as Web3 from 'web3'
 import * as ethereumjsWallet from 'ethereumjs-wallet'
 const walletTools = require('ethereumjs-wallet')
 const {privateToAddress} = require('ethereumjs-util')
@@ -10,7 +9,6 @@ const uuid = require('uuidv4')
 import {bufferToHex} from 'ethereumjs-util'
 import {hashData, generateSigNonce} from './../src/signData'
 
-import {AccountRegistryLogicInstance} from '../truffle'
 import {EVMThrow} from './helpers/EVMThrow'
 import * as ipfs from './../src/ipfs'
 
@@ -19,6 +17,8 @@ import {
   getFormattedTypedDataAddAddress,
   getFormattedTypedDataRemoveAddress,
 } from './helpers/signingLogic'
+import { AccountRegistryLogicInstance } from '../types/truffle-contracts';
+
 
 const SigningLogic = artifacts.require('SigningLogic')
 const AccountRegistryLogic = artifacts.require('AccountRegistryLogic')
@@ -116,6 +116,7 @@ contract('AccountRegistryLogic', function([
         nonce
       ),
     })
+  console.log(`link sig ${currentAddressLinkSig}`)
   })
 
   describe('Linking Accounts', async () => {
@@ -662,11 +663,9 @@ contract('AccountRegistryLogic', function([
     }
 
     it('emits an event when link is migrated', async () => {
-      const {logs} = ((await registryLogic.migrateLink(alice, unclaimed, {
+      const {logs} = await registryLogic.migrateLink(alice, unclaimed, {
         from: initializer,
-      })) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
-        AdditionEventArgs
-      >
+      })
 
       const matchingLog = logs.find(log => log.event === 'AddressLinked')
 

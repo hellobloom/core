@@ -1,4 +1,3 @@
-import * as Web3 from 'web3'
 import * as BigNumber from 'bignumber.js'
 import * as ethereumjsWallet from 'ethereumjs-wallet'
 const ethSigUtil = require('eth-sig-util')
@@ -8,11 +7,6 @@ import {AttestationTypeID, HashingLogic} from '@bloomprotocol/attestations-lib'
 
 import {EVMThrow} from './helpers/EVMThrow'
 import {should} from './test_setup'
-import {
-  AttestationLogicInstance,
-  TokenEscrowMarketplaceInstance,
-  MockBLTInstance,
-} from '../truffle'
 
 import {latestBlockTime} from './helpers/blockInfo'
 import * as ipfs from './../src/ipfs'
@@ -24,6 +18,7 @@ import {
   getFormattedTypedDataRevokeAttestationFor,
 } from './helpers/signingLogic'
 import {generateSigNonce} from '../src/signData'
+import { MockBLTInstance, AttestationLogicInstance, TokenEscrowMarketplaceInstance } from '../types/truffle-contracts';
 
 const TokenEscrowMarketplace = artifacts.require('TokenEscrowMarketplace')
 const AttestationLogic = artifacts.require('AttestationLogic')
@@ -161,7 +156,7 @@ contract('AttestationLogic', function([
   web3.eth.sendTransaction({
     to: alice,
     from: bob,
-    value: web3.utils.toWei(50, 'ether'),
+    value: web3.utils.toWei('50', 'ether')
   })
 
   beforeEach(async () => {
@@ -181,7 +176,6 @@ contract('AttestationLogic', function([
     })
 
     await Promise.all([
-      // token.gift(alice),
       token.gift(david, new BigNumber('1e18')),
       token.gift(david, new BigNumber('1e18')),
     ])
@@ -212,7 +206,7 @@ contract('AttestationLogic', function([
         1,
         david,
         bob,
-        new BigNumber(web3.toWei(1, 'ether')).toString(10),
+        new BigNumber(web3.utils.toWei(1, 'ether')).toString(10),
         nonce
       ),
     })
@@ -235,7 +229,7 @@ contract('AttestationLogic', function([
         1,
         alice,
         david,
-        new BigNumber(web3.toWei(1, 'ether')).toString(10),
+        new BigNumber(web3.utils.toWei(1, 'ether')).toString(10),
         combinedDataHash,
         nonce
       ),
@@ -246,7 +240,7 @@ contract('AttestationLogic', function([
         attestationLogicAddress,
         1,
         david,
-        new BigNumber(web3.toWei(1, 'ether')).toString(10),
+        new BigNumber(web3.utils.toWei(1, 'ether')).toString(10),
         nonce
       ),
     })
@@ -255,7 +249,7 @@ contract('AttestationLogic', function([
       subject: alice,
       attester: bob,
       requester: david,
-      reward: new BigNumber(web3.toWei(1, 'ether')),
+      reward: new BigNumber(web3.utils.toWei(1, 'ether')),
       requesterSig: tokenPaymentSig,
       dataHash: combinedDataHash,
       requestNonce: nonce,
@@ -294,7 +288,7 @@ contract('AttestationLogic', function([
     contestDefaults = {
       attester: bob,
       requester: david,
-      reward: new BigNumber(web3.toWei(1, 'ether')),
+      reward: new BigNumber(web3.utils.toWei(1, 'ether')),
       paymentNonce: nonce,
       requesterSig: tokenPaymentSig,
       from: bob,
@@ -352,9 +346,7 @@ contract('AttestationLogic', function([
     })
 
     it('emits an event when attestation is written', async () => {
-      const {logs} = ((await attest()) as Web3.TransactionReceipt<
-        any
-      >) as Web3.TransactionReceipt<WriteEventArgs>
+      const {logs} = await attest()
 
       const matchingLog = logs.find(log => log.event === 'TraitAttested')
 
@@ -376,7 +368,7 @@ contract('AttestationLogic', function([
             1,
             david,
             bob,
-            new BigNumber(web3.toWei(1, 'ether')).toString(10),
+            new BigNumber(web3.utils.toWei(1, 'ether')).toString(10),
             differentNonce
           ),
         }),
@@ -393,7 +385,7 @@ contract('AttestationLogic', function([
     })
 
     it('pays tokens from escrow to the verifier and leaves some leftover', async () => {
-      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(
+      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
       requesterEscrowBalanceBefore.should.be.bignumber.equal('2e18')
@@ -401,7 +393,7 @@ contract('AttestationLogic', function([
 
       await attest()
 
-      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(
+      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
       requesterEscrowBalanceAfter.should.be.bignumber.equal('1e18')
@@ -409,27 +401,27 @@ contract('AttestationLogic', function([
     })
 
     it('pays all tokens from escrow to the verifier', async () => {
-      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(
+      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
       requesterEscrowBalanceBefore.should.be.bignumber.equal('2e18')
       ;(await token.balanceOf(bob)).should.be.bignumber.equal('0')
 
       await attest({
-        reward: new BigNumber(web3.toWei(2, 'ether')),
+        reward: new BigNumber(web3.utils.toWei(2, 'ether')),
         requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
           data: getFormattedTypedDataPayTokens(
             tokenEscrowMarketplaceAddress,
             1,
             david,
             bob,
-            new BigNumber(web3.toWei(2, 'ether')).toString(10),
+            new BigNumber(web3.utils.toWei(2, 'ether')).toString(10),
             nonce
           ),
         }),
       })
 
-      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(
+      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
       requesterEscrowBalanceAfter.should.be.bignumber.equal('0')
@@ -445,7 +437,7 @@ contract('AttestationLogic', function([
             1,
             david,
             bob,
-            new BigNumber(web3.toWei(1, 'ether')).toString(10),
+            new BigNumber(web3.utils.toWei(1, 'ether')).toString(10),
             differentNonce
           ),
         }),
@@ -475,7 +467,7 @@ contract('AttestationLogic', function([
 
     it('rejects attestations with for an invalid reward', async () => {
       await attest({
-        reward: new BigNumber(web3.toWei(2, 'ether')),
+        reward: new BigNumber(web3.utils.toWei(2, 'ether')),
       }).should.be.rejectedWith(EVMThrow)
     })
 
@@ -518,7 +510,7 @@ contract('AttestationLogic', function([
     })
 
     it('pays tokens from escrow to the verifier and leaves some leftover', async () => {
-      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(
+      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
       requesterEscrowBalanceBefore.should.be.bignumber.equal('2e18')
@@ -526,7 +518,7 @@ contract('AttestationLogic', function([
 
       await contest()
 
-      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(
+      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
       requesterEscrowBalanceAfter.should.be.bignumber.equal('1e18')
@@ -534,27 +526,27 @@ contract('AttestationLogic', function([
     })
 
     it('pays all tokens from escrow to the verifier', async () => {
-      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow.call(
+      const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
       requesterEscrowBalanceBefore.should.be.bignumber.equal('2e18')
       ;(await token.balanceOf(bob)).should.be.bignumber.equal('0')
 
       await contest({
-        reward: new BigNumber(web3.toWei(2, 'ether')),
+        reward: new BigNumber(web3.utils.toWei(2, 'ether')),
         requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
           data: getFormattedTypedDataPayTokens(
             tokenEscrowMarketplaceAddress,
             1,
             david,
             bob,
-            new BigNumber(web3.toWei(2, 'ether')).toString(10),
+            new BigNumber(web3.utils.toWei(2, 'ether')).toString(10),
             nonce
           ),
         }),
       })
 
-      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow.call(
+      const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
       requesterEscrowBalanceAfter.should.be.bignumber.equal('0')
@@ -611,7 +603,7 @@ contract('AttestationLogic', function([
       contestForDefaults = {
         attester: bob,
         requester: david,
-        reward: new BigNumber(web3.toWei(1, 'ether')),
+        reward: new BigNumber(web3.utils.toWei(1, 'ether')),
         paymentNonce: nonce,
         requesterSig: tokenPaymentSig,
         delegationSig: contesterDelegationSig,
@@ -666,7 +658,7 @@ contract('AttestationLogic', function([
 
     it('rejects an attestation rejection if the reward is wrong', async () => {
       await contestFor({
-        reward: new BigNumber(web3.toWei(2, 'ether')),
+        reward: new BigNumber(web3.utils.toWei(2, 'ether')),
       }).should.be.rejectedWith(EVMThrow)
     })
 
@@ -731,7 +723,7 @@ contract('AttestationLogic', function([
         subject: alice,
         attester: bob,
         requester: david,
-        reward: new BigNumber(web3.toWei(1, 'ether')),
+        reward: new BigNumber(web3.utils.toWei(1, 'ether')),
         requesterSig: tokenPaymentSig,
         dataHash: combinedDataHash,
         requestNonce: nonce,
@@ -800,7 +792,7 @@ contract('AttestationLogic', function([
 
     it('rejects an attestation if the reward is wrong', async () => {
       await attestFor({
-        reward: new BigNumber(web3.toWei(2, 'ether')),
+        reward: new BigNumber(web3.utils.toWei(2, 'ether')),
       }).should.be.rejectedWith(EVMThrow)
     })
 
@@ -833,11 +825,9 @@ contract('AttestationLogic', function([
     }
 
     it('emits an event when attestation is revoked', async () => {
-      const {logs} = ((await attestationLogic.revokeAttestation(revokeLink, {
+      const {logs} = await attestationLogic.revokeAttestation(revokeLink, {
         from: bob,
-      })) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<
-        RevokeEventArgs
-      >
+      })
 
       const matchingLog = logs.find(log => log.event === 'AttestationRevoked')
 
@@ -965,7 +955,7 @@ contract('AttestationLogic', function([
           nonce
         ),
       })
-      const {logs} = ((await attestationLogic.revokeAttestationFor(
+      const {logs} = await attestationLogic.revokeAttestationFor(
         bob,
         revokeLink,
         nonce,
@@ -973,7 +963,7 @@ contract('AttestationLogic', function([
         {
           from: carl,
         }
-      )) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<RevokeEventArgs>
+      )
 
       const matchingLog = logs.find(log => log.event === 'AttestationRevoked')
 
@@ -996,7 +986,7 @@ contract('AttestationLogic', function([
         token.address,
         attestationLogic.address
       )
-      TokenEscrowMarketplaceAddressBefore = await attestationLogic.tokenEscrowMarketplace.call()
+      TokenEscrowMarketplaceAddressBefore = await attestationLogic.tokenEscrowMarketplace()
     })
 
     it('allows the initializer to change the marketplace during initialization', async () => {
@@ -1086,7 +1076,7 @@ contract('AttestationLogic', function([
     }
 
     it('emits an event when attestation is migrated', async () => {
-      const {logs} = ((await attestationLogic.migrateAttestation(
+      const {logs} = await attestationLogic.migrateAttestation(
         david,
         bob,
         alice,
@@ -1094,7 +1084,7 @@ contract('AttestationLogic', function([
         {
           from: initializer,
         }
-      )) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<WriteEventArgs>
+      )
 
       const matchingLog = logs.find(log => log.event === 'TraitAttested')
 

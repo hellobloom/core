@@ -10,12 +10,14 @@
     "lib": ["es6", "es2017", "dom"],
     "target": "es5",
     "plugins": [{"name": "tslint-language-service"}],
-    "sourceMap": true
+    "sourceMap": true,
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "types": ["node", "truffle-contracts"]
   },
   "include": [
-    "./web3.d.ts",
     "./chai-bignumber.d.ts",
     "typings/*.d.ts",
-    "ts_test/**/*.ts"
+    "ts_test/**/*.ts",
+    "**/*.ts"
   ]
 }

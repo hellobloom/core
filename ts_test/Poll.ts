@@ -1,5 +1,4 @@
 import * as BigNumber from 'bignumber.js'
-import {PollInstance, VotingCenterInstance} from './../truffle'
 import './test_setup'
 import {latestBlockTime} from './helpers/blockInfo'
 import {EVMThrow} from './helpers/EVMThrow'
@@ -14,6 +13,7 @@ import {bufferToHex} from 'ethereumjs-util'
 
 import {hashData} from './../src/signData'
 import {getFormattedTypedDataVoteFor} from './helpers/signingLogic'
+import { PollInstance } from '../types/truffle-contracts';
 
 const VotingCenter = artifacts.require('VotingCenter')
 const Poll = artifacts.require('Poll')
@@ -121,7 +121,7 @@ contract('Poll', function([alice, bob, carl]) {
   context('Administrating', () => {
     it('exposes an IPFS hash', async () => {
       ipfs
-        .fromHex(await poll.pollDataMultihash.call())
+        .fromHex(await poll.pollDataMultihash())
         .should.equal('Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe')
     })
 

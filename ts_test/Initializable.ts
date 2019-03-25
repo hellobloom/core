@@ -1,9 +1,8 @@
-import * as Web3 from 'web3'
-import {InitializableInstance} from './../truffle'
 import './test_setup'
 import {EVMThrow} from './helpers/EVMThrow'
 import {should} from './test_setup'
 import * as ethereumjsWallet from 'ethereumjs-wallet'
+import { InitializableInstance } from '../types/truffle-contracts';
 
 const Initializable = artifacts.require('Initializable')
 
@@ -82,9 +81,9 @@ contract('Initializable', function([alice, bob, carl]) {
     })
     it('Emits an event when ending initialization', async () => {
       initializable = await Initializable.new(bob)
-      const {logs} = (await initializable.endInitialization({
+      const {logs} = await initializable.endInitialization({
         from: bob,
-      })) as Web3.TransactionReceipt<any>
+      })
       const matchingLog = logs.find(log => log.event === 'InitializationEnded')
 
       should.exist(matchingLog)

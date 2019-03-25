@@ -1,5 +1,4 @@
 import * as BigNumber from 'bignumber.js'
-import * as Web3 from 'web3'
 import * as ethereumjsWallet from 'ethereumjs-wallet'
 const walletTools = require('ethereumjs-wallet')
 const {privateToAddress} = require('ethereumjs-util')
@@ -10,19 +9,19 @@ const uuid = require('uuidv4')
 import {bufferToHex} from 'ethereumjs-util'
 import {hashData} from './../src/signData'
 
-import {
-  AttestationLogicInstance,
-  AccountRegistryLogicInstance,
-  TokenEscrowMarketplaceInstance,
-  MockBLTInstance,
-  BatchInitializerInstance,
-} from '../truffle'
 import {EVMThrow} from './helpers/EVMThrow'
 import * as ipfs from './../src/ipfs'
 
 import {should} from './test_setup'
 import {getFormattedTypedDataAddAddress} from './helpers/signingLogicLegacy'
 import {HashingLogic} from '@bloomprotocol/attestations-lib'
+import {
+  AccountRegistryLogicInstance,
+  BatchInitializerInstance,
+  AttestationLogicInstance,
+  MockBLTInstance,
+  TokenEscrowMarketplaceInstance,
+} from '../types/truffle-contracts'
 
 const AttestationLogic = artifacts.require('AttestationLogic')
 const TokenEscrowMarketplace = artifacts.require('TokenEscrowMarketplace')
@@ -116,11 +115,11 @@ contract('BatchInitializer', function([owner, admin, unrelated]) {
     })
 
     it('Sets TEM in attestationLogic', async () => {
-      const addressBefore = await attestationLogic.tokenEscrowMarketplace.call()
+      const addressBefore = await attestationLogic.tokenEscrowMarketplace()
       addressBefore.should.be.equal(tokenEscrowMarketplace.address)
       await batchInitializer.setTokenEscrowMarketplace(unrelated, {from: owner})
         .should.be.fulfilled
-      const addressAfter = await attestationLogic.tokenEscrowMarketplace.call()
+      const addressAfter = await attestationLogic.tokenEscrowMarketplace()
       addressAfter.should.be.equal(unrelated)
     })
 
@@ -153,10 +152,10 @@ contract('BatchInitializer', function([owner, admin, unrelated]) {
       let i = 0
       for (let link of testLinks.slice(0, numlinks)) {
         i++
-        const linkIdA = await registryLogic.linkIds.call(link.currentAddress)
+        const linkIdA = await registryLogic.linkIds(link.currentAddress)
         linkIdA.should.be.bignumber.greaterThan(0)
         linkIdA.should.be.bignumber.equal(new BigNumber(i))
-        const linkIdB = await registryLogic.linkIds.call(link.newAddress)
+        const linkIdB = await registryLogic.linkIds(link.newAddress)
         linkIdB.should.be.bignumber.equal(linkIdA)
       }
     })
@@ -222,11 +221,11 @@ contract('BatchInitializer', function([owner, admin, unrelated]) {
       numlinks = 10
       currentAddresses = testLinks.slice(0, numlinks).map(a => a.currentAddress)
       newAddresses = testLinks.slice(0, numlinks).map(a => a.newAddress)
-      const {logs} = ((await batchInitializer.batchLinkAddresses(
+      const {logs} = await batchInitializer.batchLinkAddresses(
         currentAddresses,
         newAddresses,
         {from: admin}
-      )) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<LinkSkippedArgs>
+      )
 
       const matchingLog = logs.find(log => log.event === 'linkSkipped')
 

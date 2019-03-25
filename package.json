@@ -49,8 +49,14 @@
     "solhint": "^1.1.9",
     "solidity-coverage": "^0.2.2",
     "truffle-hdwallet-provider": "^0.0.3",
+    "truffle-typings": "^1.0.6",
     "ts-node": "^4.0.0",
     "tslint": "^5.8.0",
+    "typechain": "^0.3.14",
     "typescript": "^2.6.2"
+  },
+  "scripts": {
+    "generate": "truffle compile && typechain --target truffle './build/**/*.json'",
+    "prepare": "yarn generate"
   }
 }
