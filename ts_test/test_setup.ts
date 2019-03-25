@@ -1,11 +1,12 @@
 import * as chaiAsPromised from 'chai-as-promised'
 var chai = require('chai')
-var BN = require('bn.js')
 var bnChai = require('bn-chai')
+const BN = require('bn.js')
 
-const should = chai
-  .use(bnChai(BN))
-  .use(chaiAsPromised)
-  .should()
+chai.use(bnChai(BN))
+chai.use(chaiAsPromised)
+
+const should = chai.should()
+
 
 export {should}

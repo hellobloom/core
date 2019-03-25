@@ -15,7 +15,7 @@
     "types": ["node", "truffle-contracts"]
   },
   "include": [
-    "./chai-bignumber.d.ts",
+    "./chai-bn.d.ts",
     "typings/*.d.ts",
     "ts_test/**/*.ts",
     "**/*.ts"

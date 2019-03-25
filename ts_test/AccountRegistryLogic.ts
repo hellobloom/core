@@ -151,10 +151,10 @@ contract('AccountRegistryLogic', function([
         differentNonce,
         {from: alice}
       ).should.be.fulfilled
-      // console.log(`link id ${(await registryLogic.linkIds(alice))}`)
-      ;(await registryLogic.linkIds(alice)).eq(new BN(1))
-      // ;(await registryLogic.linkIds(unclaimed)).should.be.bignumber.equal(1)
-      // ;(await registryLogic.linkIds(unclaimedB)).should.be.bignumber.equal(1)
+      ;(new BN('1')).should.be.eq.BN(1)
+      ;(await registryLogic.linkIds(alice)).should.be.eq.BN(1)
+      ;(await registryLogic.linkIds(unclaimed)).should.be.eq.BN(1)
+      ;(await registryLogic.linkIds(unclaimedB)).should.be.eq.BN(1)
     })
 
     it.only('Incrementes linkId for new links', async () => {
@@ -188,10 +188,10 @@ contract('AccountRegistryLogic', function([
         differentNonce,
         {from: bob}
       ).should.be.fulfilled
-      ;(await registryLogic.linkIds(alice)).should.be.bignumber.equal(1)
-      ;(await registryLogic.linkIds(unclaimed)).should.be.bignumber.equal(1)
-      ;(await registryLogic.linkIds(bob)).should.be.bignumber.equal(2)
-      ;(await registryLogic.linkIds(unclaimedB)).should.be.bignumber.equal(2)
+      ;(await registryLogic.linkIds(alice)).should.be.eq.BN(1)
+      ;(await registryLogic.linkIds(unclaimed)).should.be.eq.BN(1)
+      ;(await registryLogic.linkIds(bob)).should.be.eq.BN(2)
+      ;(await registryLogic.linkIds(unclaimedB)).should.be.eq.BN(2)
     })
 
     it.only('Allows anyone to submit the link tx', async () => {
@@ -319,7 +319,7 @@ contract('AccountRegistryLogic', function([
 
       matchingLog.args.currentAddress.should.equal(alice)
       matchingLog.args.newAddress.should.equal(unclaimed)
-      matchingLog.args.linkId.should.bignumber.equal(1)
+      matchingLog.args.linkId.should.eq.BN(1)
     })
 
     it.only('Does not allow a new address to be linked if it is already linked to another address', async () => {
@@ -379,7 +379,7 @@ contract('AccountRegistryLogic', function([
         }),
         {from: alice}
       ).should.be.fulfilled
-      ;(await registryLogic.linkIds(alice)).should.be.bignumber.equal(0)
+      ;(await registryLogic.linkIds(alice)).should.be.eq.BN(0)
     })
 
     it.only('Does not allow user to unlink address with no links', async () => {
@@ -422,7 +422,7 @@ contract('AccountRegistryLogic', function([
         }),
         {from: bob}
       ).should.be.fulfilled
-      ;(await registryLogic.linkIds(alice)).should.be.bignumber.equal(0)
+      ;(await registryLogic.linkIds(alice)).should.be.eq.BN(0)
     })
 
     it.only('Allows anyone to submit valid unlink signatures', async () => {
@@ -447,7 +447,7 @@ contract('AccountRegistryLogic', function([
         }),
         {from: bob}
       ).should.be.fulfilled
-      ;(await registryLogic.linkIds(unclaimed)).should.be.bignumber.equal(0)
+      ;(await registryLogic.linkIds(unclaimed)).should.be.eq.BN(0)
     })
 
     interface UnlinkEventArgs {
@@ -662,7 +662,7 @@ contract('AccountRegistryLogic', function([
 
       matchingLog.args.currentAddress.should.be.equal(alice)
       matchingLog.args.newAddress.should.be.equal(unclaimed)
-      matchingLog.args.linkId.should.bignumber.equal(1)
+      matchingLog.args.linkId.should.eq.BN(1)
     })
   })
 })
