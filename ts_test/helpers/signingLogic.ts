@@ -1,7 +1,3 @@
-const ethSigUtil = require('eth-sig-util')
-const {soliditySha3} = require('web3-utils')
-import * as BigNumber from 'bignumber.js'
-
 interface IFormattedTypedData {
   types: {
     EIP712Domain: ITypedDataParam[]

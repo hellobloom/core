@@ -1,19 +1,9 @@
 import * as BigNumber from 'bignumber.js'
 import * as ethereumjsWallet from 'ethereumjs-wallet'
-const walletTools = require('ethereumjs-wallet')
-const {privateToAddress} = require('ethereumjs-util')
-import {signAddress} from './../src/signAddress'
-const ethSigUtil = require('eth-sig-util')
-const {soliditySha3} = require('web3-utils')
-const uuid = require('uuidv4')
-import {bufferToHex} from 'ethereumjs-util'
-import {hashData} from './../src/signData'
 
 import {EVMThrow} from './helpers/EVMThrow'
-import * as ipfs from './../src/ipfs'
 
 import {should} from './test_setup'
-import {getFormattedTypedDataAddAddress} from './helpers/signingLogicLegacy'
 import {HashingLogic} from '@bloomprotocol/attestations-lib'
 import {
   AccountRegistryLogicInstance,
@@ -28,6 +18,7 @@ const TokenEscrowMarketplace = artifacts.require('TokenEscrowMarketplace')
 const AccountRegistryLogic = artifacts.require('AccountRegistryLogic')
 const BatchInitializer = artifacts.require('BatchInitializer')
 const BLT = artifacts.require('MockBLT')
+const zeroAddress = '0x0000000000000000000000000000000000000000'
 
 contract('BatchInitializer', function([owner, admin, unrelated]) {
   let registryLogic: AccountRegistryLogicInstance
@@ -68,9 +59,9 @@ contract('BatchInitializer', function([owner, admin, unrelated]) {
 
   beforeEach(async () => {
     token = await BLT.new()
-    batchInitializer = await BatchInitializer.new('0x0', '0x0')
+    batchInitializer = await BatchInitializer.new(zeroAddress, zeroAddress)
     registryLogic = await AccountRegistryLogic.new(batchInitializer.address)
-    attestationLogic = await AttestationLogic.new(batchInitializer.address, '0x0')
+    attestationLogic = await AttestationLogic.new(batchInitializer.address, zeroAddress)
     tokenEscrowMarketplace = await TokenEscrowMarketplace.new(
       token.address,
       attestationLogic.address

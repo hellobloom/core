@@ -19,6 +19,7 @@ import {
 } from '../types/truffle-contracts'
 import BN from 'bn.js'
 import BigNumber = require('bignumber.js')
+import { BNe10 } from './helpers/BNe10'
 
 const TokenEscrowMarketplace = artifacts.require('TokenEscrowMarketplace')
 const AttestationLogic = artifacts.require('AttestationLogic')
@@ -389,7 +390,7 @@ contract('AttestationLogic', function([
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceBefore.should.be.eq.BN('2000000000000000000')
+      requesterEscrowBalanceBefore.should.be.eq.BN(BNe10('2e18'))
       ;(await token.balanceOf(bob)).should.be.eq.BN('0')
 
       await attest()
@@ -397,15 +398,15 @@ contract('AttestationLogic', function([
       const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceAfter.should.be.eq.BN('1000000000000000000')
-      ;(await token.balanceOf(bob)).should.be.eq.BN('1000000000000000000')
+      requesterEscrowBalanceAfter.should.be.eq.BN(BNe10('1e18'))
+      ;(await token.balanceOf(bob)).should.be.eq.BN(BNe10('1e18'))
     })
 
     it('pays all tokens from escrow to the verifier', async () => {
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceBefore.should.be.eq.BN('2000000000000000000')
+      requesterEscrowBalanceBefore.should.be.eq.BN(BNe10('2e18'))
       ;(await token.balanceOf(bob)).should.be.eq.BN('0')
 
       await attest({
@@ -426,7 +427,7 @@ contract('AttestationLogic', function([
         david
       )
       requesterEscrowBalanceAfter.should.be.eq.BN('0')
-      ;(await token.balanceOf(bob)).should.be.eq.BN('2000000000000000000')
+      ;(await token.balanceOf(bob)).should.be.eq.BN(BNe10('2e18'))
     })
 
     it('submits a second attestation for same data with different nonce', async () => {
@@ -512,7 +513,7 @@ contract('AttestationLogic', function([
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceBefore.should.be.eq.BN('2000000000000000000')
+      requesterEscrowBalanceBefore.should.be.eq.BN(BNe10('2e18'))
       ;(await token.balanceOf(bob)).should.be.eq.BN('0')
 
       await contest()
@@ -520,15 +521,15 @@ contract('AttestationLogic', function([
       const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceAfter.should.be.eq.BN('1000000000000000000')
-      ;(await token.balanceOf(bob)).should.be.eq.BN('1000000000000000000')
+      requesterEscrowBalanceAfter.should.be.eq.BN(BNe10('1e18'))
+      ;(await token.balanceOf(bob)).should.be.eq.BN(BNe10('1e18'))
     })
 
     it('pays all tokens from escrow to the verifier', async () => {
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceBefore.should.be.eq.BN('2000000000000000000')
+      requesterEscrowBalanceBefore.should.be.eq.BN(BNe10('2e18'))
       ;(await token.balanceOf(bob)).should.be.eq.BN('0')
 
       await contest({
@@ -549,7 +550,7 @@ contract('AttestationLogic', function([
         david
       )
       requesterEscrowBalanceAfter.should.be.eq.BN('0')
-      ;(await token.balanceOf(bob)).should.be.eq.BN('2000000000000000000')
+      ;(await token.balanceOf(bob)).should.be.eq.BN(BNe10('2e18'))
     })
 
     it('Fails if attester does not match payment sig', async () => {
