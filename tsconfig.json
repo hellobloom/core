@@ -16,7 +16,6 @@
   },
   "include": [
     "./chai-bn.d.ts",
-    "typings/*.d.ts",
     "ts_test/**/*.ts",
     "**/*.ts"
   ]

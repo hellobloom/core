@@ -2,7 +2,7 @@ import './test_setup'
 import * as BigNumber from 'bignumber.js'
 import {should} from './test_setup'
 import {EVMThrow} from './helpers/EVMThrow'
-import { AirdropProxyInstance, MockBLTInstance } from '../types/truffle-contracts';
+import { AirdropProxyInstance, MockBLTInstance } from '../types/truffle-contracts'
 
 const BLT = artifacts.require('MockBLT')
 const AirdropProxy = artifacts.require('AirdropProxy')

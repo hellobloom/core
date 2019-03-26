@@ -1,15 +1,9 @@
-import * as BigNumber from 'bignumber.js'
 import * as ethereumjsWallet from 'ethereumjs-wallet'
 const ethSigUtil = require('eth-sig-util')
-import {bufferToHex} from 'ethereumjs-util'
-const uuid = require('uuidv4')
-import {AttestationTypeID, HashingLogic} from '@bloomprotocol/attestations-lib'
 
 import {EVMThrow} from './helpers/EVMThrow'
 import {should} from './test_setup'
 
-import {latestBlockTime} from './helpers/blockInfo'
-import * as ipfs from './../src/ipfs'
 import {
   getFormattedTypedDataAttestationRequest,
   getFormattedTypedDataPayTokens,
@@ -18,11 +12,18 @@ import {
   getFormattedTypedDataRevokeAttestationFor,
 } from './helpers/signingLogic'
 import {generateSigNonce} from '../src/signData'
-import { MockBLTInstance, AttestationLogicInstance, TokenEscrowMarketplaceInstance } from '../types/truffle-contracts';
+import {
+  MockBLTInstance,
+  AttestationLogicInstance,
+  TokenEscrowMarketplaceInstance,
+} from '../types/truffle-contracts'
+import BN from 'bn.js'
+import BigNumber = require('bignumber.js')
 
 const TokenEscrowMarketplace = artifacts.require('TokenEscrowMarketplace')
 const AttestationLogic = artifacts.require('AttestationLogic')
 const MockBLT = artifacts.require('MockBLT')
+const zeroAddress = '0x0000000000000000000000000000000000000000'
 
 contract('AttestationLogic', function([
   alice,
@@ -85,21 +86,21 @@ contract('AttestationLogic', function([
   let nonce: string
   let differentNonce: string
 
-  let subjectSig: string
-  let tokenPaymentSig: string
-  let unrelatedSignature: string
-  let attesterDelegationSig: string
-  let contesterDelegationSig: string
+  let subjectSig: string[]
+  let unrelatedSignature: string[]
+  let tokenPaymentSig: string[]
+  let attesterDelegationSig: string[]
+  let contesterDelegationSig: string[]
 
   let attestDefaults: {
     subject: string
     attester: string
     requester: string
     reward: BigNumber.BigNumber
-    requesterSig: string
+    requesterSig: string[]
     dataHash: string
     requestNonce: string
-    subjectSig: string
+    subjectSig: string[]
     from: string
   }
 
@@ -137,7 +138,7 @@ contract('AttestationLogic', function([
     requester: string
     reward: BigNumber.BigNumber
     paymentNonce: string
-    requesterSig: string
+    requesterSig: string[]
     from: string
   }
 
@@ -156,13 +157,13 @@ contract('AttestationLogic', function([
   web3.eth.sendTransaction({
     to: alice,
     from: bob,
-    value: web3.utils.toWei('50', 'ether')
+    value: web3.utils.toWei('50', 'ether'),
   })
 
   beforeEach(async () => {
     token = await MockBLT.new()
 
-    attestationLogic = await AttestationLogic.new(initializer, '0x0')
+    attestationLogic = await AttestationLogic.new(initializer, zeroAddress)
     attestationLogicAddress = attestationLogic.address
 
     tokenEscrowMarketplace = await TokenEscrowMarketplace.new(
@@ -206,7 +207,7 @@ contract('AttestationLogic', function([
         1,
         david,
         bob,
-        new BigNumber(web3.utils.toWei(1, 'ether')).toString(10),
+        new BigNumber(web3.utils.toWei('1', 'ether')).toString(10),
         nonce
       ),
     })
@@ -229,7 +230,7 @@ contract('AttestationLogic', function([
         1,
         alice,
         david,
-        new BigNumber(web3.utils.toWei(1, 'ether')).toString(10),
+        new BigNumber(web3.utils.toWei('1', 'ether')).toString(10),
         combinedDataHash,
         nonce
       ),
@@ -240,7 +241,7 @@ contract('AttestationLogic', function([
         attestationLogicAddress,
         1,
         david,
-        new BigNumber(web3.utils.toWei(1, 'ether')).toString(10),
+        new BigNumber(web3.utils.toWei('1', 'ether')).toString(10),
         nonce
       ),
     })
@@ -249,7 +250,7 @@ contract('AttestationLogic', function([
       subject: alice,
       attester: bob,
       requester: david,
-      reward: new BigNumber(web3.utils.toWei(1, 'ether')),
+      reward: new BigNumber(web3.utils.toWei('1', 'ether')),
       requesterSig: tokenPaymentSig,
       dataHash: combinedDataHash,
       requestNonce: nonce,
@@ -288,7 +289,7 @@ contract('AttestationLogic', function([
     contestDefaults = {
       attester: bob,
       requester: david,
-      reward: new BigNumber(web3.utils.toWei(1, 'ether')),
+      reward: new BigNumber(web3.utils.toWei('1', 'ether')),
       paymentNonce: nonce,
       requesterSig: tokenPaymentSig,
       from: bob,
@@ -368,7 +369,7 @@ contract('AttestationLogic', function([
             1,
             david,
             bob,
-            new BigNumber(web3.utils.toWei(1, 'ether')).toString(10),
+            new BigNumber(web3.utils.toWei('1', 'ether')).toString(10),
             differentNonce
           ),
         }),
@@ -388,34 +389,34 @@ contract('AttestationLogic', function([
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceBefore.should.be.bignumber.equal('2e18')
-      ;(await token.balanceOf(bob)).should.be.bignumber.equal('0')
+      requesterEscrowBalanceBefore.should.be.eq.BN('2000000000000000000')
+      ;(await token.balanceOf(bob)).should.be.eq.BN('0')
 
       await attest()
 
       const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceAfter.should.be.bignumber.equal('1e18')
-      ;(await token.balanceOf(bob)).should.be.bignumber.equal('1e18')
+      requesterEscrowBalanceAfter.should.be.eq.BN('1000000000000000000')
+      ;(await token.balanceOf(bob)).should.be.eq.BN('1000000000000000000')
     })
 
     it('pays all tokens from escrow to the verifier', async () => {
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceBefore.should.be.bignumber.equal('2e18')
-      ;(await token.balanceOf(bob)).should.be.bignumber.equal('0')
+      requesterEscrowBalanceBefore.should.be.eq.BN('2000000000000000000')
+      ;(await token.balanceOf(bob)).should.be.eq.BN('0')
 
       await attest({
-        reward: new BigNumber(web3.utils.toWei(2, 'ether')),
+        reward: new BigNumber(web3.utils.toWei('2', 'ether')),
         requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
           data: getFormattedTypedDataPayTokens(
             tokenEscrowMarketplaceAddress,
             1,
             david,
             bob,
-            new BigNumber(web3.utils.toWei(2, 'ether')).toString(10),
+            new BigNumber(web3.utils.toWei('2', 'ether')).toString(10),
             nonce
           ),
         }),
@@ -424,8 +425,8 @@ contract('AttestationLogic', function([
       const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceAfter.should.be.bignumber.equal('0')
-      ;(await token.balanceOf(bob)).should.be.bignumber.equal('2e18')
+      requesterEscrowBalanceAfter.should.be.eq.BN('0')
+      ;(await token.balanceOf(bob)).should.be.eq.BN('2000000000000000000')
     })
 
     it('submits a second attestation for same data with different nonce', async () => {
@@ -437,7 +438,7 @@ contract('AttestationLogic', function([
             1,
             david,
             bob,
-            new BigNumber(web3.utils.toWei(1, 'ether')).toString(10),
+            new BigNumber(web3.utils.toWei('1', 'ether')).toString(10),
             differentNonce
           ),
         }),
@@ -467,7 +468,7 @@ contract('AttestationLogic', function([
 
     it('rejects attestations with for an invalid reward', async () => {
       await attest({
-        reward: new BigNumber(web3.utils.toWei(2, 'ether')),
+        reward: new BigNumber(web3.utils.toWei('2', 'ether')),
       }).should.be.rejectedWith(EVMThrow)
     })
 
@@ -496,9 +497,7 @@ contract('AttestationLogic', function([
     }
 
     it('emits an event when attestation is rejected', async () => {
-      const {logs} = ((await contest()) as Web3.TransactionReceipt<
-        any
-      >) as Web3.TransactionReceipt<rejectEventArgs>
+      const {logs} = await contest()
 
       const matchingLog = logs.find(log => log.event === 'AttestationRejected')
 
@@ -513,34 +512,34 @@ contract('AttestationLogic', function([
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceBefore.should.be.bignumber.equal('2e18')
-      ;(await token.balanceOf(bob)).should.be.bignumber.equal('0')
+      requesterEscrowBalanceBefore.should.be.eq.BN('2000000000000000000')
+      ;(await token.balanceOf(bob)).should.be.eq.BN('0')
 
       await contest()
 
       const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceAfter.should.be.bignumber.equal('1e18')
-      ;(await token.balanceOf(bob)).should.be.bignumber.equal('1e18')
+      requesterEscrowBalanceAfter.should.be.eq.BN('1000000000000000000')
+      ;(await token.balanceOf(bob)).should.be.eq.BN('1000000000000000000')
     })
 
     it('pays all tokens from escrow to the verifier', async () => {
       const requesterEscrowBalanceBefore = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceBefore.should.be.bignumber.equal('2e18')
-      ;(await token.balanceOf(bob)).should.be.bignumber.equal('0')
+      requesterEscrowBalanceBefore.should.be.eq.BN('2000000000000000000')
+      ;(await token.balanceOf(bob)).should.be.eq.BN('0')
 
       await contest({
-        reward: new BigNumber(web3.utils.toWei(2, 'ether')),
+        reward: new BigNumber(web3.utils.toWei('2', 'ether')),
         requesterSig: ethSigUtil.signTypedData(davidPrivkey, {
           data: getFormattedTypedDataPayTokens(
             tokenEscrowMarketplaceAddress,
             1,
             david,
             bob,
-            new BigNumber(web3.utils.toWei(2, 'ether')).toString(10),
+            new BigNumber(web3.utils.toWei('2', 'ether')).toString(10),
             nonce
           ),
         }),
@@ -549,8 +548,8 @@ contract('AttestationLogic', function([
       const requesterEscrowBalanceAfter = await tokenEscrowMarketplace.tokenEscrow(
         david
       )
-      requesterEscrowBalanceAfter.should.be.bignumber.equal('0')
-      ;(await token.balanceOf(bob)).should.be.bignumber.equal('2e18')
+      requesterEscrowBalanceAfter.should.be.eq.BN('0')
+      ;(await token.balanceOf(bob)).should.be.eq.BN('2000000000000000000')
     })
 
     it('Fails if attester does not match payment sig', async () => {
@@ -566,8 +565,8 @@ contract('AttestationLogic', function([
       requester: string
       reward: BigNumber.BigNumber
       paymentNonce: string
-      requesterSig: string
-      delegationSig: string
+      requesterSig: string[]
+      delegationSig: string[]
       from: string
     }
 
@@ -603,7 +602,7 @@ contract('AttestationLogic', function([
       contestForDefaults = {
         attester: bob,
         requester: david,
-        reward: new BigNumber(web3.utils.toWei(1, 'ether')),
+        reward: new BigNumber(web3.utils.toWei('1', 'ether')),
         paymentNonce: nonce,
         requesterSig: tokenPaymentSig,
         delegationSig: contesterDelegationSig,
@@ -658,7 +657,7 @@ contract('AttestationLogic', function([
 
     it('rejects an attestation rejection if the reward is wrong', async () => {
       await contestFor({
-        reward: new BigNumber(web3.utils.toWei(2, 'ether')),
+        reward: new BigNumber(web3.utils.toWei('2', 'ether')),
       }).should.be.rejectedWith(EVMThrow)
     })
 
@@ -675,11 +674,11 @@ contract('AttestationLogic', function([
       attester: string
       requester: string
       reward: BigNumber.BigNumber
-      requesterSig: string
+      requesterSig: string[]
       dataHash: string
       requestNonce: string
-      subjectSig: string
-      delegationSig: string
+      subjectSig: string[]
+      delegationSig: string[]
       from: string
     }
 
@@ -723,7 +722,7 @@ contract('AttestationLogic', function([
         subject: alice,
         attester: bob,
         requester: david,
-        reward: new BigNumber(web3.utils.toWei(1, 'ether')),
+        reward: new BigNumber(web3.utils.toWei('1', 'ether')),
         requesterSig: tokenPaymentSig,
         dataHash: combinedDataHash,
         requestNonce: nonce,
@@ -792,7 +791,7 @@ contract('AttestationLogic', function([
 
     it('rejects an attestation if the reward is wrong', async () => {
       await attestFor({
-        reward: new BigNumber(web3.utils.toWei(2, 'ether')),
+        reward: new BigNumber(web3.utils.toWei('2', 'ether')),
       }).should.be.rejectedWith(EVMThrow)
     })
 
@@ -844,7 +843,7 @@ contract('AttestationLogic', function([
       '0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
     const differentRevokeLink =
       '0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6'
-    let revokeAttestationDelegationSig: string
+    let revokeAttestationDelegationSig: string[]
 
     it('Allows anyone to revoke an attestation on behalf of an attester with a valid sig', async () => {
       revokeAttestationDelegationSig = ethSigUtil.signTypedData(bobPrivkey, {
