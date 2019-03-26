@@ -123,7 +123,6 @@ contract('Poll', function([alice, bob, carl]) {
       // compensate for typechain thinking return type is string[]
       const multihash = (await poll.pollDataMultihash()) as unknown as string
       console.log(multihash)
-      // for (let ii in hashArr) console.log(`ii: ${ii.toString()}, elem: ${hashArr[ii]}`)
       ipfs
         .fromHex(multihash)
         .should.equal('Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe')

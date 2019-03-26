@@ -2,20 +2,16 @@ import * as BigNumber from 'bignumber.js'
 import {EVMThrow} from './helpers/EVMThrow'
 import * as ethereumjsWallet from 'ethereumjs-wallet'
 const ethSigUtil = require('eth-sig-util')
-import {bufferToHex} from 'ethereumjs-util'
-const uuid = require('uuidv4')
-import * as ipfs from './../src/ipfs'
 
 import {should} from './test_setup'
-import {latestBlockTime} from './helpers/blockInfo'
-import {increaseTime} from './helpers/increaseTime'
-import {hashData, generateSigNonce} from './../src/signData'
+import {generateSigNonce} from './../src/signData'
 import {
   getFormattedTypedDataPayTokens,
   getFormattedTypedDataLockupTokensFor,
   getFormattedTypedDataReleaseTokensFor,
 } from './helpers/signingLogic'
-import { TokenEscrowMarketplaceInstance, MockBLTInstance } from '../types/truffle-contracts';
+import { TokenEscrowMarketplaceInstance, MockBLTInstance } from '../types/truffle-contracts'
+import { BNe10 } from './helpers/BNe10'
 
 const TokenEscrowMarketplace = artifacts.require('TokenEscrowMarketplace')
 const MockBLT = artifacts.require('MockBLT')
@@ -43,8 +39,6 @@ contract('TokenEscrowMarketplace', function([
       'hex'
     )
   )
-  const bobPrivkey = bobWallet.getPrivateKey()
-
   // Sanity check
   if (alice.toLowerCase() != aliceWallet.getAddressString()) {
     throw new Error('Mnemonic used for truffle tests out of sync?')
@@ -55,14 +49,12 @@ contract('TokenEscrowMarketplace', function([
     throw new Error('Mnemonic used for truffle tests out of sync?')
   }
 
-  let nonce: string
-  let differentNonce: string
   let nonceHash: string
   let differentNonceHash: string
 
-  let lockupTokensForSig: string
-  let releaseTokensForSig: string
-  let tokenPaymentSig: string
+  let lockupTokensForSig: string[]
+  let releaseTokensForSig: string[]
+  let tokenPaymentSig: string[]
 
   beforeEach(async () => {
     token = await MockBLT.new()
@@ -125,8 +117,8 @@ contract('TokenEscrowMarketplace', function([
 
       const endBalance = await token.balanceOf(alice)
 
-      startBalance.should.be.bignumber.equal('1e18')
-      endBalance.should.be.bignumber.equal('9e17')
+      startBalance.should.be.eq.BN(BNe10(('1e18')))
+      endBalance.should.be.eq.BN(BNe10(('9e17')))
     })
 
     it('emits an event when paying into escrow', async () => {
@@ -140,8 +132,8 @@ contract('TokenEscrowMarketplace', function([
 
       if (!matchingLog) return // Satisfy TS
 
-      matchingLog.args.escrowPayer.should.be.bignumber.equal(alice)
-      matchingLog.args.amount.should.be.bignumber.equal('1e17')
+      matchingLog.args.escrowPayer.should.be.eq.BN(alice)
+      matchingLog.args.amount.should.be.eq.BN(BNe10(('1e17')))
     })
 
     it('marks the tokens as being in escrow from alice', async () => {
@@ -152,9 +144,9 @@ contract('TokenEscrowMarketplace', function([
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
       // balance
-      escrowBefore.should.be.bignumber.equal('0')
+      escrowBefore.should.be.eq.BN('0')
       // balance
-      escrowAfter.should.be.bignumber.equal('1e17')
+      escrowAfter.should.be.eq.BN(BNe10(('1e17')))
     })
 
     it('can handle multiple additions to the same escrow', async () => {
@@ -167,8 +159,8 @@ contract('TokenEscrowMarketplace', function([
 
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
-      escrowBefore.should.be.bignumber.equal('0')
-      escrowAfter.should.be.bignumber.equal('2e17')
+      escrowBefore.should.be.eq.BN('0')
+      escrowAfter.should.be.eq.BN(BNe10(('2e17')))
     })
 
     it('fails if user tries to transfer more tokens to escrow than they own', async () => {
@@ -187,13 +179,13 @@ contract('TokenEscrowMarketplace', function([
       const tokenAfterBob = await token.balanceOf(bob)
 
       // balance
-      escrowBefore.should.be.bignumber.equal('0')
-      tokenBeforeAlice.should.be.bignumber.equal('1e18')
-      tokenBeforeBob.should.be.bignumber.equal('1e18')
+      escrowBefore.should.be.eq.BN('0')
+      tokenBeforeAlice.should.be.eq.BN(BNe10(('1e18')))
+      tokenBeforeBob.should.be.eq.BN(BNe10(('1e18')))
       // balance
-      escrowAfter.should.be.bignumber.equal('0')
-      tokenAfterAlice.should.be.bignumber.equal('0')
-      tokenAfterBob.should.be.bignumber.equal('2e18')
+      escrowAfter.should.be.eq.BN('0')
+      tokenAfterAlice.should.be.eq.BN('0')
+      tokenAfterBob.should.be.eq.BN(BNe10(('2e18')))
     })
 
     it('fails if user tries to transfer more tokens to escrow than they approved', async () => {
@@ -207,11 +199,11 @@ contract('TokenEscrowMarketplace', function([
       const escrowAfter = await marketplace.tokenEscrow(alice)
       const tokenAfter = await token.balanceOf(alice)
 
-      escrowBefore.should.be.bignumber.equal('0')
-      tokenBefore.should.be.bignumber.equal('1e18')
+      escrowBefore.should.be.eq.BN('0')
+      tokenBefore.should.be.eq.BN(BNe10(('1e18')))
 
-      escrowAfter.should.be.bignumber.equal('0')
-      tokenAfter.should.be.bignumber.equal('1e18')
+      escrowAfter.should.be.eq.BN('0')
+      tokenAfter.should.be.eq.BN(BNe10(('1e18')))
     })
   })
 
@@ -220,7 +212,7 @@ contract('TokenEscrowMarketplace', function([
       sender: string
       amount: BigNumber.BigNumber
       nonce: string
-      delegationSig: string
+      delegationSig: string[]
       from: string
     }
 
@@ -282,11 +274,11 @@ contract('TokenEscrowMarketplace', function([
       const endBalance = await token.balanceOf(alice)
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
-      escrowBefore.should.be.bignumber.equal('0')
-      escrowAfter.should.be.bignumber.equal('5e17')
+      escrowBefore.should.be.eq.BN('0')
+      escrowAfter.should.be.eq.BN(BNe10(('5e17')))
 
-      startBalance.should.be.bignumber.equal('1e18')
-      endBalance.should.be.bignumber.equal('5e17')
+      startBalance.should.be.eq.BN(BNe10(('1e18')))
+      endBalance.should.be.eq.BN(BNe10(('5e17')))
     })
 
     it('Allows anyone to submit valid sigs', async () => {
@@ -336,11 +328,11 @@ contract('TokenEscrowMarketplace', function([
       const endBalance = await token.balanceOf(alice)
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
-      escrowBefore.should.be.bignumber.equal('0')
-      escrowAfter.should.be.bignumber.equal('1e18')
+      escrowBefore.should.be.eq.BN('0')
+      escrowAfter.should.be.eq.BN(BNe10(('1e18')))
 
-      startBalance.should.be.bignumber.equal('1e18')
-      endBalance.should.be.bignumber.equal('0')
+      startBalance.should.be.eq.BN(BNe10(('1e18')))
+      endBalance.should.be.eq.BN('0')
     })
   })
 
@@ -379,16 +371,16 @@ contract('TokenEscrowMarketplace', function([
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
       // Bob's balance increases
-      before.token.bob.should.be.bignumber.equal('10e17')
-      after.token.bob.should.be.bignumber.equal('11e17')
+      before.token.bob.should.be.eq.BN(BNe10(('10e17')))
+      after.token.bob.should.be.eq.BN(BNe10(('11e17')))
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal('8e17')
-      after.token.alice.should.be.bignumber.equal('8e17')
+      before.token.alice.should.be.eq.BN(BNe10(('8e17')))
+      after.token.alice.should.be.eq.BN(BNe10(('8e17')))
 
       // Escrow decreases
-      escrowBefore.should.be.bignumber.equal('2e17')
-      escrowAfter.should.be.bignumber.equal('1e17')
+      escrowBefore.should.be.eq.BN(BNe10(('2e17')))
+      escrowAfter.should.be.eq.BN(BNe10(('1e17')))
     })
 
     it('emits an event when paying from escrow', async () => {
@@ -414,9 +406,9 @@ contract('TokenEscrowMarketplace', function([
 
       if (!matchingLog) return // Satisfy TS
 
-      matchingLog.args.escrowPayer.should.be.bignumber.equal(alice)
+      matchingLog.args.escrowPayer.should.be.eq.BN(alice)
       matchingLog.args.escrowPayee.should.be.equal(bob)
-      matchingLog.args.amount.should.be.bignumber.equal('1e17')
+      matchingLog.args.amount.should.be.eq.BN(BNe10(('1e17')))
     })
 
     it('allows multiple txs with different nonce', async () => {
@@ -458,16 +450,16 @@ contract('TokenEscrowMarketplace', function([
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
       // Bob's balance increases
-      before.token.bob.should.be.bignumber.equal('10e17')
-      after.token.bob.should.be.bignumber.equal('12e17')
+      before.token.bob.should.be.eq.BN(BNe10(('10e17')))
+      after.token.bob.should.be.eq.BN(BNe10(('12e17')))
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal('8e17')
-      after.token.alice.should.be.bignumber.equal('8e17')
+      before.token.alice.should.be.eq.BN(BNe10(('8e17')))
+      after.token.alice.should.be.eq.BN(BNe10(('8e17')))
 
       // Escrow goes to 0
-      escrowBefore.should.be.bignumber.equal('2e17')
-      escrowAfter.should.be.bignumber.equal('0')
+      escrowBefore.should.be.eq.BN(BNe10(('2e17')))
+      escrowAfter.should.be.eq.BN('0')
     })
 
     it('fails if not called by attestationLogic', async () => {
@@ -491,16 +483,16 @@ contract('TokenEscrowMarketplace', function([
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
       // Bob's balance stays the sam
-      before.token.bob.should.be.bignumber.equal('1e18')
-      after.token.bob.should.be.bignumber.equal('1e18')
+      before.token.bob.should.be.eq.BN(BNe10(('1e18')))
+      after.token.bob.should.be.eq.BN(BNe10(('1e18')))
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal('8e17')
-      after.token.alice.should.be.bignumber.equal('8e17')
+      before.token.alice.should.be.eq.BN(BNe10(('8e17')))
+      after.token.alice.should.be.eq.BN(BNe10(('8e17')))
 
       // Escrow stays the same
-      escrowBefore.should.be.bignumber.equal('2e17')
-      escrowAfter.should.be.bignumber.equal('2e17')
+      escrowBefore.should.be.eq.BN(BNe10(('2e17')))
+      escrowAfter.should.be.eq.BN(BNe10(('2e17')))
     })
 
     it('fails if amount higher than authorization', async () => {
@@ -524,16 +516,16 @@ contract('TokenEscrowMarketplace', function([
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
       // Bob's balance stays the same
-      before.token.bob.should.be.bignumber.equal('1e18')
-      after.token.bob.should.be.bignumber.equal('1e18')
+      before.token.bob.should.be.eq.BN(BNe10(('1e18')))
+      after.token.bob.should.be.eq.BN(BNe10(('1e18')))
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal('8e17')
-      after.token.alice.should.be.bignumber.equal('8e17')
+      before.token.alice.should.be.eq.BN(BNe10(('8e17')))
+      after.token.alice.should.be.eq.BN(BNe10(('8e17')))
 
       // Escrow stays the same
-      escrowBefore.should.be.bignumber.equal('2e17')
-      escrowAfter.should.be.bignumber.equal('2e17')
+      escrowBefore.should.be.eq.BN(BNe10(('2e17')))
+      escrowAfter.should.be.eq.BN(BNe10(('2e17')))
     })
 
     it('fails if authorized value higher than available balance', async () => {
@@ -566,16 +558,16 @@ contract('TokenEscrowMarketplace', function([
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
       // Bob's balance stays the same
-      before.token.bob.should.be.bignumber.equal('1e18')
-      after.token.bob.should.be.bignumber.equal('1e18')
+      before.token.bob.should.be.eq.BN(BNe10(('1e18')))
+      after.token.bob.should.be.eq.BN(BNe10(('1e18')))
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal('8e17')
-      after.token.alice.should.be.bignumber.equal('8e17')
+      before.token.alice.should.be.eq.BN(BNe10(('8e17')))
+      after.token.alice.should.be.eq.BN(BNe10(('8e17')))
 
       // Escrow stays the same
-      escrowBefore.should.be.bignumber.equal('2e17')
-      escrowAfter.should.be.bignumber.equal('2e17')
+      escrowBefore.should.be.eq.BN(BNe10(('2e17')))
+      escrowAfter.should.be.eq.BN(BNe10(('2e17')))
     })
 
     it('fails if sig replayed', async () => {
@@ -609,16 +601,16 @@ contract('TokenEscrowMarketplace', function([
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
       // Bob's balance increases
-      before.token.bob.should.be.bignumber.equal('1e18')
-      after.token.bob.should.be.bignumber.equal('11e17')
+      before.token.bob.should.be.eq.BN(BNe10(('1e18')))
+      after.token.bob.should.be.eq.BN(BNe10(('11e17')))
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal('8e17')
-      after.token.alice.should.be.bignumber.equal('8e17')
+      before.token.alice.should.be.eq.BN(BNe10(('8e17')))
+      after.token.alice.should.be.eq.BN(BNe10(('8e17')))
 
       // Escrow decreases
-      escrowBefore.should.be.bignumber.equal('2e17')
-      escrowAfter.should.be.bignumber.equal('1e17')
+      escrowBefore.should.be.eq.BN(BNe10(('2e17')))
+      escrowAfter.should.be.eq.BN(BNe10(('1e17')))
     })
 
     it('fails if amount lower than authorization', async () => {
@@ -642,16 +634,16 @@ contract('TokenEscrowMarketplace', function([
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
       // Bob's balance stays the same
-      before.token.bob.should.be.bignumber.equal('1e18')
-      after.token.bob.should.be.bignumber.equal('1e18')
+      before.token.bob.should.be.eq.BN(BNe10(('1e18')))
+      after.token.bob.should.be.eq.BN(BNe10(('1e18')))
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal('8e17')
-      after.token.alice.should.be.bignumber.equal('8e17')
+      before.token.alice.should.be.eq.BN(BNe10(('8e17')))
+      after.token.alice.should.be.eq.BN(BNe10(('8e17')))
 
       // Escrow stays the same
-      escrowBefore.should.be.bignumber.equal('2e17')
-      escrowAfter.should.be.bignumber.equal('2e17')
+      escrowBefore.should.be.eq.BN(BNe10(('2e17')))
+      escrowAfter.should.be.eq.BN(BNe10(('2e17')))
     })
   })
 
@@ -672,16 +664,16 @@ contract('TokenEscrowMarketplace', function([
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
       // Bob's balance stays the same
-      before.token.bob.should.be.bignumber.equal('1e18')
-      after.token.bob.should.be.bignumber.equal('1e18')
+      before.token.bob.should.be.eq.BN(BNe10(('1e18')))
+      after.token.bob.should.be.eq.BN(BNe10(('1e18')))
 
       // Alice's increases
-      before.token.alice.should.be.bignumber.equal('8e17')
-      after.token.alice.should.be.bignumber.equal('1e18')
+      before.token.alice.should.be.eq.BN(BNe10(('8e17')))
+      after.token.alice.should.be.eq.BN(BNe10(('1e18')))
 
       // Escrow goes to zero
-      escrowBefore.should.be.bignumber.equal('2e17')
-      escrowAfter.should.be.bignumber.equal('0')
+      escrowBefore.should.be.eq.BN(BNe10(('2e17')))
+      escrowAfter.should.be.eq.BN('0')
     })
 
     it('fails if more than available balance', async () => {
@@ -696,16 +688,16 @@ contract('TokenEscrowMarketplace', function([
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
       // Bob's balance stays the same
-      before.token.bob.should.be.bignumber.equal('1e18')
-      after.token.bob.should.be.bignumber.equal('1e18')
+      before.token.bob.should.be.eq.BN(BNe10(('1e18')))
+      after.token.bob.should.be.eq.BN(BNe10(('1e18')))
 
       // Alice's stays the same
-      before.token.alice.should.be.bignumber.equal('8e17')
-      after.token.alice.should.be.bignumber.equal('8e17')
+      before.token.alice.should.be.eq.BN(BNe10(('8e17')))
+      after.token.alice.should.be.eq.BN(BNe10(('8e17')))
 
       // Escrow stays the same
-      escrowBefore.should.be.bignumber.equal('2e17')
-      escrowAfter.should.be.bignumber.equal('2e17')
+      escrowBefore.should.be.eq.BN(BNe10(('2e17')))
+      escrowAfter.should.be.eq.BN(BNe10(('2e17')))
     })
 
     it('emits an event when escrow is released', async () => {
@@ -719,8 +711,8 @@ contract('TokenEscrowMarketplace', function([
 
       if (!matchingLog) return // Satisfy TS
 
-      matchingLog.args.escrowPayer.should.be.bignumber.equal(alice)
-      matchingLog.args.amount.should.be.bignumber.equal('2e17')
+      matchingLog.args.escrowPayer.should.be.eq.BN(alice)
+      matchingLog.args.amount.should.be.eq.BN(BNe10(('2e17')))
     })
   })
 
@@ -755,16 +747,16 @@ contract('TokenEscrowMarketplace', function([
       const escrowAfter = await marketplace.tokenEscrow(alice)
 
       // Bob's balance stays the same
-      before.token.bob.should.be.bignumber.equal('1e18')
-      after.token.bob.should.be.bignumber.equal('1e18')
+      before.token.bob.should.be.eq.BN(BNe10(('1e18')))
+      after.token.bob.should.be.eq.BN(BNe10(('1e18')))
 
       // Alice's increases
-      before.token.alice.should.be.bignumber.equal('8e17')
-      after.token.alice.should.be.bignumber.equal('1e18')
+      before.token.alice.should.be.eq.BN(BNe10(('8e17')))
+      after.token.alice.should.be.eq.BN(BNe10(('1e18')))
 
       // Escrow goes to zero
-      escrowBefore.should.be.bignumber.equal('2e17')
-      escrowAfter.should.be.bignumber.equal('0')
+      escrowBefore.should.be.eq.BN(BNe10(('2e17')))
+      escrowAfter.should.be.eq.BN('0')
     })
 
     it('allows anyone to submit valid sigs', async () => {
