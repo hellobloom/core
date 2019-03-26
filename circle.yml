@@ -14,6 +14,10 @@ jobs:
       - restore_cache:
           key: dependency-cache-{{ .Branch }}-{{ checksum "yarn.lock" }}
 
+      - run:
+          name: Copy truffle config
+          command: cp truffle.js.example truffle.js && ls
+
       - run: 
           name: Check yarn.lock md5 first
           command: md5sum yarn.lock
