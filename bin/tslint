@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Pass in the project config file and directory to run tslint
+#
+#   1. Passes in project file, enabling type-based linting
+#   2. Uses verbose formatter so we know which lint rule failed
+#   3. Excludes test files
+#   4. Passes in flags from command line to tslint. `bin/tslint --fix` should work
+tslint_project() {
+  local config_file="$1"
+  local directory="$2"
+
+  # Remove the function arguments
+  shift 2
+
+  # Use the verbose formatter which includes the rule name
+  ./node_modules/.bin/tslint                    \
+    --project "$config_file"                    \
+    --format verbose                            \
+    "$directory/**/*.{ts,tsx}"                  \
+    "$@" # Pass in commands passed to our executable
+}
+
+# Track if either task failed.
+linting_passed="true"
+
+if ! tslint_project tsconfig.json ts_test "$@"; then
+  linting_passed="false"
+fi
+
+if [ "$linting_passed" == "false" ]; then
+  exit 1
+fi

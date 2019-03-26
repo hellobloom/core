@@ -70,7 +70,7 @@ jobs:
           name: Check that typings are in sync
           command: yarn generate && git diff --exit-code
 
-  check_prettier:
+  check_prettier_and_tslint:
     docker:
       - image: circleci/node:8.9.4
 
@@ -83,6 +83,10 @@ jobs:
       - run:
           name: Check for prettier violations
           command: bin/prettier && git diff --exit-code
+
+      - run:
+          name: Check that typescript lints
+          command: bin/tslint
 
 workflows:
   version: 2
@@ -98,7 +102,7 @@ workflows:
           requires:
             - install_dependencies
 
-      - check_prettier:
+      - check_prettier_and_tslint:
           requires:
             - install_dependencies
 

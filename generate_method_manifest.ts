@@ -233,7 +233,7 @@ glob('./build/contracts/*.json', {}, (err: string, files: string[]) => {
 
   buffer += generateHeader(isTruffle)
 
-  let contract_names = []
+  let contract_names: string[] = []
 
   files.forEach(file => {
     let definition: Definition = require(file)

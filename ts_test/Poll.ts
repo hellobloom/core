@@ -126,7 +126,7 @@ contract('Poll', function([alice, bob, carl]) {
     })
 
     it('exposes an author', async () => {
-      ;(await poll.author()).should.be.equal(alice)
+      (await poll.author()).should.be.equal(alice)
     })
 
     it('rejects polls with a start date earlier than now', async () => {
