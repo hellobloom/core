@@ -36,7 +36,7 @@ contract('VotingCenter', function([alice, bob, carl]) {
     pollAddress = matchingLog.args.poll
 
     const poll = await Poll.at(pollAddress)
-    const multihash = (await poll.pollDataMultihash()) as unknown as string
+    const multihash = (await poll.pollDataMultihash()) as any as string
     ipfs
       .fromHex(multihash)
       .should.equal('Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe')

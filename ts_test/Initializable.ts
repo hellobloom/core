@@ -2,7 +2,7 @@ import './test_setup'
 import {EVMThrow} from './helpers/EVMThrow'
 import {should} from './test_setup'
 import * as ethereumjsWallet from 'ethereumjs-wallet'
-import { InitializableInstance } from '../types/truffle-contracts'
+import {InitializableInstance} from '../types/truffle-contracts'
 
 const Initializable = artifacts.require('Initializable')
 

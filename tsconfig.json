@@ -14,9 +14,5 @@
     "typeRoots": ["./node_modules/@types", "./types"],
     "types": ["node", "truffle-contracts"]
   },
-  "include": [
-    "./chai-bn.d.ts",
-    "ts_test/**/*.ts",
-    "**/*.ts"
-  ]
+  "include": ["./chai-bn.d.ts", "ts_test/**/*.ts", "**/*.ts"]
 }

@@ -13,7 +13,7 @@ import {bufferToHex} from 'ethereumjs-util'
 
 import {hashData} from './../src/signData'
 import {getFormattedTypedDataVoteFor} from './helpers/signingLogic'
-import { PollInstance } from '../types/truffle-contracts'
+import {PollInstance} from '../types/truffle-contracts'
 
 const Poll = artifacts.require('Poll')
 
@@ -106,30 +106,27 @@ contract('Poll', function([alice, bob, carl]) {
       const {logs} = await poll.vote(1)
 
       const matchingLog = logs.find(log => {
-        return (
-          log.event === 'VoteCast')
+        return log.event === 'VoteCast'
       })
       should.exist(matchingLog)
       if (!matchingLog) return
 
       matchingLog.args.voter.should.be.equal(alice)
       matchingLog.args.choice.should.be.eq.BN(1)
-
     })
   })
 
   context('Administrating', () => {
     it('exposes an IPFS hash', async () => {
       // compensate for typechain thinking return type is string[]
-      const multihash = (await poll.pollDataMultihash()) as unknown as string
-      console.log(multihash)
+      const multihash = (await poll.pollDataMultihash()) as any as string
       ipfs
         .fromHex(multihash)
         .should.equal('Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe')
     })
 
     it('exposes an author', async () => {
-      (await poll.author()).should.be.equal(alice)
+      ;(await poll.author()).should.be.equal(alice)
     })
 
     it('rejects polls with a start date earlier than now', async () => {
@@ -150,8 +147,8 @@ contract('Poll', function([alice, bob, carl]) {
         1,
         ipfs.toHex('Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe'),
         10,
-        await (latestBlockTime()) + 10,
-        await (latestBlockTime()) + 10,
+        (await latestBlockTime()) + 10,
+        (await latestBlockTime()) + 10,
         alice
       ).should.be.rejectedWith(EVMThrow)
     })

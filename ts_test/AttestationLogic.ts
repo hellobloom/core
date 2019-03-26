@@ -19,7 +19,7 @@ import {
 } from '../types/truffle-contracts'
 import BN from 'bn.js'
 import BigNumber = require('bignumber.js')
-import { BNe10 } from './helpers/BNe10'
+import {BNe10} from './helpers/BNe10'
 
 const TokenEscrowMarketplace = artifacts.require('TokenEscrowMarketplace')
 const AttestationLogic = artifacts.require('AttestationLogic')
@@ -969,8 +969,6 @@ contract('AttestationLogic', function([
 
       should.exist(matchingLog)
       if (!matchingLog) return
-
-      console.log(matchingLog.args)
 
       matchingLog.args.link.should.be.equal(revokeLink)
       matchingLog.args.attester.should.be.equal(bob)

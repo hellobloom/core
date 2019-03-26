@@ -60,7 +60,10 @@ contract('BatchInitializer', function([owner, admin, unrelated]) {
     token = await BLT.new()
     batchInitializer = await BatchInitializer.new(zeroAddress, zeroAddress)
     registryLogic = await AccountRegistryLogic.new(batchInitializer.address)
-    attestationLogic = await AttestationLogic.new(batchInitializer.address, zeroAddress)
+    attestationLogic = await AttestationLogic.new(
+      batchInitializer.address,
+      zeroAddress
+    )
     tokenEscrowMarketplace = await TokenEscrowMarketplace.new(
       token.address,
       attestationLogic.address
@@ -222,7 +225,6 @@ contract('BatchInitializer', function([owner, admin, unrelated]) {
       should.exist(matchingLog)
 
       logs.length.should.be.equal(5)
-      console.log(matchingLog)
     })
   })
   describe('Batch loading attestations', async () => {

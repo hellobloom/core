@@ -10,8 +10,7 @@ import {
   getFormattedTypedDataAddAddress,
   getFormattedTypedDataRemoveAddress,
 } from './helpers/signingLogic'
-import { AccountRegistryLogicInstance } from '../types/truffle-contracts'
-
+import {AccountRegistryLogicInstance} from '../types/truffle-contracts'
 
 const SigningLogic = artifacts.require('SigningLogic')
 const AccountRegistryLogic = artifacts.require('AccountRegistryLogic')
@@ -151,7 +150,7 @@ contract('AccountRegistryLogic', function([
         differentNonce,
         {from: alice}
       ).should.be.fulfilled
-      ;(new BN('1')).should.be.eq.BN(1)
+      new BN('1').should.be.eq.BN(1)
       ;(await registryLogic.linkIds(alice)).should.be.eq.BN(1)
       ;(await registryLogic.linkIds(unclaimed)).should.be.eq.BN(1)
       ;(await registryLogic.linkIds(unclaimedB)).should.be.eq.BN(1)
