@@ -119,7 +119,7 @@ contract('Poll', function([alice, bob, carl]) {
   context('Administrating', () => {
     it('exposes an IPFS hash', async () => {
       // compensate for typechain thinking return type is string[]
-      const multihash = (await poll.pollDataMultihash()) as any as string
+      const multihash = ((await poll.pollDataMultihash()) as any) as string
       ipfs
         .fromHex(multihash)
         .should.equal('Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe')
