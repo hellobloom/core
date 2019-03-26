@@ -2,7 +2,7 @@ import './test_setup'
 import {EVMThrow} from './helpers/EVMThrow'
 import {should} from './test_setup'
 import * as ethereumjsWallet from 'ethereumjs-wallet'
-import { InitializableInstance } from '../types/truffle-contracts';
+import { InitializableInstance } from '../types/truffle-contracts'
 
 const Initializable = artifacts.require('Initializable')
 
@@ -15,18 +15,12 @@ contract('Initializable', function([alice, bob, carl]) {
       'hex'
     )
   )
-  const alicePrivkey = aliceWallet.getPrivateKey()
-
   const bobWallet = ethereumjsWallet.fromPrivateKey(
     new Buffer(
       'ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f',
       'hex'
     )
   )
-  const bobPrivkey = bobWallet.getPrivateKey()
-
-  let aliceId: BigNumber.BigNumber
-
   // Sanity check
   if (alice.toLowerCase() != aliceWallet.getAddressString()) {
     throw new Error('Mnemonic used for truffle tests out of sync?')

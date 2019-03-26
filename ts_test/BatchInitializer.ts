@@ -1,4 +1,3 @@
-import * as BigNumber from 'bignumber.js'
 import * as ethereumjsWallet from 'ethereumjs-wallet'
 
 import {EVMThrow} from './helpers/EVMThrow'

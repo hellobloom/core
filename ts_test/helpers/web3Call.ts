@@ -7,7 +7,7 @@ export default (method: string, ...params: any[]) => {
   }
 
   return new Promise((resolve, reject) =>
-    web3.currentProvider.sendAsync(payload, function(err) {
+    web3.currentProvider.send(payload, function(err) {
       if (err) return reject(err)
       resolve()
     })

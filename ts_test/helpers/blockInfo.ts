@@ -3,16 +3,16 @@ interface BlockInfo {
   timestamp: number
 }
 
-export function latestBlockNumber(): number {
-  return latestBlock().number
+export async function latestBlockNumber(): Promise<number> {
+  return (await latestBlock()).number
 }
 
-export function latestBlockTime(): number {
-  return latestBlock().timestamp
+export async function latestBlockTime(): Promise<number> {
+  return (await latestBlock()).timestamp
 }
 
-function latestBlock(): BlockInfo {
-  const latestBlock = web3.eth.getBlock('latest')
+async function latestBlock(): Promise<BlockInfo> {
+  const latestBlock = await web3.eth.getBlock('latest')
 
   if (latestBlock && latestBlock.number && latestBlock.timestamp) {
     return {
