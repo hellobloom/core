@@ -144,10 +144,10 @@ contract('BatchInitializer', function([owner, admin, unrelated]) {
       for (let link of testLinks.slice(0, numlinks)) {
         i++
         const linkIdA = await registryLogic.linkIds(link.currentAddress)
-        linkIdA.should.be.bignumber.greaterThan(0)
-        linkIdA.should.be.bignumber.equal(new BigNumber(i))
+        linkIdA.should.be.gt.BN(0)
+        linkIdA.should.be.eq.BN(i)
         const linkIdB = await registryLogic.linkIds(link.newAddress)
-        linkIdB.should.be.bignumber.equal(linkIdA)
+        linkIdB.should.be.eq.BN(linkIdA)
       }
     })
 
