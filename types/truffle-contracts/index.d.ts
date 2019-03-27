@@ -75,6 +75,10 @@ export interface HasNoEtherContract
   "new"(meta?: Truffle.TransactionDetails): Promise<HasNoEtherInstance>;
 }
 
+export interface IERC20Contract extends Truffle.Contract<IERC20Instance> {
+  "new"(meta?: Truffle.TransactionDetails): Promise<IERC20Instance>;
+}
+
 export interface InitializableContract
   extends Truffle.Contract<InitializableInstance> {
   "new"(
@@ -98,6 +102,11 @@ export interface OwnableContract extends Truffle.Contract<OwnableInstance> {
 
 export interface PausableContract extends Truffle.Contract<PausableInstance> {
   "new"(meta?: Truffle.TransactionDetails): Promise<PausableInstance>;
+}
+
+export interface PauserRoleContract
+  extends Truffle.Contract<PauserRoleInstance> {
+  "new"(meta?: Truffle.TransactionDetails): Promise<PauserRoleInstance>;
 }
 
 export interface PollContract extends Truffle.Contract<PollInstance> {
@@ -189,6 +198,10 @@ export interface AccreditationRepoInstance extends Truffle.ContractInstance {
     txDetails?: Truffle.TransactionDetails
   ): Promise<boolean>;
 
+  renounceOwnership(
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
   transferOwnership(
     newOwner: string | BigNumber,
     txDetails?: Truffle.TransactionDetails
@@ -210,10 +223,16 @@ export interface AccreditationRepoInstance extends Truffle.ContractInstance {
   ): Promise<Truffle.TransactionResponse>;
 
   owner(txDetails?: Truffle.TransactionDetails): Promise<string>;
+  isOwner(txDetails?: Truffle.TransactionDetails): Promise<boolean>;
   admin(txDetails?: Truffle.TransactionDetails): Promise<string>;
 }
 
 export interface AirdropProxyInstance extends Truffle.ContractInstance {
+  isPauser(
+    account: string | BigNumber,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<boolean>;
+
   isManager(
     _address: string | BigNumber,
     txDetails?: Truffle.TransactionDetails
@@ -223,11 +242,20 @@ export interface AirdropProxyInstance extends Truffle.ContractInstance {
     txDetails?: Truffle.TransactionDetails
   ): Promise<Truffle.TransactionResponse>;
 
-  pause(
+  renouncePauser(
     txDetails?: Truffle.TransactionDetails
   ): Promise<Truffle.TransactionResponse>;
 
-  reclaimEther(
+  renounceOwnership(
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
+  addPauser(
+    account: string | BigNumber,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
+  pause(
     txDetails?: Truffle.TransactionDetails
   ): Promise<Truffle.TransactionResponse>;
 
@@ -259,6 +287,7 @@ export interface AirdropProxyInstance extends Truffle.ContractInstance {
 
   paused(txDetails?: Truffle.TransactionDetails): Promise<boolean>;
   owner(txDetails?: Truffle.TransactionDetails): Promise<string>;
+  isOwner(txDetails?: Truffle.TransactionDetails): Promise<boolean>;
   token(txDetails?: Truffle.TransactionDetails): Promise<string>;
 }
 
@@ -363,6 +392,10 @@ export interface BasicTokenInstance extends Truffle.ContractInstance {
 }
 
 export interface BatchInitializerInstance extends Truffle.ContractInstance {
+  renounceOwnership(
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
   transferOwnership(
     newOwner: string | BigNumber,
     txDetails?: Truffle.TransactionDetails
@@ -409,6 +442,7 @@ export interface BatchInitializerInstance extends Truffle.ContractInstance {
 
   attestationLogic(txDetails?: Truffle.TransactionDetails): Promise<string>;
   owner(txDetails?: Truffle.TransactionDetails): Promise<string>;
+  isOwner(txDetails?: Truffle.TransactionDetails): Promise<boolean>;
   registryLogic(txDetails?: Truffle.TransactionDetails): Promise<string>;
   admin(txDetails?: Truffle.TransactionDetails): Promise<string>;
 }
@@ -431,7 +465,7 @@ export interface ECRecoveryInstance extends Truffle.ContractInstance {
 
 export interface ERC20Instance extends Truffle.ContractInstance {
   balanceOf(
-    who: string | BigNumber,
+    owner: string | BigNumber,
     txDetails?: Truffle.TransactionDetails
   ): Promise<BigNumber>;
 
@@ -447,6 +481,12 @@ export interface ERC20Instance extends Truffle.ContractInstance {
     txDetails?: Truffle.TransactionDetails
   ): Promise<Truffle.TransactionResponse>;
 
+  approve(
+    spender: string | BigNumber,
+    value: number | BigNumber | string,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
   transferFrom(
     from: string | BigNumber,
     to: string | BigNumber,
@@ -454,9 +494,15 @@ export interface ERC20Instance extends Truffle.ContractInstance {
     txDetails?: Truffle.TransactionDetails
   ): Promise<Truffle.TransactionResponse>;
 
-  approve(
+  increaseAllowance(
     spender: string | BigNumber,
-    value: number | BigNumber | string,
+    addedValue: number | BigNumber | string,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
+  decreaseAllowance(
+    spender: string | BigNumber,
+    subtractedValue: number | BigNumber | string,
     txDetails?: Truffle.TransactionDetails
   ): Promise<Truffle.TransactionResponse>;
 
@@ -491,6 +537,40 @@ export interface HasNoEtherInstance extends Truffle.ContractInstance {
   owner(txDetails?: Truffle.TransactionDetails): Promise<string>;
 }
 
+export interface IERC20Instance extends Truffle.ContractInstance {
+  balanceOf(
+    who: string | BigNumber,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<BigNumber>;
+
+  allowance(
+    owner: string | BigNumber,
+    spender: string | BigNumber,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<BigNumber>;
+
+  transfer(
+    to: string | BigNumber,
+    value: number | BigNumber | string,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
+  approve(
+    spender: string | BigNumber,
+    value: number | BigNumber | string,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
+  transferFrom(
+    from: string | BigNumber,
+    to: string | BigNumber,
+    value: number | BigNumber | string,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
+  totalSupply(txDetails?: Truffle.TransactionDetails): Promise<BigNumber>;
+}
+
 export interface InitializableInstance extends Truffle.ContractInstance {
   endInitialization(
     txDetails?: Truffle.TransactionDetails
@@ -519,44 +599,44 @@ export interface MigrationsInstance extends Truffle.ContractInstance {
 
 export interface MockBLTInstance extends Truffle.ContractInstance {
   balanceOf(
-    _owner: string | BigNumber,
+    owner: string | BigNumber,
     txDetails?: Truffle.TransactionDetails
   ): Promise<BigNumber>;
 
   allowance(
-    _owner: string | BigNumber,
-    _spender: string | BigNumber,
+    owner: string | BigNumber,
+    spender: string | BigNumber,
     txDetails?: Truffle.TransactionDetails
   ): Promise<BigNumber>;
 
   approve(
-    _spender: string | BigNumber,
-    _value: number | BigNumber | string,
+    spender: string | BigNumber,
+    value: number | BigNumber | string,
     txDetails?: Truffle.TransactionDetails
   ): Promise<Truffle.TransactionResponse>;
 
   transferFrom(
-    _from: string | BigNumber,
-    _to: string | BigNumber,
-    _value: number | BigNumber | string,
+    from: string | BigNumber,
+    to: string | BigNumber,
+    value: number | BigNumber | string,
     txDetails?: Truffle.TransactionDetails
   ): Promise<Truffle.TransactionResponse>;
 
-  decreaseApproval(
-    _spender: string | BigNumber,
-    _subtractedValue: number | BigNumber | string,
+  increaseAllowance(
+    spender: string | BigNumber,
+    addedValue: number | BigNumber | string,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
+  decreaseAllowance(
+    spender: string | BigNumber,
+    subtractedValue: number | BigNumber | string,
     txDetails?: Truffle.TransactionDetails
   ): Promise<Truffle.TransactionResponse>;
 
   transfer(
-    _to: string | BigNumber,
-    _value: number | BigNumber | string,
-    txDetails?: Truffle.TransactionDetails
-  ): Promise<Truffle.TransactionResponse>;
-
-  increaseApproval(
-    _spender: string | BigNumber,
-    _addedValue: number | BigNumber | string,
+    to: string | BigNumber,
+    value: number | BigNumber | string,
     txDetails?: Truffle.TransactionDetails
   ): Promise<Truffle.TransactionResponse>;
 
@@ -570,17 +650,31 @@ export interface MockBLTInstance extends Truffle.ContractInstance {
 }
 
 export interface OwnableInstance extends Truffle.ContractInstance {
+  renounceOwnership(
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
   transferOwnership(
     newOwner: string | BigNumber,
     txDetails?: Truffle.TransactionDetails
   ): Promise<Truffle.TransactionResponse>;
 
   owner(txDetails?: Truffle.TransactionDetails): Promise<string>;
+  isOwner(txDetails?: Truffle.TransactionDetails): Promise<boolean>;
 }
 
 export interface PausableInstance extends Truffle.ContractInstance {
-  transferOwnership(
-    newOwner: string | BigNumber,
+  isPauser(
+    account: string | BigNumber,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<boolean>;
+
+  renouncePauser(
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
+  addPauser(
+    account: string | BigNumber,
     txDetails?: Truffle.TransactionDetails
   ): Promise<Truffle.TransactionResponse>;
 
@@ -593,7 +687,22 @@ export interface PausableInstance extends Truffle.ContractInstance {
   ): Promise<Truffle.TransactionResponse>;
 
   paused(txDetails?: Truffle.TransactionDetails): Promise<boolean>;
-  owner(txDetails?: Truffle.TransactionDetails): Promise<string>;
+}
+
+export interface PauserRoleInstance extends Truffle.ContractInstance {
+  isPauser(
+    account: string | BigNumber,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<boolean>;
+
+  addPauser(
+    account: string | BigNumber,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
+
+  renouncePauser(
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
 }
 
 export interface PollInstance extends Truffle.ContractInstance {

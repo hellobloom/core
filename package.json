@@ -16,7 +16,7 @@
     "eth-gas-reporter": "^0.1.9",
     "eth-sig-util": "^2.0.1",
     "ethereumjs-util": "^5.1.2",
-    "openzeppelin-solidity": "^1.9.0",
+    "openzeppelin-solidity": "^2.2.0",
     "solc": "0.4.23",
     "truffle": "^5.0.9",
     "truffle-contract": "^3.0.5",

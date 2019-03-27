@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.7;
 
 import "./SigningLogic.sol";
 import "./TokenEscrowMarketplace.sol";
@@ -49,10 +49,10 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _subject,
     address _requester,
     uint256 _reward,
-    bytes _requesterSig,
+    bytes calldata _requesterSig,
     bytes32 _dataHash,
     bytes32 _requestNonce,
-    bytes _subjectSig // Sig of subject with requester, attester, dataHash, requestNonce
+    bytes calldata _subjectSig // Sig of subject with requester, attester, dataHash, requestNonce
   ) external {
     attestForUser(
       _subject,
@@ -84,11 +84,11 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _attester,
     address _requester,
     uint256 _reward,
-    bytes _requesterSig,
+    bytes calldata _requesterSig,
     bytes32 _dataHash,
     bytes32 _requestNonce,
-    bytes _subjectSig, // Sig of subject with dataHash and requestNonce
-    bytes _delegationSig
+    bytes calldata _subjectSig, // Sig of subject with dataHash and requestNonce
+    bytes calldata _delegationSig
   ) external {
     // Confirm attester address matches recovered address from signature
     validateAttestForSig(_subject, _attester, _requester, _reward, _dataHash, _requestNonce, _delegationSig);
@@ -121,10 +121,10 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _attester,
     address _requester,
     uint256 _reward,
-    bytes _requesterSig,
+    bytes memory _requesterSig,
     bytes32 _dataHash,
     bytes32 _requestNonce,
-    bytes _subjectSig
+    bytes memory _subjectSig
     ) private {
     
     validateSubjectSig(
@@ -158,7 +158,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _requester,
     uint256 _reward,
     bytes32 _requestNonce,
-    bytes _requesterSig
+    bytes calldata _requesterSig
   ) external {
     contestForUser(
       msg.sender,
@@ -184,8 +184,8 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _requester,
     uint256 _reward,
     bytes32 _requestNonce,
-    bytes _requesterSig,
-    bytes _delegationSig
+    bytes calldata _requesterSig,
+    bytes calldata _delegationSig
   ) external {
     validateContestForSig(
       _attester,
@@ -217,7 +217,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _requester,
     uint256 _reward,
     bytes32 _requestNonce,
-    bytes _requesterSig
+    bytes memory _requesterSig
     ) private {
 
     if (_reward > 0) {
@@ -237,7 +237,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _subject,
     bytes32 _dataHash,
     bytes32 _requestNonce,
-    bytes _subjectSig
+    bytes memory _subjectSig
   ) private {
     bytes32 _signatureDigest = generateRequestAttestationSchemaHash(_dataHash, _requestNonce);
     require(_subject == recoverSigner(_signatureDigest, _subjectSig));
@@ -261,7 +261,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     uint256 _reward,
     bytes32 _dataHash,
     bytes32 _requestNonce,
-    bytes _delegationSig
+    bytes memory _delegationSig
   ) private {
     bytes32 _delegationDigest = generateAttestForDelegationSchemaHash(_subject, _requester, _reward, _dataHash, _requestNonce);
     require(_attester == recoverSigner(_delegationDigest, _delegationSig), 'Invalid AttestFor Signature');
@@ -281,7 +281,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _requester,
     uint256 _reward,
     bytes32 _requestNonce,
-    bytes _delegationSig
+    bytes memory _delegationSig
   ) private {
     bytes32 _delegationDigest = generateContestForDelegationSchemaHash(_requester, _reward, _requestNonce);
     require(_attester == recoverSigner(_delegationDigest, _delegationSig), 'Invalid ContestFor Signature');
@@ -330,7 +330,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _sender,
     bytes32 _link,
     bytes32 _nonce,
-    bytes _delegationSig
+    bytes calldata _delegationSig
     ) external {
       validateRevokeForSig(_sender, _link, _nonce, _delegationSig);
       revokeAttestationForUser(_link, _sender);
@@ -346,7 +346,7 @@ contract AttestationLogic is Initializable, SigningLogic{
     address _sender,
     bytes32 _link,
     bytes32 _nonce,
-    bytes _delegationSig
+    bytes memory _delegationSig
   ) private {
     bytes32 _delegationDigest = generateRevokeAttestationForDelegationSchemaHash(_link, _nonce);
     require(_sender == recoverSigner(_delegationDigest, _delegationSig), 'Invalid RevokeFor Signature');
@@ -372,9 +372,9 @@ contract AttestationLogic is Initializable, SigningLogic{
    * @param _newTokenEscrowMarketplace Address of new SigningLogic implementation
    */
   function setTokenEscrowMarketplace(TokenEscrowMarketplace _newTokenEscrowMarketplace) external onlyDuringInitialization {
-    address oldTokenEscrowMarketplace = tokenEscrowMarketplace;
+    address oldTokenEscrowMarketplace = address(tokenEscrowMarketplace);
     tokenEscrowMarketplace = _newTokenEscrowMarketplace;
-    emit TokenEscrowMarketplaceChanged(oldTokenEscrowMarketplace, tokenEscrowMarketplace);
+    emit TokenEscrowMarketplaceChanged(oldTokenEscrowMarketplace, address(tokenEscrowMarketplace));
   }
 
 }

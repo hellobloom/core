@@ -27,11 +27,13 @@ declare global {
       require(name: "ERC20"): TruffleContracts.ERC20Contract;
       require(name: "ERC20Basic"): TruffleContracts.ERC20BasicContract;
       require(name: "HasNoEther"): TruffleContracts.HasNoEtherContract;
+      require(name: "IERC20"): TruffleContracts.IERC20Contract;
       require(name: "Initializable"): TruffleContracts.InitializableContract;
       require(name: "Migrations"): TruffleContracts.MigrationsContract;
       require(name: "MockBLT"): TruffleContracts.MockBLTContract;
       require(name: "Ownable"): TruffleContracts.OwnableContract;
       require(name: "Pausable"): TruffleContracts.PausableContract;
+      require(name: "PauserRole"): TruffleContracts.PauserRoleContract;
       require(name: "Poll"): TruffleContracts.PollContract;
       require(name: "SigningLogic"): TruffleContracts.SigningLogicContract;
       require(name: "StandardToken"): TruffleContracts.StandardTokenContract;

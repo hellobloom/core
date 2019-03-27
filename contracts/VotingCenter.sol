@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.7;
 
 import "./Poll.sol";
 
@@ -23,9 +23,9 @@ contract VotingCenter {
    * @return The address of the new Poll
    */
   function createPoll(
-    string _name,
+    string calldata _name,
     uint256 _chainId,
-    bytes _ipfsHash,
+    bytes calldata _ipfsHash,
     uint16 _numOptions,
     uint256 _startTime,
     uint256 _endTime
@@ -41,12 +41,12 @@ contract VotingCenter {
       );
     polls.push(newPoll);
 
-    emit PollCreated(newPoll, msg.sender);
+    emit PollCreated(address(newPoll), msg.sender);
 
-    return newPoll;
+    return address(newPoll);
   }
 
-  function allPolls() external view returns (Poll[]) {
+  function allPolls() external view returns (Poll[] memory) {
     return polls;
   }
 
