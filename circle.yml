@@ -14,6 +14,10 @@ jobs:
       - restore_cache:
           key: dependency-cache-{{ .Branch }}-{{ checksum "yarn.lock" }}
 
+      - run:
+          name: Copy truffle config
+          command: cp truffle.js.example truffle.js && ls
+
       - run: 
           name: Check yarn.lock md5 first
           command: md5sum yarn.lock
@@ -64,7 +68,21 @@ jobs:
 
       - run:
           name: Check that typings are in sync
-          command: bin/compile-typings && git diff --exit-code
+          command: yarn generate && git diff --exit-code
+
+  check_prettier:
+    docker:
+      - image: circleci/node:8.9.4
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: dependency-cache-{{ .Branch }}-{{ checksum "yarn.lock" }}
+
+      - run:
+          name: Check for prettier violations
+          command: bin/prettier && git diff --exit-code
 
 workflows:
   version: 2
@@ -79,3 +97,8 @@ workflows:
       - verify_typings:
           requires:
             - install_dependencies
+
+      - check_prettier:
+          requires:
+            - install_dependencies
+

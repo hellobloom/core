@@ -1,68 +1,89 @@
-import * as BigNumber from "bignumber.js"
-import * as Web3 from "web3"
-import * as ethereumjsWallet from "ethereumjs-wallet"
-const walletTools = require("ethereumjs-wallet")
-const { privateToAddress } = require("ethereumjs-util")
-import { signAddress } from "./../src/signAddress"
-const ethSigUtil = require("eth-sig-util")
-const { soliditySha3 } = require("web3-utils")
-const uuid = require("uuidv4")
-import { bufferToHex } from "ethereumjs-util"
-import { hashData, generateSigNonce } from "./../src/signData"
+import * as ethereumjsWallet from 'ethereumjs-wallet'
+const ethSigUtil = require('eth-sig-util')
+import {generateSigNonce} from './../src/signData'
 
-import { AccountRegistryLogicInstance } from "../truffle"
-import { EVMThrow } from "./helpers/EVMThrow"
-import * as ipfs from "./../src/ipfs"
+const BN = require('bn.js')
+import {EVMThrow} from './helpers/EVMThrow'
 
-import { should } from "./test_setup"
-import { getFormattedTypedDataAddAddress, getFormattedTypedDataRemoveAddress } from "./helpers/signingLogic"
+import {should} from './test_setup'
+import {
+  getFormattedTypedDataAddAddress,
+  getFormattedTypedDataRemoveAddress,
+} from './helpers/signingLogic'
+import {AccountRegistryLogicInstance} from '../types/truffle-contracts'
 
-const SigningLogic = artifacts.require("SigningLogic")
-const AccountRegistryLogic = artifacts.require("AccountRegistryLogic")
+const SigningLogic = artifacts.require('SigningLogic')
+const AccountRegistryLogic = artifacts.require('AccountRegistryLogic')
 
-contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaimedB, initializer]) {
+contract('AccountRegistryLogic', function([
+  owner,
+  alice,
+  bob,
+  unclaimed,
+  unclaimedB,
+  initializer,
+]) {
   let registryLogic: AccountRegistryLogicInstance
   let registryLogicAddress: string
 
   // Keys come from default ganache mnemonic
 
-  const aliceWallet = ethereumjsWallet.fromPrivateKey(new Buffer("ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f", "hex"))
+  const aliceWallet = ethereumjsWallet.fromPrivateKey(
+    new Buffer(
+      'ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f',
+      'hex'
+    )
+  )
   const alicePrivkey = aliceWallet.getPrivateKey()
 
-  const bobWallet = ethereumjsWallet.fromPrivateKey(new Buffer("0dbbe8e4ae425a6d2687f1a7e3ba17bc98c673636790f1b8ad91193c05875ef1", "hex"))
+  const bobWallet = ethereumjsWallet.fromPrivateKey(
+    new Buffer(
+      '0dbbe8e4ae425a6d2687f1a7e3ba17bc98c673636790f1b8ad91193c05875ef1',
+      'hex'
+    )
+  )
   const bobPrivkey = bobWallet.getPrivateKey()
 
-  const unclaimedWallet = ethereumjsWallet.fromPrivateKey(new Buffer("c88b703fb08cbea894b6aeff5a544fb92e78a18e19814cd85da83b71f772aa6c", "hex"))
+  const unclaimedWallet = ethereumjsWallet.fromPrivateKey(
+    new Buffer(
+      'c88b703fb08cbea894b6aeff5a544fb92e78a18e19814cd85da83b71f772aa6c',
+      'hex'
+    )
+  )
   const unclaimedPrivkey = unclaimedWallet.getPrivateKey()
 
-  const unclaimedWalletB = ethereumjsWallet.fromPrivateKey(new Buffer("388c684f0ba1ef5017716adb5d21a053ea8e90277d0868337519f97bede61418", "hex"))
+  const unclaimedWalletB = ethereumjsWallet.fromPrivateKey(
+    new Buffer(
+      '388c684f0ba1ef5017716adb5d21a053ea8e90277d0868337519f97bede61418',
+      'hex'
+    )
+  )
   const unclaimedPrivkeyB = unclaimedWalletB.getPrivateKey()
 
-  let aliceId: BigNumber.BigNumber
-  let bobId: BigNumber.BigNumber
-
   // Sanity check
-  if (alice != aliceWallet.getAddressString()) {
-    throw new Error("Mnemonic used for truffle tests out of sync?")
+  if (alice.toLowerCase() != aliceWallet.getAddressString()) {
+    throw new Error(
+      `Mnemonic used for truffle tests out of sync? ${alice} / ${aliceWallet.getAddressString()}`
+    )
   }
 
   // Sanity check
-  if (bob != bobWallet.getAddressString()) {
-    throw new Error("Mnemonic used for truffle tests out of sync?")
+  if (bob.toLowerCase() != bobWallet.getAddressString()) {
+    throw new Error('Mnemonic used for truffle tests out of sync?')
   }
 
   // Sanity check
-  if (unclaimed != unclaimedWallet.getAddressString()) {
-    throw new Error("Mnemonic used for truffle tests out of sync?")
+  if (unclaimed.toLowerCase() != unclaimedWallet.getAddressString()) {
+    throw new Error('Mnemonic used for truffle tests out of sync?')
   }
 
   // Sanity check
-  if (unclaimedB != unclaimedWalletB.getAddressString()) {
-    throw new Error("Mnemonic used for truffle tests out of sync?")
+  if (unclaimedB.toLowerCase() != unclaimedWalletB.getAddressString()) {
+    throw new Error('Mnemonic used for truffle tests out of sync?')
   }
 
-  let newAddressLinkSig: string
-  let currentAddressLinkSig: string
+  let newAddressLinkSig: string[]
+  let currentAddressLinkSig: string[]
   let nonce: string
   let differentNonce: string
 
@@ -73,66 +94,140 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
     differentNonce = generateSigNonce()
 
     newAddressLinkSig = ethSigUtil.signTypedData(unclaimedPrivkey, {
-      data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, alice, nonce)
+      data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, alice, nonce),
     })
 
     currentAddressLinkSig = ethSigUtil.signTypedData(alicePrivkey, {
-      data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimed, nonce)
+      data: getFormattedTypedDataAddAddress(
+        registryLogicAddress,
+        1,
+        unclaimed,
+        nonce
+      ),
     })
   })
 
-  describe("Linking Accounts", async () => {
-    it("Allows a user to add an unclaimed address to their account", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice }).should.be.fulfilled
-    })
-
-    it("Allows a user to add multiple unclaimed addresses to their account", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice }).should.be.fulfilled
+  describe('Linking Accounts', async () => {
+    it('Allows a user to add an unclaimed address to their account', async () => {
       await registryLogic.linkAddresses(
         alice,
-        ethSigUtil.signTypedData(alicePrivkey, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimedB, differentNonce) }),
-        unclaimedB,
-        ethSigUtil.signTypedData(unclaimedPrivkeyB, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, alice, differentNonce) }),
-        differentNonce,
-        { from: alice }
+        currentAddressLinkSig,
+        unclaimed,
+        newAddressLinkSig,
+        nonce,
+        {from: alice}
       ).should.be.fulfilled
-      ;(await registryLogic.linkIds(alice)).should.be.bignumber.equal(1)
-      ;(await registryLogic.linkIds(unclaimed)).should.be.bignumber.equal(1)
-      ;(await registryLogic.linkIds(unclaimedB)).should.be.bignumber.equal(1)
     })
 
-    it("Incrementes linkId for new links", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice }).should.be.fulfilled
+    it('Allows a user to add multiple unclaimed addresses to their account', async () => {
+      await registryLogic.linkAddresses(
+        alice,
+        currentAddressLinkSig,
+        unclaimed,
+        newAddressLinkSig,
+        nonce,
+        {from: alice}
+      ).should.be.fulfilled
+      await registryLogic.linkAddresses(
+        alice,
+        ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataAddAddress(
+            registryLogicAddress,
+            1,
+            unclaimedB,
+            differentNonce
+          ),
+        }),
+        unclaimedB,
+        ethSigUtil.signTypedData(unclaimedPrivkeyB, {
+          data: getFormattedTypedDataAddAddress(
+            registryLogicAddress,
+            1,
+            alice,
+            differentNonce
+          ),
+        }),
+        differentNonce,
+        {from: alice}
+      ).should.be.fulfilled
+      new BN('1').should.be.eq.BN(1)
+      ;(await registryLogic.linkIds(alice)).should.be.eq.BN(1)
+      ;(await registryLogic.linkIds(unclaimed)).should.be.eq.BN(1)
+      ;(await registryLogic.linkIds(unclaimedB)).should.be.eq.BN(1)
+    })
+
+    it('Incrementes linkId for new links', async () => {
+      await registryLogic.linkAddresses(
+        alice,
+        currentAddressLinkSig,
+        unclaimed,
+        newAddressLinkSig,
+        nonce,
+        {from: alice}
+      ).should.be.fulfilled
       await registryLogic.linkAddresses(
         bob,
-        ethSigUtil.signTypedData(bobPrivkey, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimedB, differentNonce) }),
+        ethSigUtil.signTypedData(bobPrivkey, {
+          data: getFormattedTypedDataAddAddress(
+            registryLogicAddress,
+            1,
+            unclaimedB,
+            differentNonce
+          ),
+        }),
         unclaimedB,
-        ethSigUtil.signTypedData(unclaimedPrivkeyB, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, bob, differentNonce) }),
+        ethSigUtil.signTypedData(unclaimedPrivkeyB, {
+          data: getFormattedTypedDataAddAddress(
+            registryLogicAddress,
+            1,
+            bob,
+            differentNonce
+          ),
+        }),
         differentNonce,
-        { from: bob }
+        {from: bob}
       ).should.be.fulfilled
-      ;(await registryLogic.linkIds(alice)).should.be.bignumber.equal(1)
-      ;(await registryLogic.linkIds(unclaimed)).should.be.bignumber.equal(1)
-      ;(await registryLogic.linkIds(bob)).should.be.bignumber.equal(2)
-      ;(await registryLogic.linkIds(unclaimedB)).should.be.bignumber.equal(2)
+      ;(await registryLogic.linkIds(alice)).should.be.eq.BN(1)
+      ;(await registryLogic.linkIds(unclaimed)).should.be.eq.BN(1)
+      ;(await registryLogic.linkIds(bob)).should.be.eq.BN(2)
+      ;(await registryLogic.linkIds(unclaimedB)).should.be.eq.BN(2)
     })
 
-    it("Allows anyone to submit the link tx", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: bob }).should.be.fulfilled
+    it('Allows anyone to submit the link tx', async () => {
+      await registryLogic.linkAddresses(
+        alice,
+        currentAddressLinkSig,
+        unclaimed,
+        newAddressLinkSig,
+        nonce,
+        {from: bob}
+      ).should.be.fulfilled
     })
 
-    it("Fails if nonce hash wrong", async () => {
+    it('Fails if nonce hash wrong', async () => {
       await registryLogic
-        .linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, differentNonce, { from: alice })
+        .linkAddresses(
+          alice,
+          currentAddressLinkSig,
+          unclaimed,
+          newAddressLinkSig,
+          differentNonce,
+          {from: alice}
+        )
         .should.be.rejectedWith(EVMThrow)
     })
 
-    it("Does not allow address to be added if does not match the current address sig", async () => {
+    it('Does not allow address to be added if does not match the current address sig', async () => {
       await registryLogic
         .linkAddresses(
           alice,
           ethSigUtil.signTypedData(alicePrivkey, {
-            data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimedB, nonce)
+            data: getFormattedTypedDataAddAddress(
+              registryLogicAddress,
+              1,
+              unclaimedB,
+              nonce
+            ),
           }),
           unclaimed,
           newAddressLinkSig,
@@ -141,12 +236,17 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         .should.rejectedWith(EVMThrow)
     })
 
-    it("Does not allow address to be added if does not match the current address sig", async () => {
+    it('Does not allow address to be added if does not match the current address sig', async () => {
       await registryLogic
         .linkAddresses(
           alice,
           ethSigUtil.signTypedData(alicePrivkey, {
-            data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimedB, nonce)
+            data: getFormattedTypedDataAddAddress(
+              registryLogicAddress,
+              1,
+              unclaimedB,
+              nonce
+            ),
           }),
           unclaimedB,
           newAddressLinkSig,
@@ -155,28 +255,38 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
         .should.rejectedWith(EVMThrow)
     })
 
-    it("Does not allow address to be added if does not match the newAddress sig", async () => {
+    it('Does not allow address to be added if does not match the newAddress sig', async () => {
       await registryLogic
         .linkAddresses(
           alice,
           currentAddressLinkSig,
           unclaimed,
           ethSigUtil.signTypedData(unclaimedPrivkey, {
-            data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, bob, nonce)
+            data: getFormattedTypedDataAddAddress(
+              registryLogicAddress,
+              1,
+              bob,
+              nonce
+            ),
           }),
           nonce
         )
         .should.rejectedWith(EVMThrow)
     })
 
-    it("Does not allow address to be added if does not match the newAddress sig", async () => {
+    it('Does not allow address to be added if does not match the newAddress sig', async () => {
       await registryLogic
         .linkAddresses(
           bob,
           currentAddressLinkSig,
           unclaimed,
           ethSigUtil.signTypedData(unclaimedPrivkey, {
-            data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, bob, nonce)
+            data: getFormattedTypedDataAddAddress(
+              registryLogicAddress,
+              1,
+              bob,
+              nonce
+            ),
           }),
           nonce
         )
@@ -189,107 +299,185 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       linkId: BigNumber.BigNumber
     }
 
-    it("Emits an event when an address is added", async () => {
-      const { logs } = ((await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, {
-        from: alice
-      })) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<AdditionEventArgs>
+    it('Emits an event when an address is added', async () => {
+      const {logs} = await registryLogic.linkAddresses(
+        alice,
+        currentAddressLinkSig,
+        unclaimed,
+        newAddressLinkSig,
+        nonce,
+        {
+          from: alice,
+        }
+      )
 
-      const matchingLog = logs.find(log => log.event === "AddressLinked")
+      const matchingLog = logs.find(log => log.event === 'AddressLinked')
 
       should.exist(matchingLog)
       if (!matchingLog) return
 
       matchingLog.args.currentAddress.should.equal(alice)
       matchingLog.args.newAddress.should.equal(unclaimed)
-      matchingLog.args.linkId.should.bignumber.equal(1)
+      matchingLog.args.linkId.should.eq.BN(1)
     })
 
-    it("Does not allow a new address to be linked if it is already linked to another address", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice }).should.be.fulfilled
+    it('Does not allow a new address to be linked if it is already linked to another address', async () => {
+      await registryLogic.linkAddresses(
+        alice,
+        currentAddressLinkSig,
+        unclaimed,
+        newAddressLinkSig,
+        nonce,
+        {from: alice}
+      ).should.be.fulfilled
       await registryLogic
         .linkAddresses(
           bob,
           ethSigUtil.signTypedData(bobPrivkey, {
-            data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimed, differentNonce)
+            data: getFormattedTypedDataAddAddress(
+              registryLogicAddress,
+              1,
+              unclaimed,
+              differentNonce
+            ),
           }),
           unclaimed,
           ethSigUtil.signTypedData(unclaimedPrivkey, {
-            data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, bob, differentNonce)
+            data: getFormattedTypedDataAddAddress(
+              registryLogicAddress,
+              1,
+              bob,
+              differentNonce
+            ),
           }),
           differentNonce,
-          { from: alice }
+          {from: alice}
         )
         .should.be.rejectedWith(EVMThrow)
     })
 
-    it("Allows a user to unlink self", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice }).should.be.fulfilled
-      await registryLogic.unlinkAddress(
+    it('Allows a user to unlink self', async () => {
+      await registryLogic.linkAddresses(
         alice,
-        differentNonce,
-        ethSigUtil.signTypedData(alicePrivkey, {
-          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, alice, differentNonce)
-        }),
-        { from: alice }
-      ).should.be.fulfilled
-      ;(await registryLogic.linkIds(alice)).should.be.bignumber.equal(0)
-    })
-
-    it("Does not allow user to unlink address with no links", async () => {
-      await registryLogic.unlinkAddress(
-        alice,
+        currentAddressLinkSig,
+        unclaimed,
+        newAddressLinkSig,
         nonce,
-        ethSigUtil.signTypedData(alicePrivkey, {
-          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, alice, nonce)
-        }),
-        { from: alice }
-      ).should.be.rejectedWith(EVMThrow)
-    })
-
-    it("Allows anyone to submit valid unlink signatures", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice }).should.be.fulfilled
+        {from: alice}
+      ).should.be.fulfilled
       await registryLogic.unlinkAddress(
         alice,
         differentNonce,
         ethSigUtil.signTypedData(alicePrivkey, {
-          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, alice, differentNonce)
+          data: getFormattedTypedDataRemoveAddress(
+            registryLogicAddress,
+            1,
+            alice,
+            differentNonce
+          ),
         }),
-        { from: bob }
+        {from: alice}
       ).should.be.fulfilled
-      ;(await registryLogic.linkIds(alice)).should.be.bignumber.equal(0)
+      ;(await registryLogic.linkIds(alice)).should.be.eq.BN(0)
     })
 
-    it("Allows anyone to submit valid unlink signatures", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice }).should.be.fulfilled
+    it('Does not allow user to unlink address with no links', async () => {
+      await registryLogic
+        .unlinkAddress(
+          alice,
+          nonce,
+          ethSigUtil.signTypedData(alicePrivkey, {
+            data: getFormattedTypedDataRemoveAddress(
+              registryLogicAddress,
+              1,
+              alice,
+              nonce
+            ),
+          }),
+          {from: alice}
+        )
+        .should.be.rejectedWith(EVMThrow)
+    })
+
+    it('Allows anyone to submit valid unlink signatures', async () => {
+      await registryLogic.linkAddresses(
+        alice,
+        currentAddressLinkSig,
+        unclaimed,
+        newAddressLinkSig,
+        nonce,
+        {from: alice}
+      ).should.be.fulfilled
+      await registryLogic.unlinkAddress(
+        alice,
+        differentNonce,
+        ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataRemoveAddress(
+            registryLogicAddress,
+            1,
+            alice,
+            differentNonce
+          ),
+        }),
+        {from: bob}
+      ).should.be.fulfilled
+      ;(await registryLogic.linkIds(alice)).should.be.eq.BN(0)
+    })
+
+    it('Allows anyone to submit valid unlink signatures', async () => {
+      await registryLogic.linkAddresses(
+        alice,
+        currentAddressLinkSig,
+        unclaimed,
+        newAddressLinkSig,
+        nonce,
+        {from: alice}
+      ).should.be.fulfilled
       await registryLogic.unlinkAddress(
         unclaimed,
         differentNonce,
         ethSigUtil.signTypedData(unclaimedPrivkey, {
-          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, unclaimed, differentNonce)
+          data: getFormattedTypedDataRemoveAddress(
+            registryLogicAddress,
+            1,
+            unclaimed,
+            differentNonce
+          ),
         }),
-        { from: bob }
+        {from: bob}
       ).should.be.fulfilled
-      ;(await registryLogic.linkIds(unclaimed)).should.be.bignumber.equal(0)
+      ;(await registryLogic.linkIds(unclaimed)).should.be.eq.BN(0)
     })
-
 
     interface UnlinkEventArgs {
       senderAddress: string
       addressToRemove: string
     }
 
-    it("Emits an event when an address is removed", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice }).should.be.fulfilled
-      const { logs } = ((await registryLogic.unlinkAddress(
+    it('Emits an event when an address is removed', async () => {
+      await registryLogic.linkAddresses(
+        alice,
+        currentAddressLinkSig,
+        unclaimed,
+        newAddressLinkSig,
+        nonce,
+        {from: alice}
+      ).should.be.fulfilled
+      const {logs} = await registryLogic.unlinkAddress(
         alice,
         differentNonce,
         ethSigUtil.signTypedData(alicePrivkey, {
-          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, alice, differentNonce)
+          data: getFormattedTypedDataRemoveAddress(
+            registryLogicAddress,
+            1,
+            alice,
+            differentNonce
+          ),
         }),
-        { from: alice }
-      )) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<UnlinkEventArgs>
+        {from: alice}
+      )
 
-      const matchingLog = logs.find(log => log.event === "AddressUnlinked")
+      const matchingLog = logs.find(log => log.event === 'AddressUnlinked')
 
       should.exist(matchingLog)
       if (!matchingLog) return
@@ -297,88 +485,163 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       matchingLog.args.addressToRemove.should.equal(alice)
     })
 
-    it("Does not allow link sig to be replayed", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice }).should.be.fulfilled
+    it('Does not allow link sig to be replayed', async () => {
+      await registryLogic.linkAddresses(
+        alice,
+        currentAddressLinkSig,
+        unclaimed,
+        newAddressLinkSig,
+        nonce,
+        {from: alice}
+      ).should.be.fulfilled
       await registryLogic.unlinkAddress(
         alice,
         differentNonce,
         ethSigUtil.signTypedData(alicePrivkey, {
-          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, alice, differentNonce)
+          data: getFormattedTypedDataRemoveAddress(
+            registryLogicAddress,
+            1,
+            alice,
+            differentNonce
+          ),
         }),
-        { from: alice }
+        {from: alice}
       ).should.be.fulfilled
       await registryLogic
-        .linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice })
+        .linkAddresses(
+          alice,
+          currentAddressLinkSig,
+          unclaimed,
+          newAddressLinkSig,
+          nonce,
+          {from: alice}
+        )
         .should.be.rejectedWith(EVMThrow)
     })
 
-    it("Allows user to relink address that has been unlinked using new sig", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice }).should.be.fulfilled
+    it('Allows user to relink address that has been unlinked using new sig', async () => {
+      await registryLogic.linkAddresses(
+        alice,
+        currentAddressLinkSig,
+        unclaimed,
+        newAddressLinkSig,
+        nonce,
+        {from: alice}
+      ).should.be.fulfilled
       await registryLogic.unlinkAddress(
         unclaimed,
         differentNonce,
         ethSigUtil.signTypedData(unclaimedPrivkey, {
-          data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, unclaimed, differentNonce)
+          data: getFormattedTypedDataRemoveAddress(
+            registryLogicAddress,
+            1,
+            unclaimed,
+            differentNonce
+          ),
         }),
-        { from: bob }
+        {from: bob}
       ).should.be.fulfilled
       const differentNonceB = generateSigNonce()
       await registryLogic.linkAddresses(
         alice,
-        ethSigUtil.signTypedData(alicePrivkey, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimed, differentNonceB) }),
+        ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataAddAddress(
+            registryLogicAddress,
+            1,
+            unclaimed,
+            differentNonceB
+          ),
+        }),
         unclaimed,
-        ethSigUtil.signTypedData(unclaimedPrivkey, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, alice, differentNonceB) }),
+        ethSigUtil.signTypedData(unclaimedPrivkey, {
+          data: getFormattedTypedDataAddAddress(
+            registryLogicAddress,
+            1,
+            alice,
+            differentNonceB
+          ),
+        }),
         differentNonceB,
-        { from: alice }
+        {from: alice}
       ).should.be.fulfilled
     })
 
-    it("Does not allow unlink sig to be replayed", async () => {
-      await registryLogic.linkAddresses(alice, currentAddressLinkSig, unclaimed, newAddressLinkSig, nonce, { from: alice }).should.be.fulfilled
-      const unlinkSig = ethSigUtil.signTypedData(unclaimedPrivkey, {
-        data: getFormattedTypedDataRemoveAddress(registryLogicAddress, 1, unclaimed, differentNonce)
-      })
-      await registryLogic.unlinkAddress(
+    it('Does not allow unlink sig to be replayed', async () => {
+      await registryLogic.linkAddresses(
+        alice,
+        currentAddressLinkSig,
         unclaimed,
-        differentNonce,
-        unlinkSig,
-        { from: bob }
+        newAddressLinkSig,
+        nonce,
+        {from: alice}
       ).should.be.fulfilled
+      const unlinkSig = ethSigUtil.signTypedData(unclaimedPrivkey, {
+        data: getFormattedTypedDataRemoveAddress(
+          registryLogicAddress,
+          1,
+          unclaimed,
+          differentNonce
+        ),
+      })
+      await registryLogic.unlinkAddress(unclaimed, differentNonce, unlinkSig, {
+        from: bob,
+      }).should.be.fulfilled
       const differentNonceB = generateSigNonce()
       await registryLogic.linkAddresses(
         alice,
-        ethSigUtil.signTypedData(alicePrivkey, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, unclaimed, differentNonceB) }),
+        ethSigUtil.signTypedData(alicePrivkey, {
+          data: getFormattedTypedDataAddAddress(
+            registryLogicAddress,
+            1,
+            unclaimed,
+            differentNonceB
+          ),
+        }),
         unclaimed,
-        ethSigUtil.signTypedData(unclaimedPrivkey, { data: getFormattedTypedDataAddAddress(registryLogicAddress, 1, alice, differentNonceB) }),
+        ethSigUtil.signTypedData(unclaimedPrivkey, {
+          data: getFormattedTypedDataAddAddress(
+            registryLogicAddress,
+            1,
+            alice,
+            differentNonceB
+          ),
+        }),
         differentNonceB,
-        { from: alice }
+        {from: alice}
       ).should.be.fulfilled
-      await registryLogic.unlinkAddress(
-        unclaimed,
-        differentNonce,
-        unlinkSig,
-        { from: bob }
-      ).should.be.rejectedWith(EVMThrow)
+      await registryLogic
+        .unlinkAddress(unclaimed, differentNonce, unlinkSig, {from: bob})
+        .should.be.rejectedWith(EVMThrow)
     })
   })
-  describe("Migrating links during initialization", async () => {
-    it("allows the initializer to write links without validation during initialization", async () => {
-      await registryLogic.migrateLink(alice, unclaimed, { from: initializer }).should.be.fulfilled
+  describe('Migrating links during initialization', async () => {
+    it('allows the initializer to write links without validation during initialization', async () => {
+      await registryLogic.migrateLink(alice, unclaimed, {from: initializer}).should
+        .be.fulfilled
     })
-    it("does not allow anyone else to write links during initialization", async () => {
-      await registryLogic.migrateLink(alice, unclaimed, { from: bob }).should.be.rejectedWith(EVMThrow)
+    it('does not allow anyone else to write links during initialization', async () => {
+      await registryLogic
+        .migrateLink(alice, unclaimed, {from: bob})
+        .should.be.rejectedWith(EVMThrow)
     })
-    it("does not allow claimed account to be linked during migration", async () => {
-      await registryLogic.migrateLink(alice, unclaimed, { from: initializer }).should.be.fulfilled
-      await registryLogic.migrateLink(bob, unclaimed, { from: initializer }).should.be.rejectedWith(EVMThrow)
+    it('does not allow claimed account to be linked during migration', async () => {
+      await registryLogic.migrateLink(alice, unclaimed, {from: initializer}).should
+        .be.fulfilled
+      await registryLogic
+        .migrateLink(bob, unclaimed, {from: initializer})
+        .should.be.rejectedWith(EVMThrow)
     })
-    it("does not allow initializer to migrate links after initialization", async () => {
-      await registryLogic.endInitialization({ from: initializer }).should.be.fulfilled
-      await registryLogic.migrateLink(alice, unclaimed, { from: initializer }).should.be.rejectedWith(EVMThrow)
+    it('does not allow initializer to migrate links after initialization', async () => {
+      await registryLogic.endInitialization({from: initializer}).should.be.fulfilled
+      await registryLogic
+        .migrateLink(alice, unclaimed, {from: initializer})
+        .should.be.rejectedWith(EVMThrow)
     })
-    it("does not allow anyone else to write links after initialization", async () => {
-      await registryLogic.endInitialization({ from: initializer }).should.be.fulfilled
-      await registryLogic.migrateLink(alice, unclaimed, { from: bob }).should.be.rejectedWith(EVMThrow)
+    it('does not allow anyone else to write links after initialization', async () => {
+      await registryLogic.endInitialization({from: initializer}).should.be.fulfilled
+      await registryLogic
+        .migrateLink(alice, unclaimed, {from: bob})
+        .should.be.rejectedWith(EVMThrow)
     })
     interface AdditionEventArgs {
       currentAddress: string
@@ -386,19 +649,19 @@ contract("AccountRegistryLogic", function([owner, alice, bob, unclaimed, unclaim
       linkId: BigNumber.BigNumber
     }
 
-    it("emits an event when link is migrated", async () => {
-      const { logs } = ((await registryLogic.migrateLink(alice, unclaimed, {
-        from: initializer
-      })) as Web3.TransactionReceipt<any>) as Web3.TransactionReceipt<AdditionEventArgs>
+    it('emits an event when link is migrated', async () => {
+      const {logs} = await registryLogic.migrateLink(alice, unclaimed, {
+        from: initializer,
+      })
 
-      const matchingLog = logs.find(log => log.event === "AddressLinked")
+      const matchingLog = logs.find(log => log.event === 'AddressLinked')
 
       should.exist(matchingLog)
       if (!matchingLog) return
 
       matchingLog.args.currentAddress.should.be.equal(alice)
       matchingLog.args.newAddress.should.be.equal(unclaimed)
-      matchingLog.args.linkId.should.bignumber.equal(1)
+      matchingLog.args.linkId.should.eq.BN(1)
     })
   })
 })

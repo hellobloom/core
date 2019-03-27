@@ -9,6 +9,8 @@ var Poll = artifacts.require("Poll")
 var VotingCenter = artifacts.require("VotingCenter")
 var BatchInitializer = artifacts.require("BatchInitializer")
 
+var zeroAddress = '0x0000000000000000000000000000000000000000'
+
 module.exports = function(deployer) {
 
   deployer
@@ -21,7 +23,7 @@ module.exports = function(deployer) {
     .then(() => deployer.deploy(BLT))
     .then(() => BLT.deployed())
     .then(blt => (token = blt))
-    .then(() => deployer.deploy(BatchInitializer, '0x0', '0x0'))
+    .then(() => deployer.deploy(BatchInitializer, zeroAddress, zeroAddress))
     .then(() => BatchInitializer.deployed())
     .then(bi => (batchInitializer = bi))
     .then(() => deployer.deploy(AccountRegistryLogic, batchInitializer.address))
@@ -36,7 +38,7 @@ module.exports = function(deployer) {
       deployer.deploy(
         AttestationLogic,
         batchInitializer.address,
-        "0x0"
+        zeroAddress
       ))
     .then(() => AttestationLogic.deployed())
     .then(al => (attestationLogic = al))

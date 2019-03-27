@@ -1,11 +1,11 @@
-import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import * as chaiAsPromised from 'chai-as-promised'
+var chai = require('chai')
+var bnChai = require('bn-chai')
+const BN = require('bn.js')
 
-const chaiBignumber = require("chai-bignumber");
+chai.use(bnChai(BN))
+chai.use(chaiAsPromised)
 
-const should = chai
-  .use(chaiBignumber(web3.BigNumber))
-  .use(chaiAsPromised)
-  .should();
+const should = chai.should()
 
-export { should };
+export {should}

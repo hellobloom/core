@@ -1,83 +1,79 @@
-import "./test_setup";
-import { latestBlockTime } from "./helpers/blockInfo";
-import { should } from "./test_setup";
-import * as ipfs from "../src/ipfs";
-import { VotingCenterInstance} from "../truffle";
+import './test_setup'
+import {latestBlockTime} from './helpers/blockInfo'
+import {should} from './test_setup'
+import * as ipfs from '../src/ipfs'
+import {VotingCenterInstance} from '../types/truffle-contracts'
 
-const VotingCenter = artifacts.require("VotingCenter");
-const Poll = artifacts.require("Poll");
+const VotingCenter = artifacts.require('VotingCenter')
+const Poll = artifacts.require('Poll')
 
-contract("VotingCenter", function([alice, bob, carl]) {
-  let votingCenter: VotingCenterInstance;
-  let ipfsHash: string;
-  let pollAddress: string;
-  let startTime: number;
-  let endTime: number;
+contract('VotingCenter', function([alice, bob, carl]) {
+  let votingCenter: VotingCenterInstance
+  let ipfsHash: string[]
+  let pollAddress: string
+  let startTime: number
+  let endTime: number
   let pollName = 'Bloom Poll'
 
   beforeEach(async () => {
-    votingCenter = await VotingCenter.new();
-    ipfsHash = ipfs.toHex("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe");
-    startTime = latestBlockTime() + 10;
-    endTime = startTime + 100;
+    votingCenter = await VotingCenter.new()
+    ipfsHash = ipfs.toHex('Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe')
+    startTime = (await latestBlockTime()) + 10
+    endTime = startTime + 100
+  })
 
-    pollAddress = await votingCenter.createPoll.call(
+  it('lets anyone create a poll', async () => {
+    const {logs} = await votingCenter.createPoll(
       pollName,
       1,
       ipfsHash,
       10,
       startTime,
       endTime
-    );
-  });
+    )
+    const matchingLog = logs.find(log => log.event === 'PollCreated')
+    if (!matchingLog) return
+    pollAddress = matchingLog.args.poll
 
-  it("lets anyone create a poll", async () => {
-    await votingCenter.createPoll(
-      pollName,
-      1,
-      ipfsHash,
-      10,
-      startTime,
-      endTime
-    );
-
-    const poll = Poll.at(pollAddress);
+    const poll = await Poll.at(pollAddress)
+    const multihash = ((await poll.pollDataMultihash()) as any) as string
     ipfs
-      .fromHex(await poll.pollDataMultihash.call())
-      .should.equal("Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe");
-  });
+      .fromHex(multihash)
+      .should.equal('Qmd5yJ2g7RQYJrve1eytv1Pj33VUKnb4FmpEyLxqvFmafe')
+  })
 
-  it("emits an event when a poll is created", async () => {
-    const { logs } = await votingCenter.createPoll(
+  it('emits an event when a poll is created', async () => {
+    const {logs} = await votingCenter.createPoll(
       pollName,
       1,
       ipfsHash,
       10,
       startTime,
       endTime
-    );
+    )
+    const matchingLog = logs.find(log => log.event === 'PollCreated')
 
-    const matchingLog = logs.find(
-      log =>
-        log.event === "PollCreated" &&
-        log.args.poll === pollAddress &&
-        log.args.author === alice
-    );
+    should.exist(matchingLog)
+    if (!matchingLog) return
 
-    should.exist(matchingLog);
-  });
+    matchingLog.args.author.should.be.equal(alice)
+  })
 
-  it("sets the author on the Poll", async () => {
-    await votingCenter.createPoll(
+  it('sets the author on the Poll', async () => {
+    const {logs} = await votingCenter.createPoll(
       pollName,
       1,
       ipfsHash,
       10,
       startTime,
       endTime
-    );
+    )
+    const matchingLog = logs.find(log => log.event === 'PollCreated')
+    if (!matchingLog) return
+    pollAddress = matchingLog.args.poll
 
-    const poll = Poll.at(pollAddress);
-    (await poll.author()).should.be.equal(alice);
-  });
-});
+    const poll = await Poll.at(pollAddress)
+    const pollAuthor = await poll.author()
+    pollAuthor.should.be.equal(alice)
+  })
+})
