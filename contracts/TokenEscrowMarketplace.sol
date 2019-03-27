@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.7;
 
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
@@ -64,7 +64,7 @@ contract TokenEscrowMarketplace is SigningLogic {
     address _sender,
     uint256 _amount,
     bytes32 _nonce,
-    bytes _delegationSig
+    bytes calldata _delegationSig
     ) external {
       validateLockupTokensSig(
         _sender,
@@ -86,7 +86,7 @@ contract TokenEscrowMarketplace is SigningLogic {
     address _sender,
     uint256 _amount,
     bytes32 _nonce,
-    bytes _delegationSig
+    bytes memory _delegationSig
   ) private {
     bytes32 _signatureDigest = generateLockupTokensDelegationSchemaHash(_sender, _amount, _nonce);
     require(_sender == recoverSigner(_signatureDigest, _delegationSig), 'Invalid LockupTokens Signature');
@@ -111,7 +111,7 @@ contract TokenEscrowMarketplace is SigningLogic {
     address _sender,
     uint256 _amount
     ) private {
-    token.safeTransferFrom(_sender, this, _amount);
+    token.safeTransferFrom(_sender, address(this), _amount);
     addToEscrow(_sender, _amount);
   }
 
@@ -129,7 +129,7 @@ contract TokenEscrowMarketplace is SigningLogic {
     address _sender,
     uint256 _amount,
     bytes32 _nonce,
-    bytes _delegationSig
+    bytes calldata _delegationSig
     ) external {
       validateReleaseTokensSig(
         _sender,
@@ -151,7 +151,7 @@ contract TokenEscrowMarketplace is SigningLogic {
     address _sender,
     uint256 _amount,
     bytes32 _nonce,
-    bytes _delegationSig
+    bytes memory _delegationSig
 
   ) private {
     bytes32 _signatureDigest = generateReleaseTokensDelegationSchemaHash(_sender, _amount, _nonce);
@@ -208,7 +208,7 @@ contract TokenEscrowMarketplace is SigningLogic {
     address _receiver,
     uint256 _amount,
     bytes32 _nonce,
-    bytes _paymentSig
+    bytes calldata _paymentSig
     ) external onlyAttestationLogic {
 
     validatePaymentSig(
@@ -235,7 +235,7 @@ contract TokenEscrowMarketplace is SigningLogic {
     address _receiver,
     uint256 _amount,
     bytes32 _nonce,
-    bytes _paymentSig
+    bytes memory _paymentSig
 
   ) private {
     bytes32 _signatureDigest = generatePayTokensSchemaHash(_payer, _receiver, _amount, _nonce);

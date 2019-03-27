@@ -11,18 +11,18 @@
   },
   "dependencies": {
     "@bloomprotocol/attestations-lib": "^3.0.2",
-    "@ledgerhq/hw-transport-node-hid": "^4.48.0",
+    "@types/web3": "^1.0.18",
+    "bn-chai": "^1.0.1",
     "eth-gas-reporter": "^0.1.9",
     "eth-sig-util": "^2.0.1",
     "ethereumjs-util": "^5.1.2",
-    "openzeppelin-solidity": "^1.9.0",
+    "openzeppelin-solidity": "^2.2.0",
     "solc": "0.4.23",
     "truffle": "^5.0.9",
     "truffle-contract": "^3.0.5",
     "truffle-debugger": "^2.0.3",
     "truffle-hdwallet-provider-privkey": "^0.2.0",
     "uuidv4": "^1.0.0",
-    "web3": "0.20.5",
     "web3-provider-engine": "13.6.5",
     "web3-utils": "^1.0.0-beta.33"
   },
@@ -41,7 +41,6 @@
     "babel-register": "^6.26.0",
     "chai": "^4.1.1",
     "chai-as-promised": "^7.1.1",
-    "chai-bignumber": "^2.0.1",
     "ethereumjs-abi": "^0.6.5",
     "ganache-cli": "^6.0.3",
     "lodash": "^4.17.5",
@@ -50,8 +49,14 @@
     "solhint": "^1.1.9",
     "solidity-coverage": "^0.2.2",
     "truffle-hdwallet-provider": "^0.0.3",
+    "truffle-typings": "^1.0.6",
     "ts-node": "^4.0.0",
     "tslint": "^5.8.0",
+    "typechain": "^0.3.14",
     "typescript": "^2.6.2"
+  },
+  "scripts": {
+    "generate": "truffle compile && typechain --target truffle './build/**/*.json'",
+    "prepare": "yarn generate"
   }
 }

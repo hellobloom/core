@@ -1,1 +1,1 @@
-export const EVMThrow = /^VM Exception while processing transaction: (?:revert|invalid opcode)$/;
+export const EVMThrow = /^Returned error: VM Exception while processing transaction: (.*)$/

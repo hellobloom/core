@@ -1,4 +1,4 @@
-import web3Call from "./web3Call";
+import web3Call from './web3Call'
 
 export const increaseTime = async (seconds: number) =>
-  web3Call("evm_increaseTime", seconds);
+  web3Call('evm_increaseTime', seconds)

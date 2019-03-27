@@ -12,6 +12,11 @@ remove_compiled_tests() {
   fi
 }
 
+remove_ts_artifacts() {
+  rm ./test/*.ts
+  rm ./test/**/*.ts
+}
+
 compile_tests() {
   remove_compiled_tests
 
@@ -20,6 +25,9 @@ compile_tests() {
 
   # Compile into the js_test directory
   node_modules/.bin/tsc
+
+  # Remove .ts files
+  remove_ts_artifacts
 }
 
 compile_tests

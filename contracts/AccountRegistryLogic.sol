@@ -1,4 +1,4 @@
-pragma solidity 0.5.6;
+pragma solidity 0.5.7;
 
 import "./SigningLogic.sol";
 import "./Initializable.sol";
@@ -33,9 +33,9 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
    */
   function linkAddresses(
     address _currentAddress,
-    bytes _currentAddressSig,
+    bytes calldata _currentAddressSig,
     address _newAddress,
-    bytes _newAddressSig,
+    bytes calldata _newAddressSig,
     bytes32 _nonce
     ) external {
       // Confirm newAddress is not linked to another account
@@ -64,7 +64,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
   function unlinkAddress(
     address _addressToRemove,
     bytes32 _nonce,
-    bytes _unlinkSignature
+    bytes calldata _unlinkSignature
   ) external {
     // Confirm unlink request is signed by sender and is unused
     validateUnlinkSignature(_addressToRemove, _nonce, _unlinkSignature);
@@ -84,7 +84,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
     address _currentAddress,
     address _addressToAdd,
     bytes32 _nonce,
-    bytes _linkSignature
+    bytes memory _linkSignature
   ) private {
     bytes32 _signatureDigest = generateAddAddressSchemaHash(_addressToAdd, _nonce);
     require(_currentAddress == recoverSigner(_signatureDigest, _linkSignature));
@@ -100,7 +100,7 @@ contract AccountRegistryLogic is Initializable, SigningLogic {
   function validateUnlinkSignature(
     address _addressToRemove,
     bytes32 _nonce,
-    bytes _unlinkSignature
+    bytes memory _unlinkSignature
   ) private {
 
     // require that address to remove is currently linked to senderAddress

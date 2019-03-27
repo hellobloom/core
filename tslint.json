@@ -3,6 +3,10 @@
   "extends": [],
   "jsRules": {},
   "rules": {
-    "no-floating-promises": true
+    "no-floating-promises": true,
+    "semicolon": [true, "never"],
+    "no-unused-expression": true,
+    "no-use-before-declare": true,
+    "quotemark": [true, "single", "jsx-double", "avoid-escape"]
   }
 }
