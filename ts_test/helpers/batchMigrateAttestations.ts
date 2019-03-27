@@ -17,7 +17,11 @@ export const batchMigrateAttestations = async (
   }
 ) => {
   let nonce = options.startingNonce
-  for (let i = 0, j = data.requesters.length, p = Promise.resolve({}); i < j; i += options.chunkSize) {
+  for (
+    let i = 0, j = data.requesters.length, p = Promise.resolve({});
+    i < j;
+    i += options.chunkSize
+  ) {
     p = p.then(
       _ =>
         new Promise(resolve => {
@@ -26,13 +30,13 @@ export const batchMigrateAttestations = async (
             data.requesters.slice(i, i + options.chunkSize),
             data.attesters.slice(i, i + options.chunkSize),
             data.subjects.slice(i, i + options.chunkSize),
-            data.dataHashes.slice(i, i + options.chunkSize)
+            data.dataHashes.slice(i, i + options.chunkSize),
           ]
           dataChunk.push({
             nonce: nonce,
             gasPrice: options.gasPrice,
             gas: options.gas,
-            from: options.from
+            from: options.from,
           })
           func.sendTransaction.apply(null, dataChunk).then((txHash: string) => {
             console.log(txHash)

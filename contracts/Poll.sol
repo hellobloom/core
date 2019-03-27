@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.7;
 
 import "./VotingCenter.sol";
 import "./DependentOnIPFS.sol";
@@ -24,9 +24,9 @@ contract Poll is DependentOnIPFS, SigningLogic {
   event VoteCast(address indexed voter, uint16 indexed choice);
 
   constructor(
-    string _name,
+    string memory _name,
     uint256 _chainId,
-    bytes _ipfsHash,
+    bytes memory _ipfsHash,
     uint16 _numChoices,
     uint256 _startTime,
     uint256 _endTime,
@@ -46,7 +46,7 @@ contract Poll is DependentOnIPFS, SigningLogic {
     voteForUser(_choice, msg.sender);
   }
 
-  function voteFor(uint16 _choice, address _voter, bytes32 _nonce, bytes _delegationSig) external {
+  function voteFor(uint16 _choice, address _voter, bytes32 _nonce, bytes calldata _delegationSig) external {
     validateVoteForSig(_choice, _voter, _nonce, _delegationSig);
     voteForUser(_choice, _voter);
   }
@@ -55,9 +55,9 @@ contract Poll is DependentOnIPFS, SigningLogic {
     uint16 _choice,
     address _voter,
     bytes32 _nonce,
-    bytes _delegationSig
+    bytes memory _delegationSig
   ) private {
-    bytes32 _signatureDigest = generateVoteForDelegationSchemaHash(_choice, _voter, _nonce, this);
+    bytes32 _signatureDigest = generateVoteForDelegationSchemaHash(_choice, _voter, _nonce, address(this));
     require(_voter == recoverSigner(_signatureDigest, _delegationSig),
       "Invalid signer"
       );

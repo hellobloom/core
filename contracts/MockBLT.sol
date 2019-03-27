@@ -1,16 +1,15 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.7;
 
-import 'openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol';
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
-contract MockBLT is StandardToken {
+contract MockBLT is ERC20 {
   event Gift(address recipient);
 
   constructor() public {
-    totalSupply_ = 1.5e26;
   }
 
   function gift(address _recipient, uint256 _amount) public {
-    balances[_recipient] += _amount;
+    ERC20._mint(_recipient, _amount);
     emit Gift(_recipient);
   }
 }

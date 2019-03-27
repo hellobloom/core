@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity 0.5.7;
 
 /**
  * @title IPFS hash handler
@@ -25,7 +25,7 @@ contract DependentOnIPFS {
   /**
    * @dev Validate a multihash bytes value
    */
-  function isValidIPFSMultihash(bytes _multihashBytes) internal pure returns (bool) {
+  function isValidIPFSMultihash(bytes memory _multihashBytes) internal pure returns (bool) {
     require(_multihashBytes.length > 2);
 
     uint8 _size;

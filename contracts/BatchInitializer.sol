@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.7;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./AccountRegistryLogic.sol";
@@ -18,7 +18,7 @@ contract BatchInitializer is Ownable{
     ) public {
     attestationLogic = _attestationLogic;
     registryLogic = _registryLogic;
-    admin = owner;
+    admin = msg.sender;
   }
 
   event linkSkipped(address currentAddress, address newAddress);
@@ -56,7 +56,7 @@ contract BatchInitializer is Ownable{
     _initializable.endInitialization();
   }
 
-  function batchLinkAddresses(address[] _currentAddresses, address[] _newAddresses) external onlyAdmin {
+  function batchLinkAddresses(address[] calldata _currentAddresses, address[] calldata _newAddresses) external onlyAdmin {
     require(_currentAddresses.length == _newAddresses.length);
     for (uint256 i = 0; i < _currentAddresses.length; i++) {
       if (registryLogic.linkIds(_newAddresses[i]) > 0) {
@@ -68,10 +68,10 @@ contract BatchInitializer is Ownable{
   }
 
   function batchMigrateAttestations(
-    address[] _requesters,
-    address[] _attesters,
-    address[] _subjects,
-    bytes32[] _dataHashes
+    address[] calldata _requesters,
+    address[] calldata _attesters,
+    address[] calldata _subjects,
+    bytes32[] calldata _dataHashes
     ) external onlyAdmin {
     require(
       _requesters.length == _attesters.length &&

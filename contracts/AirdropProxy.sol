@@ -1,15 +1,14 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.7;
 
 import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "openzeppelin-solidity/contracts/ownership/HasNoEther.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
 // @title Airdrop proxy contract for BLT
 // @author Dustin van Schouwen
 // @notice Handles simple airdrops for BLT
-contract AirdropProxy is Ownable, HasNoEther, Pausable {
+contract AirdropProxy is Ownable, Pausable {
   using SafeERC20 for ERC20;
   ERC20 public token;
 

@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.7;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
@@ -36,7 +36,7 @@ contract AccreditationRepo is Ownable{
    * @dev Zero address not allowed
    */
   modifier nonZero(address _address) {
-    require(_address != 0);
+    require(_address != address(0));
     _;
   }
 

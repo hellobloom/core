@@ -1,6 +1,6 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.7;
 
-import "./ECRecovery.sol";
+import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 
 /**
  * @title SigningLogic is contract implementing signature recovery from typed data signatures
@@ -65,12 +65,12 @@ contract SigningLogic {
 
   bytes32 DOMAIN_SEPARATOR;
 
-  constructor (string name, string version, uint256 chainId) public {
+  constructor (string memory name, string memory version, uint256 chainId) public {
     DOMAIN_SEPARATOR = hash(EIP712Domain({
       name: name,
       version: version,
       chainId: chainId,
-      verifyingContract: this
+      verifyingContract: address(this)
     }));
   }
 
@@ -81,7 +81,7 @@ contract SigningLogic {
       address verifyingContract;
   }
 
-  function hash(EIP712Domain eip712Domain) private pure returns (bytes32) {
+  function hash(EIP712Domain memory eip712Domain) private pure returns (bytes32) {
     return keccak256(abi.encode(
       EIP712DOMAIN_TYPEHASH,
       keccak256(bytes(eip712Domain.name)),
@@ -96,7 +96,7 @@ contract SigningLogic {
       bytes32 nonce;
   }
 
-  function hash(AttestationRequest request) private pure returns (bytes32) {
+  function hash(AttestationRequest memory request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       ATTESTATION_REQUEST_TYPEHASH,
       request.dataHash,
@@ -109,7 +109,7 @@ contract SigningLogic {
       bytes32 nonce;
   }
 
-  function hash(AddAddress request) private pure returns (bytes32) {
+  function hash(AddAddress memory request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       ADD_ADDRESS_TYPEHASH,
       request.addressToAdd,
@@ -122,7 +122,7 @@ contract SigningLogic {
       bytes32 nonce;
   }
 
-  function hash(RemoveAddress request) private pure returns (bytes32) {
+  function hash(RemoveAddress memory request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       REMOVE_ADDRESS_TYPEHASH,
       request.addressToRemove,
@@ -137,7 +137,7 @@ contract SigningLogic {
       bytes32 nonce;
   }
 
-  function hash(PayTokens request) private pure returns (bytes32) {
+  function hash(PayTokens memory request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       PAY_TOKENS_TYPEHASH,
       request.sender,
@@ -155,7 +155,7 @@ contract SigningLogic {
       bytes32 requestNonce;
   }
 
-  function hash(AttestFor request) private pure returns (bytes32) {
+  function hash(AttestFor memory request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       ATTEST_FOR_TYPEHASH,
       request.subject,
@@ -172,7 +172,7 @@ contract SigningLogic {
       bytes32 requestNonce;
   }
 
-  function hash(ContestFor request) private pure returns (bytes32) {
+  function hash(ContestFor memory request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       CONTEST_FOR_TYPEHASH,
       request.requester,
@@ -186,7 +186,7 @@ contract SigningLogic {
       bytes32 nonce;
   }
 
-  function hash(RevokeAttestationFor request) private pure returns (bytes32) {
+  function hash(RevokeAttestationFor memory request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       REVOKE_ATTESTATION_FOR_TYPEHASH,
       request.link,
@@ -201,7 +201,7 @@ contract SigningLogic {
       address poll;
   }
 
-  function hash(VoteFor request) private pure returns (bytes32) {
+  function hash(VoteFor memory request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       VOTE_FOR_TYPEHASH,
       request.choice,
@@ -217,7 +217,7 @@ contract SigningLogic {
     bytes32 nonce;
   }
 
-  function hash(LockupTokensFor request) private pure returns (bytes32) {
+  function hash(LockupTokensFor memory request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       LOCKUP_TOKENS_FOR_TYPEHASH,
       request.sender,
@@ -232,7 +232,7 @@ contract SigningLogic {
     bytes32 nonce;
   }
 
-  function hash(ReleaseTokensFor request) private pure returns (bytes32) {
+  function hash(ReleaseTokensFor memory request) private pure returns (bytes32) {
     return keccak256(abi.encode(
       RELEASE_TOKENS_FOR_TYPEHASH,
       request.sender,
@@ -421,8 +421,8 @@ contract SigningLogic {
       );
   }
 
-  function recoverSigner(bytes32 _hash, bytes _sig) internal pure returns (address) {
-    address signer = ECRecovery.recover(_hash, _sig);
+  function recoverSigner(bytes32 _hash, bytes memory _sig) internal pure returns (address) {
+    address signer = ECDSA.recover(_hash, _sig);
     require(signer != address(0));
 
     return signer;
