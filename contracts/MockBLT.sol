@@ -6,7 +6,6 @@ contract MockBLT is ERC20 {
   event Gift(address recipient);
 
   constructor() public {
-    ERC20._mint(msg.sender, 1.5e26);
   }
 
   function gift(address _recipient, uint256 _amount) public {
