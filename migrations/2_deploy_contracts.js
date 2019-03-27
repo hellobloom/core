@@ -1,4 +1,4 @@
-const ECRecovery = artifacts.require("ECRecovery")
+const ECDSA = artifacts.require("ECDSA")
 var BLT = artifacts.require("./MockBLT.sol")
 var AccountRegistryLogic = artifacts.require("AccountRegistryLogic")
 var SigningLogic = artifacts.require("SigningLogic")
@@ -14,12 +14,12 @@ var zeroAddress = '0x0000000000000000000000000000000000000000'
 module.exports = function(deployer) {
 
   deployer
-    .deploy(ECRecovery)
-    .then(() => deployer.link(ECRecovery, AccountRegistryLogic))
-    .then(() => deployer.link(ECRecovery, AttestationLogic))
-    .then(() => deployer.link(ECRecovery, TokenEscrowMarketplace))
-    .then(() => deployer.link(ECRecovery, VotingCenter))
-    .then(() => deployer.link(ECRecovery, Poll))
+    .deploy(ECDSA)
+    .then(() => deployer.link(ECDSA, AccountRegistryLogic))
+    .then(() => deployer.link(ECDSA, AttestationLogic))
+    .then(() => deployer.link(ECDSA, TokenEscrowMarketplace))
+    .then(() => deployer.link(ECDSA, VotingCenter))
+    .then(() => deployer.link(ECDSA, Poll))
     .then(() => deployer.deploy(BLT))
     .then(() => BLT.deployed())
     .then(blt => (token = blt))
