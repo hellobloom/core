@@ -18,15 +18,10 @@ declare global {
       require(
         name: "AttestationLogic"
       ): TruffleContracts.AttestationLogicContract;
-      require(name: "BasicToken"): TruffleContracts.BasicTokenContract;
       require(
         name: "BatchInitializer"
       ): TruffleContracts.BatchInitializerContract;
-      require(name: "ConvertLib"): TruffleContracts.ConvertLibContract;
-      require(name: "ECRecovery"): TruffleContracts.ECRecoveryContract;
       require(name: "ERC20"): TruffleContracts.ERC20Contract;
-      require(name: "ERC20Basic"): TruffleContracts.ERC20BasicContract;
-      require(name: "HasNoEther"): TruffleContracts.HasNoEtherContract;
       require(name: "IERC20"): TruffleContracts.IERC20Contract;
       require(name: "Initializable"): TruffleContracts.InitializableContract;
       require(name: "Migrations"): TruffleContracts.MigrationsContract;
@@ -36,7 +31,6 @@ declare global {
       require(name: "PauserRole"): TruffleContracts.PauserRoleContract;
       require(name: "Poll"): TruffleContracts.PollContract;
       require(name: "SigningLogic"): TruffleContracts.SigningLogicContract;
-      require(name: "StandardToken"): TruffleContracts.StandardTokenContract;
       require(
         name: "TokenEscrowMarketplace"
       ): TruffleContracts.TokenEscrowMarketplaceContract;
