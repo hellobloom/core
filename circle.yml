@@ -84,10 +84,6 @@ jobs:
           name: Check for prettier violations
           command: bin/prettier && git diff --exit-code
 
-      - run:
-          name: Check that typescript lints
-          command: bin/tslint
-
 workflows:
   version: 2
   build_and_test:
@@ -102,7 +98,7 @@ workflows:
           requires:
             - install_dependencies
 
-      - check_prettier_and_tslint:
+      - check_prettier:
           requires:
             - install_dependencies
 
