@@ -70,7 +70,7 @@ jobs:
           name: Check that typings are in sync
           command: yarn generate && git diff --exit-code
 
-  check_prettier_and_tslint:
+  check_prettier:
     docker:
       - image: circleci/node:8.9.4
 
