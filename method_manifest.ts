@@ -565,11 +565,11 @@ export const BatchAttestationLogic: IContractMethodManifest = {
       args: {
         _dataHash: {
           type: 'bytes32',
-          index: 0
-        }
-      }
-    }
-  }
+          index: 0,
+        },
+      },
+    },
+  },
 }
 
 export const BatchInitializer: IContractMethodManifest = {
