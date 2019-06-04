@@ -25,10 +25,20 @@ reset_build() {
     echo "Deleting ./build"
     rm -r build
   fi
+
+  if [ -f contracts.d.ts ]; then
+    echo "Deleting ./contracts.d.ts"
+    rm contracts.d.ts
+  fi
+
+  if [ -f truffle.d.ts ]; then
+    echo "Deleting ./truffle.d.ts"
+    rm truffle.d.ts
+  fi
 }
 
 compile_typings() {
-  yarn generate
+  ./node_modules/.bin/ts-node generate.ts $@
 }
 
 compile_method_manifest() {
@@ -40,7 +50,7 @@ format_typings() {
 }
 
 update_typings() {
-  compile_typings
+  compile_typings --contracts --truffle | format_typings > truffle.d.ts
   compile_method_manifest | format_typings > method_manifest.ts
 }
 
