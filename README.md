@@ -993,3 +993,12 @@ A designed poll admin can submit votes on behalf of users in order to pay the tr
     );
   }
 ```
+
+## Generating a ganache snapshot
+
+1.  Remove the current temporary ganache dir `rm -rf /tmp/ganache`
+2.  Recreate it `mkdir /tmp/ganache`
+3.  Start the rpc and run migrations `bin/rpc & bin/migrate-contracts`
+    You can stop via `pkill node` once `3_print_addr.js` has finished
+5.  Traverse into the tmp dir `cd /tmp`
+6.  Run tar `tar -czf rpcSnapshot.tar.gz ganache`

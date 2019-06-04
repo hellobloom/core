@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Kill our process and all of our child processes upon ctrl+c.
+trap "exit" INT TERM ERR
+trap "kill 0" EXIT
+
+if [ ! -d /tmp/ganache ]; then
+  ./bin/extract-contracts
+fi
+
+# By using the same mnemonic, ganache-cli generates the same keys which means
+# our contracts deploy to the same addresses!
+mnemonic="robot robot robot robot robot robot robot robot robot robot robot robot"
+
+if [[ -z "$GANACHE_BIND" ]]
+then
+  export GANACHE_BIND=127.0.0.1
+fi
+
+./node_modules/.bin/ganache-cli \
+  --db "/tmp/ganache"           \
+  --mnemonic "$mnemonic"        \
+  --blockTime 1                 \
+  --gasLimit 100000000          \
+  --hostname $GANACHE_BIND      \
+  --port 8545 &
+
+wait %1
+
