@@ -37,6 +37,13 @@ export interface AttestationLogicContract
   ): Promise<AttestationLogicInstance>;
 }
 
+export interface BatchAttestationLogicContract
+  extends Truffle.Contract<BatchAttestationLogicInstance> {
+  "new"(
+    meta?: Truffle.TransactionDetails
+  ): Promise<BatchAttestationLogicInstance>;
+}
+
 export interface BatchInitializerContract
   extends Truffle.Contract<BatchInitializerInstance> {
   "new"(
@@ -344,6 +351,14 @@ export interface AttestationLogicInstance extends Truffle.ContractInstance {
     txDetails?: Truffle.TransactionDetails
   ): Promise<string>;
   initializer(txDetails?: Truffle.TransactionDetails): Promise<string>;
+}
+
+export interface BatchAttestationLogicInstance
+  extends Truffle.ContractInstance {
+  batchAttest(
+    _dataHash: string | BigNumber,
+    txDetails?: Truffle.TransactionDetails
+  ): Promise<Truffle.TransactionResponse>;
 }
 
 export interface BatchInitializerInstance extends Truffle.ContractInstance {

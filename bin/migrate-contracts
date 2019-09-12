@@ -1,0 +1,3 @@
+#!/bin/sh
+export NODEPWD="$(pwd)"
+./node_modules/.bin/truffle migrate --reset

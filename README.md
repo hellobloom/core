@@ -330,15 +330,15 @@ Each signature contains a domain specification so the user understands how their
 
 ## Burning Signatures
 
-Each signature containing an authorization for a delegated Bloom Protocol action is single use. The schema contains a nonce to make each signature unique even if the intended actionis the same. SigningLogic maintains a list of signatures that have been used and reverts if a signature is submitted more than once.
+Each signature containing an authorization for a delegated Bloom Protocol action is single use. The schema contains a nonce to make each signature unique even if the intended actionis the same. SigningLogic maintains a list of signature digests that have been used and reverts if a signature is submitted more than once.
 
 ```
   mapping (bytes32 => bool) public usedSignatures;
 
-  function burnSignature(bytes _signature) internal {
-    bytes32 _signatureHash = keccak256(abi.encodePacked(_signature));
-    require(!usedSignatures[_signatureHash], "Signature not unique");
-    usedSignatures[_signatureHash] = true;
+  function burnSignatureDigest(bytes32 _signatureDigest, address _sender) internal {
+    bytes32 _txDataHash = keccak256(abi.encode(_signatureDigest, _sender));
+    require(!usedSignatures[_txDataHash], "Signature not unique");
+    usedSignatures[_txDataHash] = true;
   }
 ```
 
@@ -993,3 +993,12 @@ A designed poll admin can submit votes on behalf of users in order to pay the tr
     );
   }
 ```
+
+## Generating a ganache snapshot
+
+1.  Remove the current temporary ganache dir `rm -rf /tmp/ganache`
+2.  Recreate it `mkdir /tmp/ganache`
+3.  Start the rpc and run migrations `bin/rpc & bin/migrate-contracts`
+    You can stop via `pkill node` once `3_print_addr.js` has finished
+4.  Traverse into the tmp dir `cd /tmp`
+5.  Run tar `tar -czf rpcSnapshot.tar.gz ganache`

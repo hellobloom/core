@@ -16,26 +16,26 @@ interface IContractMethodManifest {
 export enum EContractNames {
   'AccountRegistryLogic' = 'AccountRegistryLogic',
   'AccreditationRepo' = 'AccreditationRepo',
+  'Address' = 'Address',
   'AirdropProxy' = 'AirdropProxy',
   'AttestationLogic' = 'AttestationLogic',
-  'BasicToken' = 'BasicToken',
+  'BatchAttestationLogic' = 'BatchAttestationLogic',
   'BatchInitializer' = 'BatchInitializer',
-  'ConvertLib' = 'ConvertLib',
   'DependentOnIPFS' = 'DependentOnIPFS',
-  'ECRecovery' = 'ECRecovery',
+  'ECDSA' = 'ECDSA',
   'ERC20' = 'ERC20',
-  'ERC20Basic' = 'ERC20Basic',
-  'HasNoEther' = 'HasNoEther',
+  'IERC20' = 'IERC20',
   'Initializable' = 'Initializable',
   'Migrations' = 'Migrations',
   'MockBLT' = 'MockBLT',
   'Ownable' = 'Ownable',
   'Pausable' = 'Pausable',
+  'PauserRole' = 'PauserRole',
   'Poll' = 'Poll',
+  'Roles' = 'Roles',
   'SafeERC20' = 'SafeERC20',
   'SafeMath' = 'SafeMath',
   'SigningLogic' = 'SigningLogic',
-  'StandardToken' = 'StandardToken',
   'TokenEscrowMarketplace' = 'TokenEscrowMarketplace',
   'VotingCenter' = 'VotingCenter',
 }
@@ -150,7 +150,15 @@ export const AccreditationRepo: IContractMethodManifest = {
         },
       },
     },
+    renounceOwnership: {
+      args_arr: [],
+      args: {},
+    },
     owner: {
+      args_arr: [],
+      args: {},
+    },
+    isOwner: {
       args_arr: [],
       args: {},
     },
@@ -198,15 +206,45 @@ export const AccreditationRepo: IContractMethodManifest = {
   },
 }
 
+export const Address: IContractMethodManifest = {
+  methods: {},
+}
+
 export const AirdropProxy: IContractMethodManifest = {
   methods: {
     unpause: {
       args_arr: [],
       args: {},
     },
+    isPauser: {
+      args_arr: ['account'],
+      args: {
+        account: {
+          type: 'address',
+          index: 0,
+        },
+      },
+    },
     paused: {
       args_arr: [],
       args: {},
+    },
+    renouncePauser: {
+      args_arr: [],
+      args: {},
+    },
+    renounceOwnership: {
+      args_arr: [],
+      args: {},
+    },
+    addPauser: {
+      args_arr: ['account'],
+      args: {
+        account: {
+          type: 'address',
+          index: 0,
+        },
+      },
     },
     pause: {
       args_arr: [],
@@ -216,7 +254,7 @@ export const AirdropProxy: IContractMethodManifest = {
       args_arr: [],
       args: {},
     },
-    reclaimEther: {
+    isOwner: {
       args_arr: [],
       args: {},
     },
@@ -526,30 +564,13 @@ export const AttestationLogic: IContractMethodManifest = {
   },
 }
 
-export const BasicToken: IContractMethodManifest = {
+export const BatchAttestationLogic: IContractMethodManifest = {
   methods: {
-    totalSupply: {
-      args_arr: [],
-      args: {},
-    },
-    transfer: {
-      args_arr: ['_to', '_value'],
+    batchAttest: {
+      args_arr: ['_dataHash'],
       args: {
-        _to: {
-          type: 'address',
-          index: 0,
-        },
-        _value: {
-          type: 'uint256',
-          index: 1,
-        },
-      },
-    },
-    balanceOf: {
-      args_arr: ['_owner'],
-      args: {
-        _owner: {
-          type: 'address',
+        _dataHash: {
+          type: 'bytes32',
           index: 0,
         },
       },
@@ -563,7 +584,15 @@ export const BatchInitializer: IContractMethodManifest = {
       args_arr: [],
       args: {},
     },
+    renounceOwnership: {
+      args_arr: [],
+      args: {},
+    },
     owner: {
+      args_arr: [],
+      args: {},
+    },
+    isOwner: {
       args_arr: [],
       args: {},
     },
@@ -667,44 +696,12 @@ export const BatchInitializer: IContractMethodManifest = {
   },
 }
 
-export const ConvertLib: IContractMethodManifest = {
-  methods: {
-    convert: {
-      args_arr: ['amount', 'conversionRate'],
-      args: {
-        amount: {
-          type: 'uint256',
-          index: 0,
-        },
-        conversionRate: {
-          type: 'uint256',
-          index: 1,
-        },
-      },
-    },
-  },
-}
-
 export const DependentOnIPFS: IContractMethodManifest = {
   methods: {},
 }
 
-export const ECRecovery: IContractMethodManifest = {
-  methods: {
-    recover: {
-      args_arr: ['hash', 'sig'],
-      args: {
-        hash: {
-          type: 'bytes32',
-          index: 0,
-        },
-        sig: {
-          type: 'bytes',
-          index: 1,
-        },
-      },
-    },
-  },
+export const ECDSA: IContractMethodManifest = {
+  methods: {},
 }
 
 export const ERC20: IContractMethodManifest = {
@@ -714,11 +711,24 @@ export const ERC20: IContractMethodManifest = {
       args: {},
     },
     balanceOf: {
-      args_arr: ['who'],
+      args_arr: ['owner'],
       args: {
-        who: {
+        owner: {
           type: 'address',
           index: 0,
+        },
+      },
+    },
+    allowance: {
+      args_arr: ['owner', 'spender'],
+      args: {
+        owner: {
+          type: 'address',
+          index: 0,
+        },
+        spender: {
+          type: 'address',
+          index: 1,
         },
       },
     },
@@ -735,16 +745,15 @@ export const ERC20: IContractMethodManifest = {
         },
       },
     },
-
-    allowance: {
-      args_arr: ['owner', 'spender'],
+    approve: {
+      args_arr: ['spender', 'value'],
       args: {
-        owner: {
+        spender: {
           type: 'address',
           index: 0,
         },
-        spender: {
-          type: 'address',
+        value: {
+          type: 'uint256',
           index: 1,
         },
       },
@@ -766,14 +775,27 @@ export const ERC20: IContractMethodManifest = {
         },
       },
     },
-    approve: {
-      args_arr: ['spender', 'value'],
+    increaseAllowance: {
+      args_arr: ['spender', 'addedValue'],
       args: {
         spender: {
           type: 'address',
           index: 0,
         },
-        value: {
+        addedValue: {
+          type: 'uint256',
+          index: 1,
+        },
+      },
+    },
+    decreaseAllowance: {
+      args_arr: ['spender', 'subtractedValue'],
+      args: {
+        spender: {
+          type: 'address',
+          index: 0,
+        },
+        subtractedValue: {
           type: 'uint256',
           index: 1,
         },
@@ -782,21 +804,8 @@ export const ERC20: IContractMethodManifest = {
   },
 }
 
-export const ERC20Basic: IContractMethodManifest = {
+export const IERC20: IContractMethodManifest = {
   methods: {
-    totalSupply: {
-      args_arr: [],
-      args: {},
-    },
-    balanceOf: {
-      args_arr: ['who'],
-      args: {
-        who: {
-          type: 'address',
-          index: 0,
-        },
-      },
-    },
     transfer: {
       args_arr: ['to', 'value'],
       args: {
@@ -810,28 +819,61 @@ export const ERC20Basic: IContractMethodManifest = {
         },
       },
     },
-  },
-}
-
-export const HasNoEther: IContractMethodManifest = {
-  methods: {
-    owner: {
+    approve: {
+      args_arr: ['spender', 'value'],
+      args: {
+        spender: {
+          type: 'address',
+          index: 0,
+        },
+        value: {
+          type: 'uint256',
+          index: 1,
+        },
+      },
+    },
+    transferFrom: {
+      args_arr: ['from', 'to', 'value'],
+      args: {
+        from: {
+          type: 'address',
+          index: 0,
+        },
+        to: {
+          type: 'address',
+          index: 1,
+        },
+        value: {
+          type: 'uint256',
+          index: 2,
+        },
+      },
+    },
+    totalSupply: {
       args_arr: [],
       args: {},
     },
-    transferOwnership: {
-      args_arr: ['newOwner'],
+    balanceOf: {
+      args_arr: ['who'],
       args: {
-        newOwner: {
+        who: {
           type: 'address',
           index: 0,
         },
       },
     },
-
-    reclaimEther: {
-      args_arr: [],
-      args: {},
+    allowance: {
+      args_arr: ['owner', 'spender'],
+      args: {
+        owner: {
+          type: 'address',
+          index: 0,
+        },
+        spender: {
+          type: 'address',
+          index: 1,
+        },
+      },
     },
   },
 }
@@ -889,13 +931,13 @@ export const Migrations: IContractMethodManifest = {
 export const MockBLT: IContractMethodManifest = {
   methods: {
     approve: {
-      args_arr: ['_spender', '_value'],
+      args_arr: ['spender', 'value'],
       args: {
-        _spender: {
+        spender: {
           type: 'address',
           index: 0,
         },
-        _value: {
+        value: {
           type: 'uint256',
           index: 1,
         },
@@ -906,78 +948,78 @@ export const MockBLT: IContractMethodManifest = {
       args: {},
     },
     transferFrom: {
-      args_arr: ['_from', '_to', '_value'],
+      args_arr: ['from', 'to', 'value'],
       args: {
-        _from: {
+        from: {
           type: 'address',
           index: 0,
         },
-        _to: {
+        to: {
           type: 'address',
           index: 1,
         },
-        _value: {
+        value: {
           type: 'uint256',
           index: 2,
         },
       },
     },
-    decreaseApproval: {
-      args_arr: ['_spender', '_subtractedValue'],
+    increaseAllowance: {
+      args_arr: ['spender', 'addedValue'],
       args: {
-        _spender: {
+        spender: {
           type: 'address',
           index: 0,
         },
-        _subtractedValue: {
+        addedValue: {
           type: 'uint256',
           index: 1,
         },
       },
     },
     balanceOf: {
-      args_arr: ['_owner'],
+      args_arr: ['owner'],
       args: {
-        _owner: {
+        owner: {
           type: 'address',
           index: 0,
         },
       },
     },
-    transfer: {
-      args_arr: ['_to', '_value'],
+    decreaseAllowance: {
+      args_arr: ['spender', 'subtractedValue'],
       args: {
-        _to: {
+        spender: {
           type: 'address',
           index: 0,
         },
-        _value: {
+        subtractedValue: {
           type: 'uint256',
           index: 1,
         },
       },
     },
-    increaseApproval: {
-      args_arr: ['_spender', '_addedValue'],
+    transfer: {
+      args_arr: ['to', 'value'],
       args: {
-        _spender: {
+        to: {
           type: 'address',
           index: 0,
         },
-        _addedValue: {
+        value: {
           type: 'uint256',
           index: 1,
         },
       },
     },
     allowance: {
-      args_arr: ['_owner', '_spender'],
+      args_arr: ['owner', 'spender'],
       args: {
-        _owner: {
+        owner: {
           type: 'address',
           index: 0,
         },
-        _spender: {
+        spender: {
           type: 'address',
           index: 1,
         },
@@ -1006,7 +1048,14 @@ export const Ownable: IContractMethodManifest = {
       args_arr: [],
       args: {},
     },
-
+    isOwner: {
+      args_arr: [],
+      args: {},
+    },
+    renounceOwnership: {
+      args_arr: [],
+      args: {},
+    },
     transferOwnership: {
       args_arr: ['newOwner'],
       args: {
@@ -1021,29 +1070,65 @@ export const Ownable: IContractMethodManifest = {
 
 export const Pausable: IContractMethodManifest = {
   methods: {
-    paused: {
-      args_arr: [],
-      args: {},
-    },
-    owner: {
-      args_arr: [],
-      args: {},
-    },
-    transferOwnership: {
-      args_arr: ['newOwner'],
+    isPauser: {
+      args_arr: ['account'],
       args: {
-        newOwner: {
+        account: {
+          type: 'address',
+          index: 0,
+        },
+      },
+    },
+    renouncePauser: {
+      args_arr: [],
+      args: {},
+    },
+    addPauser: {
+      args_arr: ['account'],
+      args: {
+        account: {
           type: 'address',
           index: 0,
         },
       },
     },
 
+    paused: {
+      args_arr: [],
+      args: {},
+    },
     pause: {
       args_arr: [],
       args: {},
     },
     unpause: {
+      args_arr: [],
+      args: {},
+    },
+  },
+}
+
+export const PauserRole: IContractMethodManifest = {
+  methods: {
+    isPauser: {
+      args_arr: ['account'],
+      args: {
+        account: {
+          type: 'address',
+          index: 0,
+        },
+      },
+    },
+    addPauser: {
+      args_arr: ['account'],
+      args: {
+        account: {
+          type: 'address',
+          index: 0,
+        },
+      },
+    },
+    renouncePauser: {
       args_arr: [],
       args: {},
     },
@@ -1115,6 +1200,10 @@ export const Poll: IContractMethodManifest = {
   },
 }
 
+export const Roles: IContractMethodManifest = {
+  methods: {},
+}
+
 export const SafeERC20: IContractMethodManifest = {
   methods: {},
 }
@@ -1131,107 +1220,6 @@ export const SigningLogic: IContractMethodManifest = {
         anonymous_0: {
           type: 'bytes32',
           index: 0,
-        },
-      },
-    },
-  },
-}
-
-export const StandardToken: IContractMethodManifest = {
-  methods: {
-    totalSupply: {
-      args_arr: [],
-      args: {},
-    },
-    balanceOf: {
-      args_arr: ['_owner'],
-      args: {
-        _owner: {
-          type: 'address',
-          index: 0,
-        },
-      },
-    },
-    transfer: {
-      args_arr: ['_to', '_value'],
-      args: {
-        _to: {
-          type: 'address',
-          index: 0,
-        },
-        _value: {
-          type: 'uint256',
-          index: 1,
-        },
-      },
-    },
-
-    transferFrom: {
-      args_arr: ['_from', '_to', '_value'],
-      args: {
-        _from: {
-          type: 'address',
-          index: 0,
-        },
-        _to: {
-          type: 'address',
-          index: 1,
-        },
-        _value: {
-          type: 'uint256',
-          index: 2,
-        },
-      },
-    },
-    approve: {
-      args_arr: ['_spender', '_value'],
-      args: {
-        _spender: {
-          type: 'address',
-          index: 0,
-        },
-        _value: {
-          type: 'uint256',
-          index: 1,
-        },
-      },
-    },
-    allowance: {
-      args_arr: ['_owner', '_spender'],
-      args: {
-        _owner: {
-          type: 'address',
-          index: 0,
-        },
-        _spender: {
-          type: 'address',
-          index: 1,
-        },
-      },
-    },
-    increaseApproval: {
-      args_arr: ['_spender', '_addedValue'],
-      args: {
-        _spender: {
-          type: 'address',
-          index: 0,
-        },
-        _addedValue: {
-          type: 'uint256',
-          index: 1,
-        },
-      },
-    },
-    decreaseApproval: {
-      args_arr: ['_spender', '_subtractedValue'],
-      args: {
-        _spender: {
-          type: 'address',
-          index: 0,
-        },
-        _subtractedValue: {
-          type: 'uint256',
-          index: 1,
         },
       },
     },

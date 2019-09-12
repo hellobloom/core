@@ -19,6 +19,9 @@ declare global {
         name: "AttestationLogic"
       ): TruffleContracts.AttestationLogicContract;
       require(
+        name: "BatchAttestationLogic"
+      ): TruffleContracts.BatchAttestationLogicContract;
+      require(
         name: "BatchInitializer"
       ): TruffleContracts.BatchInitializerContract;
       require(name: "ERC20"): TruffleContracts.ERC20Contract;
