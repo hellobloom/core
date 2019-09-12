@@ -6,9 +6,9 @@ var AttestationLogic = artifacts.require('AttestationLogic')
 var TokenEscrowMarketplace = artifacts.require('TokenEscrowMarketplace')
 var VotingCenter = artifacts.require('VotingCenter')
 var AirdropProxy = artifacts.require('AirdropProxy')
-var BatchAttestationLogic = artifacts.require("BatchAttestationLogic")
+var BatchAttestationLogic = artifacts.require('BatchAttestationLogic')
 
-module.exports = function (deployer) {
+module.exports = function(deployer) {
   var contractEnv = {}
 
   deployer
