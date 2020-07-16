@@ -43,7 +43,7 @@
     "chai-as-promised": "^7.1.1",
     "ethereumjs-abi": "^0.6.5",
     "ganache-cli": "^6.0.3",
-    "lodash": "^4.17.5",
+    "lodash": "^4.17.19",
     "multihashes": "^0.4.12",
     "prettier": "^1.9.2",
     "solhint": "^1.1.9",
